@@ -45,4 +45,32 @@ expect_empty "base does not overlap the roof"  part-base-vs-roof
 # catches a band of the case that no part owns.
 expect_empty "the three parts tile the whole shell" shell-minus-parts
 
+# THE SHOWCASE MUST RENDER CLEAN. It is the only file that touches the framework's
+# board model and the vendor fan mesh, so it is the only place their path assumptions
+# can bite -- and both announce themselves as WARNING rather than ERROR, which is
+# silent unless something looks. The framework asks for its heatsink DXF as
+# "./lib/heatsinks/..." and import() resolves that against the MAIN document; see
+# cad/lib/readme-heatsinks.md.
+showcase() {
+    local label="$1"; shift
+    local out="$WORK/showcase.stl"
+    # shellcheck disable=SC2086
+    "$OPENSCAD" $BACKEND --export-format=binstl -o "$out" "$@" cad/case.scad \
+        >"$out.log" 2>&1
+    if grep -qE "ERROR:|WARNING:" "$out.log"; then
+        fail "$label — errors during render"
+        grep -E "ERROR:|WARNING:" "$out.log" | head -3 | sed 's/^/       /'
+        return 1
+    fi
+    local n; n=$(tris "$out")
+    if [ "$n" -gt 0 ] 2>/dev/null; then pass "$label ($n triangles)"
+    else fail "$label — no geometry"; fi
+}
+
+showcase "assembly renders clean"            -D 'case_part="assembly"'
+showcase "assembly explodes clean"           -D 'case_part="assembly"' -D 'assembly_space=30'
+showcase "assembly renders with nothing on"  -D 'case_part="assembly"' \
+         -D 'show_boards=false' -D 'show_hats=false' -D 'show_standoffs=false' \
+         -D 'show_fan=false'
+
 report "part checks"

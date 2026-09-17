@@ -167,3 +167,31 @@ board_y    = exhaust_gap;
 interior_y = board_y + pi5_pcb[1] + hat_overhang_y + fan_plenum + fan_depth;
 
 outer = [interior_x + 2 * wall, interior_y + 2 * wall, interior_h + 2 * wall];
+
+// ----------------------------------------------------------------------------
+// ASSEMBLY / PREVIEW
+// ----------------------------------------------------------------------------
+// Open cad/case.scad and set case_part. Mirrors hexrack's body_part /
+// bodyAssembly_space pair, turned through 90 degrees: hexrack stacks its sections
+// along Y, this case stacks along Z.
+//
+//   "assembly" - everything, for looking at
+//   "base" | "shell" | "roof" | "filter" - one printed part
+case_part = "assembly";
+
+// Explode distance. 0 means every part sits where it really sits, which is what you
+// want for checking a joint and useless for seeing one: at 0 each tenon is swallowed
+// by its neighbour's rebate. Push it to 20-40 to pull the case apart along Z.
+//
+// THE EXPLODE LIVES ONLY IN case.scad. placement.scad never reads assembly_space, so
+// no fit test can accidentally measure an exploded position -- the checks are
+// structurally incapable of seeing it rather than merely defaulting to 0.
+assembly_space = 0;
+
+// Preview geometry. None of it is ever exported: generate-stl.sh renders the parts
+// by name, and the showcase marks vendor geometry with %.
+show_boards    = true;    // the three Pi 5s, from the framework (cooler included)
+show_hats      = true;    // both M.2 HAT+ boards and their drives
+show_standoffs = true;    // the M2.5 stacks the boards sit on
+show_fan       = true;    // the NF-A8 mesh
+show_case      = true;    // the printed parts themselves

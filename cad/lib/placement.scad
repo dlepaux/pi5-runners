@@ -16,11 +16,26 @@ use <m2-hat-plus.scad>
 // FRAMES
 // ----------------------------------------------------------------------------
 
+// TWO FRAMES, AND THE WALL IS THE DIFFERENCE BETWEEN THEM.
+//
+// board_x/board_y/board_z and interior_* are all measured in the INTERIOR frame, whose
+// origin is the inside corner of the floor. shellSolid() is built in the CASE frame,
+// whose origin is the outside corner. They differ by `wall` on every axis.
+//
+// Everything that has to meet the shell goes through interiorOrigin(). Getting this
+// wrong is invisible for a long time: a suite that only ever compares interior things
+// to each other -- slot against slot, slot against roof -- passes perfectly while the
+// whole stack sits 3mm inside the floor.
+module interiorOrigin() {
+  translate([wall, wall, wall]) children();
+}
+
 // Board i's frame: the Pi's PCB underside at z=0, its left-rear corner at [0,0].
 // Every board sits at the same x/y -- they are a stack, not a staircase -- so the
 // only thing that varies is z.
 module onBoard(i) {
-  translate([board_x, board_y, board_z[i]]) children();
+  interiorOrigin()
+    translate([board_x, board_y, board_z[i]]) children();
 }
 
 // ----------------------------------------------------------------------------
@@ -50,6 +65,7 @@ module boardPcb(i) {
 
 // The roof's inner face, as a plane to test the top slot against.
 module roofPlane() {
-  translate([-EPS, -EPS, interior_h])
-    cube([interior_x + 2 * EPS, interior_y + 2 * EPS, wall]);
+  interiorOrigin()
+    translate([-EPS, -EPS, interior_h])
+      cube([interior_x + 2 * EPS, interior_y + 2 * EPS, wall]);
 }

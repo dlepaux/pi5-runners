@@ -116,6 +116,12 @@ if (test_view == "shell-minus-parts")
     shellPanel("roof");
   }
 
+// Every slot must be inside the shell, not embedded in its walls. This is the check
+// that a frame error hides from: slot-vs-slot and slot-vs-roof all pass while the
+// entire stack sits one wall-thickness into the floor.
+if (test_view == "stack-vs-shell")
+  intersection() { shellSolid(); union() { slotSlab(0); slotSlab(1); slotSlab(2); } }
+
 // -- reporting ---------------------------------------------------------------
 // Echoes the derived geometry so a human (or a test) reads the numbers the parts are
 // actually built from, rather than the numbers a document claims. Renders a unit cube

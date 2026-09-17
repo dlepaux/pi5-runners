@@ -31,5 +31,6 @@ expect_geometry "slot 2 occupies its slab"              slot2-solid
 expect_empty    "slot 0 clears slot 1's board"          slot0-vs-slot1
 expect_empty    "slot 1 clears slot 2's board"          slot1-vs-slot2
 expect_empty    "slot 2 clears the roof"                slot2-vs-roof
+expect_empty    "the whole stack sits inside the shell"  stack-vs-shell
 
 report "fit checks"

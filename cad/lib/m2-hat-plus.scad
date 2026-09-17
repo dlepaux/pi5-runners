@@ -77,3 +77,22 @@ module coolerEnvelope() {
   translate([pi5_hole_inset, pi5_hole_inset, pi5_pcb[2]])
     cube([58, 40, active_cooler_h]);
 }
+
+// ----------------------------------------------------------------------------
+// SHOWCASE
+// ----------------------------------------------------------------------------
+// The HAT as it looks, not as it claims. hatSolid() is a slab swept to the top of the
+// retaining screw -- correct for clearance, wrong for a picture. This is the PCB and
+// the drive as separate bodies at their real heights.
+module hatVisualization(compact = false) {
+  z0 = pi5_pcb[2] + hat_stack_h;
+  translate([0, 0, z0]) {
+    color("ForestGreen")
+      linear_extrude(hat_pcb_t)
+        if (compact) hatCompactOutline(); else hatStandardOutline();
+    // The M.2 module, lying along the board's long axis on top of the HAT.
+    color("DimGray")
+      translate([pi5_hole_inset + 8, pi5_pcb[1] / 2 - 11, hat_pcb_t])
+        cube([compact ? 30 : 42, 22, drive_t]);
+  }
+}
