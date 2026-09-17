@@ -26,6 +26,8 @@ include <lib/shell.scad>
 include <lib/vents.scad>
 use <lib/ports.scad>
 use <parts/filter.scad>
+use <parts/base.scad>
+use <parts/roof.scad>
 
 test_view = "";
 
@@ -96,9 +98,9 @@ if (test_view == "report-fan-asset") {
 }
 
 // -- printed parts -----------------------------------------------------------
-if (test_view == "part-base")  shellPanel("base");
+if (test_view == "part-base")  basePart();
 if (test_view == "part-shell") shellPanel("shell");
-if (test_view == "part-roof")  shellPanel("roof");
+if (test_view == "part-roof")  roofPart();
 
 // Disjoint: no two parts may claim the same material.
 if (test_view == "part-base-vs-shell")
@@ -149,7 +151,7 @@ if (test_view == "report-areas") {
 // the real thing rather than a re-derivation of it.
 if (test_view == "ports-blind")
   intersection() {
-    union() { shellPanel("base"); shellPanel("shell"); shellPanel("roof"); }
+    union() { basePart(); shellPanel("shell"); roofPart(); }
     allPortProbes();
   }
 
@@ -190,6 +192,22 @@ if (test_view == "report-filter") {
   cube(1);
 }
 
+// The retainer must not touch the top board's cooler. Two posts clear it by
+// derivation; this is what notices if the cooler or the hole list ever changes.
+if (test_view == "retainer-vs-cooler")
+  intersection() {
+    roofRetainer();
+    onBoard(2) coolerEnvelope();
+  }
+
+// The bosses must reach the bottom board and carry an insert.
+// The bosses must MEET the board, not pass through it: their top face is the board's
+// underside, so the correct relationship is contact and the correct volume is zero.
+// "reach" is therefore a measurement, not an intersection -- test-fit.sh reads the
+// boss bbox's top against board 0's underside.
+if (test_view == "bosses-alone")     baseBosses();
+if (test_view == "bosses-vs-board")  intersection() { baseBosses(); boardPcb(0); }
+
 // -- reporting ---------------------------------------------------------------
 // Echoes the derived geometry so a human (or a test) reads the numbers the parts are
 // actually built from, rather than the numbers a document claims. Renders a unit cube
@@ -202,5 +220,6 @@ if (test_view == "report-geometry") {
   echo(str("board_z = ", board_z, " stack_top = ", stack_top));
   echo(str("fan_span_z = ", fan_z0, " .. ", fan_z0 + fan_size));
   echo(str("fan_throat_area = ", fan_throat_area));
+  echo(str("board0_underside = ", wall + board_z[0]));
   cube(1);
 }

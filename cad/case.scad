@@ -21,6 +21,8 @@ use <lib/m2-hat-plus.scad>
 use <lib/noctua-fan.scad>
 use <lib/sbc-helpers.scad>
 use <parts/filter.scad>
+use <parts/base.scad>
+use <parts/roof.scad>
 
 // ----------------------------------------------------------------------------
 // EXPLODE
@@ -87,13 +89,17 @@ module assemblyContents() {
 
 if (case_part == "assembly") {
   if (show_case) {
-    exploded("base")  shellPanel("base");
+    exploded("base")  basePart();
                       shellPanel("shell");
-    exploded("roof")  shellPanel("roof");
+    exploded("roof")  roofPart();
   }
   assemblyContents();
 } else if (case_part == "filter") {
   filterPart();
+} else if (case_part == "base") {
+  basePart();
+} else if (case_part == "roof") {
+  roofPart();
 } else {
   // One printed part, at the origin, with no preview geometry anywhere near it.
   shellPanel(case_part);

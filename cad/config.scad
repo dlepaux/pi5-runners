@@ -5,6 +5,13 @@
 // Mirrors naja-miner/cad/config.scad, which mirrors lab-router's.
 // ============================================================================
 
+// Both spec tables, INCLUDED not used: `use` imports modules and functions but not
+// variables, and the fastener block below reads their constants. Neither includes
+// config.scad, so there is no cycle. OpenSCAD does not hoist either, which is why
+// these are at the top rather than beside the block that reads them.
+include <lib/screws.scad>
+include <lib/theaded-inserts.scad>
+
 EPS       = 0.01;     // CSG safety
 OVERLAP   = 0.1;
 tolerance = 0.4;      // general print fit
@@ -254,3 +261,40 @@ filter_web       = 1.4;
 // pressure. So the floor here is "the grille is not the dominant restriction", not
 // "the grille is as open as the fan", which no printable web achieves.
 filter_min_open_fraction = 0.6;
+
+// ----------------------------------------------------------------------------
+// FASTENERS AND BASE FEATURES
+// ----------------------------------------------------------------------------
+// M2.5 throughout, because that is what a Pi mounts on and one insert size means one
+// soldering-iron tip and one bag of screws. READ FROM lib/theaded-inserts.scad rather
+// than typed: a Ruthex RX-M2.5x5.7 wants 6.7mm of hole, not 5.7, because the extra
+// millimetre takes displaced plastic and screw-tip overrun. A pocket cut to the
+// insert's own length leaves the board seating on the screw instead of the standoff.
+insert_m25        = "M2.5";
+insert_m25_d      = get_insert_spec(insert_m25, "hole_diameter");
+insert_m25_depth  = get_insert_spec(insert_m25, "hole_depth");
+insert_m25_boss   = get_insert_min_boss(insert_m25);
+
+// The bottom board's four bosses stand on the floor and carry the whole stack.
+boss_d = max(insert_m25_boss, 6.5);
+
+// Feet. Low and wide: the case is 1.1L and light, and the cable bundle leaving two
+// adjacent walls is the thing most likely to tip it.
+foot_h = 4;
+foot_d = 14;
+
+// Cable comb. Six cables leave the box -- 3x Ethernet on +X, 3x USB-C on -Y -- and
+// the comb is what stops the bundle levering the case over.
+comb_slot_w = 7;
+comb_slot_h = 5;
+comb_t      = 3;
+
+// The roof's retainer presses on the top board's four mounting points so the stack
+// cannot flex. It is a spacer, not a fixing: nothing is screwed into it.
+// The Active Cooler's footprint, from the framework's rpi5_oem model. Named because
+// the roof retainer derives its post positions from it: a different cooler then moves
+// the posts instead of quietly landing one on a fan.
+cooler_footprint = [58, 40];
+
+retainer_d     = 8;
+retainer_clear = 0.4;

@@ -112,11 +112,17 @@ module portProbe(which) {
           rotate([-90, 0, 0])
             maskBeyond("-Y");
   else
-    rotate([0, 90, 0])
-      linear_extrude(probe_reach)
-        projection(cut = false)
-          rotate([0, -90, 0])
-            maskBeyond("+X");
+    // TRANSLATED TO THE BOARD'S +X FACE. projection() flattens everything to z=0, which
+    // back-rotates to x=0 -- the board's NEAR edge. Without this the probe starts in the
+    // middle of the case and drives outward through the interior, so it reports every
+    // post and boss in its path as a blocked port and tells you nothing about the wall.
+    // The -Y probe needs no such shift only because the board's -Y face IS y=0.
+    translate([pi5_pcb[0], 0, 0])
+      rotate([0, 90, 0])
+        linear_extrude(probe_reach)
+          projection(cut = false)
+            rotate([0, -90, 0])
+              maskBeyond("+X");
 }
 
 module allPortProbes() {
