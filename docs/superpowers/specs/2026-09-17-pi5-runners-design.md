@@ -203,8 +203,9 @@ Structure follows `naja-miner`:
 cad/config.scad        every dimension, nothing hardcoded in parts
 cad/case.scad          assembly / showcase entry point
 cad/tests.scad         synthetic envelopes for fit tests
-cad/lib/               m2-hat-plus.scad, m2-hat-compact.scad, noctua-fan.scad,
-                       placement.scad, shell.scad, screws.scad
+cad/lib/               m2-hat-plus.scad (both variants), noctua-fan.scad,
+                       placement.scad, shell.scad, vents.scad, ports.scad,
+                       screws.scad
 cad/parts/             base.scad, shell.scad, roof.scad, filter.scad
 cad/SBC_Model_Framework/   git submodule, as lab-router consumes it
 scripts/               generate-stl.sh, test*.sh
@@ -226,6 +227,7 @@ and absence.
 | `test-parts.sh` | one body per part, holes cut in both directions, no stray bodies |
 | `test-airflow.sh` | `exhaust_open_area >= fan_throat_area`; fan swept height covers the stack |
 | `test-board-assets.sh` | declared Pi 5 constants still match the framework's `rpi5` model |
+| `test-assets.sh` | mesh assets are closed manifolds, one body, matching their declared extents |
 
 ## Known unresolved
 
