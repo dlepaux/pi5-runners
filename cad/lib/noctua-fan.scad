@@ -36,10 +36,21 @@ assert(abs(fan_asset_extent[2] - fan_depth) <= fan_asset_tol,
 // PARAMETRIC — everything that cuts
 // ----------------------------------------------------------------------------
 
-// The through-bore, in the wall's frame: centred on [0,0], axis along Y.
-module fanBore(depth) {
+// The opening, in the wall's frame: centred on [0,0], axis along Y.
+//
+// A ROUNDED SQUARE rather than the fan's circular bore. The fan does not care -- its
+// throat is the impeller's swept annulus whatever shape the hole is -- and a square
+// opening is both more open area and a better match for a square-cornered case.
+module fanOpeningProfile(clear = 0) {
+  s = fan_opening + 2 * clear;
+  offset(r = fan_opening_r, $fn = 48)
+    square([s - 2 * fan_opening_r, s - 2 * fan_opening_r], center = true);
+}
+
+module fanBore(depth, clear = 0) {
   rotate([-90, 0, 0])
-    cylinder(h = depth, d = fan_size, center = false);
+    linear_extrude(depth)
+      fanOpeningProfile(clear);
 }
 
 // The four mounting holes on the standard 71.5 x 71.5 pattern.

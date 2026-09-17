@@ -23,6 +23,9 @@ use <lib/m2-hat-plus.scad>
 include <lib/placement.scad>
 use <lib/noctua-fan.scad>
 include <lib/shell.scad>
+include <lib/vents.scad>
+use <lib/ports.scad>
+use <parts/filter.scad>
 
 test_view = "";
 
@@ -110,7 +113,7 @@ if (test_view == "part-base-vs-roof")
 // missing and passes every other check in the file.
 if (test_view == "shell-minus-parts")
   difference() {
-    shellSolid();
+    shellCut();
     shellPanel("base");
     shellPanel("shell");
     shellPanel("roof");
@@ -121,6 +124,71 @@ if (test_view == "shell-minus-parts")
 // entire stack sits one wall-thickness into the floor.
 if (test_view == "stack-vs-shell")
   intersection() { shellSolid(); union() { slotSlab(0); slotSlab(1); slotSlab(2); } }
+
+// -- vents -------------------------------------------------------------------
+// THE DRAWN AREA AGAINST THE COMPUTED ONE. Extruded 1mm, so volume IS area. If
+// ventOpenArea() ever stops describing what ventField() draws, the exhaust budget
+// becomes a number with no physical meaning and nothing else would notice.
+if (test_view == "vent-field-area") linear_extrude(1) ventField(vent_y_w, vent_y_h);
+if (test_view == "vent-roof-area")  linear_extrude(1) ventField(vent_roof_w, vent_roof_h);
+
+if (test_view == "report-areas") {
+  echo(str("fan_throat_area = ", fan_throat_area));
+  echo(str("vent_y_area = ", ventOpenArea(vent_y_w, vent_y_h)));
+  echo(str("vent_roof_area = ", ventOpenArea(vent_roof_w, vent_roof_h)));
+  echo(str("exhaust_open_area = ", ventOpenArea(vent_y_w, vent_y_h)
+                                 + ventOpenArea(vent_roof_w, vent_roof_h)));
+  echo(str("filter_open_area = ", filterOpenArea()));
+  cube(1);
+}
+
+// -- ports -------------------------------------------------------------------
+// NO PORT MAY BE BLIND. Any wall material left standing inside a connector's mask is
+// a port you cannot plug into -- and it renders, exports and previews perfectly. The
+// finished panels are cut by the same allPortCuts() the parts use, so this measures
+// the real thing rather than a re-derivation of it.
+if (test_view == "ports-blind")
+  intersection() {
+    union() { shellPanel("base"); shellPanel("shell"); shellPanel("roof"); }
+    allPortProbes();
+  }
+
+// ...and the other direction: the walls must still EXIST. A cut that swallowed a
+// whole wall passes the check above perfectly.
+if (test_view == "wall-y-remains")
+  intersection() { shellPanel("shell"); wallSlab("-Y"); }
+if (test_view == "wall-x-remains")
+  intersection() { shellPanel("shell"); wallSlab("+X"); }
+
+// -- filter ------------------------------------------------------------------
+if (test_view == "part-filter") filterPart();
+
+// The lip must actually enter the opening. Modelled as the filter placed at the wall
+// and intersected with the SHELL: the flange sits proud and only the lip goes in, so
+// any collision here is a lip that is too fat to fit.
+if (test_view == "filter-vs-shell")
+  intersection() {
+    shellCut();
+    // rotate([90,0,0]) maps the filter's local +Z to world -Y, so the lip points INTO
+    // the opening. rotate([-90,0,0]) maps it to +Y and stands the lip off into open
+    // air with the plate buried in the wall -- which is what this first did, and the
+    // check caught as 2577mm3 of plate inside the shell.
+    translate([wall + interior_x / 2, outer[1] + filter_t,
+               wall + fan_z0 + fan_size / 2])
+      rotate([90, 0, 0])
+        filterPart();
+  }
+
+if (test_view == "filter-grille-area")
+  linear_extrude(1) ventField(fan_opening - 2 * filter_frame,
+                              fan_opening - 2 * filter_frame, filter_cell, filter_web);
+
+if (test_view == "report-filter") {
+  echo(str("filter_open_area = ", filterOpenArea()));
+  echo(str("filter_frac = ", filterOpenArea() / fan_throat_area));
+  echo(str("filter_plate = ", filterPlateSize()));
+  cube(1);
+}
 
 // -- reporting ---------------------------------------------------------------
 // Echoes the derived geometry so a human (or a test) reads the numbers the parts are

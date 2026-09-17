@@ -13,6 +13,9 @@
 // ============================================================================
 
 include <../config.scad>
+use <ports.scad>
+use <vents.scad>
+use <noctua-fan.scad>
 
 // Seam heights. The base takes the floor plus a short skirt so its joint is off the
 // floor line, and the roof takes the ceiling plus a matching skirt.
@@ -65,10 +68,50 @@ module claimVolume(which, grow = 0) {
 // these three tile the case exactly; growth belongs on bosses and tenons, which ask
 // for slightly more than they occupy so a neighbour's subtraction cannot leave a
 // zero-volume skin.
+// The case as it is actually built: the box, less every opening. CUT ONCE, THEN
+// CLAIM. Cutting each panel separately would let two panels disagree about where an
+// opening is; more subtly, it breaks the tiling check, which has to compare the parts
+// against the thing they are supposed to add up to -- and that is this, not the
+// uncut box.
+module shellCut() {
+  difference() {
+    shellSolid();
+    allPortCuts();
+    ventCuts();
+    fanCut();
+  }
+}
+
 module shellPanel(which) {
   render()
     intersection() {
-      shellSolid();
+      shellCut();
       claimVolume(which);
     }
+}
+
+// The intake: one rounded-square opening through the +Y wall, plus the fan's own four
+// screws. Positioned from fan_z0, which config.scad has already asserted spans the
+// whole board stack -- that assert is why this case has no plenum.
+module fanCut() {
+  translate([wall + interior_x / 2, outer[1] - wall - EPS, wall + fan_z0 + fan_size / 2]) {
+    fanBore(wall + 4 * EPS);
+    fanBoltPattern(wall + 4 * EPS, fan_screw_d);
+  }
+}
+
+// The two exhaust fields, swept through their walls. Positive pressure means these
+// are the only way air leaves, so their combined open area is the number
+// test-airflow.sh holds against the fan's throat.
+module ventCuts() {
+  // -Y wall, standing in XZ.
+  translate([wall + vent_margin, wall + EPS, wall + vent_margin])
+    rotate([90, 0, 0])
+      linear_extrude(wall + 4 * EPS)
+        ventField(vent_y_w, vent_y_h);
+
+  // Roof, lying in XY at the ceiling.
+  translate([wall + vent_margin, wall + vent_margin, outer[2] - wall - EPS])
+    linear_extrude(wall + 4 * EPS)
+      ventField(vent_roof_w, vent_roof_h);
 }

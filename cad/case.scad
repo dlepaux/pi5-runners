@@ -20,6 +20,7 @@ use <lib/shell.scad>
 use <lib/m2-hat-plus.scad>
 use <lib/noctua-fan.scad>
 use <lib/sbc-helpers.scad>
+use <parts/filter.scad>
 
 // ----------------------------------------------------------------------------
 // EXPLODE
@@ -65,6 +66,13 @@ module assemblyContents() {
     }
   }
 
+  // The filter, clipped onto the intake from outside.
+  if (show_filter)
+    translate([wall + interior_x / 2, outer[1] + filter_t + assembly_space,
+               wall + fan_z0 + fan_size / 2])
+      rotate([90, 0, 0])
+        color("DimGray") filterPart();
+
   // The fan, on the +Y wall, facing the stack. Its own frame is centred on the bore,
   // so it is placed by the bore's centre rather than by a corner.
   if (show_fan)
@@ -84,6 +92,8 @@ if (case_part == "assembly") {
     exploded("roof")  shellPanel("roof");
   }
   assemblyContents();
+} else if (case_part == "filter") {
+  filterPart();
 } else {
   // One printed part, at the origin, with no preview geometry anywhere near it.
   shellPanel(case_part);

@@ -30,7 +30,8 @@ one_body() {
 
 one_body "base is one body"  part-base
 one_body "shell is one body" part-shell
-one_body "roof is one body"  part-roof
+one_body "roof is one body"   part-roof
+one_body "filter is one body" part-filter
 
 # THE PARTS MUST NOT OVERLAP EACH OTHER. Three panels cut from one solid by three
 # claims is only correct if the claims are disjoint; overlapping claims render fine,

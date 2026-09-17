@@ -194,4 +194,63 @@ show_boards    = true;    // the three Pi 5s, from the framework (cooler include
 show_hats      = true;    // both M.2 HAT+ boards and their drives
 show_standoffs = true;    // the M2.5 stacks the boards sit on
 show_fan       = true;    // the NF-A8 mesh
+show_filter    = true;    // the intake filter, clipped on from outside
 show_case      = true;    // the printed parts themselves
+
+// ----------------------------------------------------------------------------
+// VENTS — the exhaust budget
+// ----------------------------------------------------------------------------
+// Positive pressure: one filtered intake, and everything else leaves through these.
+// The -Y field and the roof field feed ONE number, so either can be widened when
+// test-airflow.sh says the intake is choked.
+// TRIANGLES are the shape. They are the stiffest opening you can cut into a thin
+// wall -- a triangle cannot rack, so a field of them keeps a 3mm panel rigid at an
+// open-area fraction that would make a round-hole panel floppy.
+vent_pattern    = "triangles";   // "triangles" | "hex"
+vent_tri_cell   = 12;            // lattice edge length
+vent_tri_radius = 1.2;           // corner rounding on each hole
+vent_hex_cell   = 6;             // across-corners, only when vent_pattern == "hex"
+vent_wall       = 1.6;           // web left between neighbouring holes
+
+// The -Y wall carries three rows of USB-C/micro-HDMI cutouts as well, so its field is
+// inset from the wall rather than filling it.
+vent_margin = 8;    // solid border left around each field, for stiffness and for the
+                    // port cutouts the -Y wall also has to carry
+
+vent_y_w    = interior_x - 2 * vent_margin;
+vent_y_h    = interior_h - 2 * vent_margin;
+vent_roof_w = interior_x - 2 * vent_margin;
+vent_roof_h = interior_y - 2 * vent_margin;
+
+// ----------------------------------------------------------------------------
+// FAN OPENING AND FILTER
+// ----------------------------------------------------------------------------
+// A ROUNDED SQUARE, not a circle. The case is a square-cornered box and an 80mm disc
+// cut into its face fights that; a square opening on the same corner radius as the
+// shell reads as part of the design. It is also strictly more open area than the bore
+// it replaces, so it cannot be the restriction.
+fan_opening      = fan_size;     // across flats
+fan_opening_r    = 6;            // corner rounding
+fan_screw_d      = 4.3;          // M4 clearance for the fan's own screws
+
+// The filter press-fits into that opening from outside. Positive pressure means this
+// is the only way dust can get in, which is the only reason there is exactly one.
+filter_t         = 2;      // grille plate
+filter_frame     = 3;      // solid border around the grille
+filter_lip_h     = 3.5;    // how deep the lip reaches into the opening
+filter_lip_t     = 1.6;
+filter_clear     = 0.35;   // press fit
+filter_flange    = 4;      // how far the plate oversails the opening
+
+// The grille's own lattice, NOT the wall fields'. Measured: the wall's 12/1.6 leaves
+// the grille at 47% of the fan's throat, which makes the filter the restriction in
+// the whole intake. 16/1.4 gives 71%. A wall field is sized for stiffness across a
+// large panel; this one is sized to get out of the air's way.
+filter_cell      = 16;
+filter_web       = 1.4;
+
+// The printed part is a RETAINER, not the filtration. Like hexrack's, it holds bought
+// media against the intake; the media is what stops dust and what actually costs
+// pressure. So the floor here is "the grille is not the dominant restriction", not
+// "the grille is as open as the fan", which no printable web achieves.
+filter_min_open_fraction = 0.6;
