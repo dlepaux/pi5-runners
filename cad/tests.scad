@@ -22,6 +22,7 @@ use <lib/m2-hat-plus.scad>
 // and only a WARNING would say so.
 include <lib/placement.scad>
 use <lib/noctua-fan.scad>
+include <lib/shell.scad>
 
 test_view = "";
 
@@ -90,6 +91,30 @@ if (test_view == "report-fan-asset") {
            fan_asset_extent[2], " tol ", fan_asset_tol));
   cube(1);
 }
+
+// -- printed parts -----------------------------------------------------------
+if (test_view == "part-base")  shellPanel("base");
+if (test_view == "part-shell") shellPanel("shell");
+if (test_view == "part-roof")  shellPanel("roof");
+
+// Disjoint: no two parts may claim the same material.
+if (test_view == "part-base-vs-shell")
+  intersection() { shellPanel("base");  shellPanel("shell"); }
+if (test_view == "part-roof-vs-shell")
+  intersection() { shellPanel("roof");  shellPanel("shell"); }
+if (test_view == "part-base-vs-roof")
+  intersection() { shellPanel("base");  shellPanel("roof"); }
+
+// Complete: nothing of the shell may be left unclaimed. Disjointness alone would be
+// satisfied by three parts with a gap between them, which prints a case with a band
+// missing and passes every other check in the file.
+if (test_view == "shell-minus-parts")
+  difference() {
+    shellSolid();
+    shellPanel("base");
+    shellPanel("shell");
+    shellPanel("roof");
+  }
 
 // -- reporting ---------------------------------------------------------------
 // Echoes the derived geometry so a human (or a test) reads the numbers the parts are
