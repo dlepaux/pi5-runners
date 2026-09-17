@@ -1,0 +1,3 @@
+[submodule "cad/SBC_Model_Framework"]
+	path = cad/SBC_Model_Framework
+	url = https://github.com/dlepaux/SBC_Model_Framework.git

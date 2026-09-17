@@ -1,0 +1,51 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+
+# Generated STL files (CI builds these)
+public/stl
+public/manifest.json
+output
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.sw?
+
+# OS
+.DS_Store
+*.local
+
+# Test harness scratch (kept in-tree: snap-confined OpenSCAD cannot see /tmp)
+.test-work.*
+
+# Backups OpenSCAD and the asset scripts leave behind; originals are in git history.
+*.bak
+*.stl.orig
+
+# Scratch probes written by geometry audits; never committed.
+.probe-*.scad
+
+# Vendor CAD fetched by scripts/fetch-vendor-cad.sh. Noctua's licence forbids
+# redistribution, so these are downloaded on demand and never committed.
+.vendor-cad/
+
+# Browser-automation scratch
+.playwright-mcp/
+
+# Optional OpenCASCADE venv for scripts/fetch-vendor-cad.sh (~500MB, never committed).
+# No trailing slash: it is often a symlink to one built elsewhere, and `.venv/`
+# matches only a real directory.
+.venv
+
+# Local scratch
+stl/
