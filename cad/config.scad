@@ -71,3 +71,80 @@ bare_slot_h = pi5_pcb[2] + active_cooler_h;                                 // 1
 compact_standoff_h = hat_stack_h;
 assert(compact_standoff_h >= active_cooler_h + 3,
        "slot 2 standoff must clear the Active Cooler by at least 3mm");
+
+// ----------------------------------------------------------------------------
+// THE STACK — derived, never typed. Changing a standoff moves everything.
+// ----------------------------------------------------------------------------
+// Slot 0 carries the standard M.2 HAT+, slot 1 the Compact, slot 2 a bare Pi.
+slot_is_hat   = [true, true, false];
+
+base_standoff = 10;         // microSD clearance, keeps the fan's sweep off the floor,
+                            // and leaves the cable comb somewhere to live
+slot_standoff = [30, 30];   // PCB top -> next PCB underside, slots 0->1 and 1->2
+                            // 20+10 from stock M2.5 standoffs
+roof_air      = 8;
+
+// Occupied height of slot i, from its own PCB underside.
+function slot_h(i) = slot_is_hat[i] ? hat_slot_h : bare_slot_h;
+
+board_z = [
+  base_standoff,
+  base_standoff + pi5_pcb[2] + slot_standoff[0],
+  base_standoff + pi5_pcb[2] + slot_standoff[0] + pi5_pcb[2] + slot_standoff[1],
+];
+
+stack_top  = board_z[2] + slot_h(2);    // 85.95
+interior_h = stack_top + roof_air;      // 93.95
+
+// Both HAT slots need real air above the drive or the fan has no channel to push
+// through. 8.1mm at the declared standoffs; 4 is the floor below which the slot is a
+// fin gap rather than a duct.
+assert(slot_standoff[0] >= slot_h(0) - pi5_pcb[2] + 4,
+       "slot 0 standoff leaves no air channel above the drive");
+assert(slot_standoff[1] >= slot_h(1) - pi5_pcb[2] + 4,
+       "slot 1 standoff leaves no air channel above the drive");
+
+// ----------------------------------------------------------------------------
+// FAN — Noctua NF-A8 5V PWM
+// ----------------------------------------------------------------------------
+// 55.5 m3/h, 17.7 dB(A), 2.37 mmH2O, 0.75W at 5V, with a USB power adaptor cable in
+// the box -- so it feeds from a USB port inside the case, no GPIO wiring and no PSU.
+//
+// THE 80mm IS WHY THIS CASE HAS NO PLENUM. At 80 it spans the whole board stack and
+// presents a fresh-air front to all three slots at once. A 40mm fan needed a side
+// plenum and ~40mm of extra width to approximate that. The assert below is what keeps
+// that true: a slot that grows fails here instead of quietly leaving the top board
+// out of the airstream.
+fan_size       = 80;
+fan_depth      = 25;
+fan_bolt_pitch = 71.5;   // standard 80mm pattern. NOT the Compact HAT's 71.5 width --
+                         // they are the same number for unrelated reasons.
+fan_hub_d      = 30;
+
+fan_throat_area = PI * pow(fan_size, 2) / 4 - PI * pow(fan_hub_d, 2) / 4;   // ~4320
+
+fan_z0 = (interior_h - fan_size) / 2;
+assert(fan_z0 <= board_z[0],
+       "fan does not reach the bottom board -- the stack has outgrown an 80mm fan");
+assert(fan_z0 + fan_size >= stack_top,
+       "fan does not reach the top of the stack -- slot 2 is out of the airstream");
+
+// ----------------------------------------------------------------------------
+// ENVELOPE
+// ----------------------------------------------------------------------------
+side_clear    = 2;     // board edge (or its overhang) to the inner wall face
+port_overhang = 3;     // RJ45 and the USB-A stacks stand proud of the PCB's +X edge
+fan_plenum    = 8;     // fan's inner face to the HAT's +Y edge
+exhaust_gap   = 8;     // board's -Y edge to the -Y wall
+
+// X: the -X wall clears slot 1's Compact tab, NOT the board edge. The tab hangs
+// 6.5 off the PCB and the wall has to be behind it, which is 6.5mm of case that the
+// standard HAT+ alone would not have cost.
+board_x    = hat_compact_overhang_x + side_clear;
+interior_x = board_x + pi5_pcb[0] + port_overhang + side_clear;
+
+// Y: exhaust gap, board, the HAT's 0.5 overhang past the Pi's +Y edge, plenum, fan.
+board_y    = exhaust_gap;
+interior_y = board_y + pi5_pcb[1] + hat_overhang_y + fan_plenum + fan_depth;
+
+outer = [interior_x + 2 * wall, interior_y + 2 * wall, interior_h + 2 * wall];

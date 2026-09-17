@@ -158,12 +158,21 @@ the stack rather than typed.
 
 | Axis | Interior | Composition |
 |------|----------|-------------|
-| X | 95 | board 85 + port overhang 3 + clearance |
-| Y | 97 | fan 25 + plenum 8 + board 56 + exhaust gap 8 |
-| Z | 94 | base standoff 10 + stack 76 + roof air 8 |
+| X | 98.5 | Compact tab 6.5 + clearance 2 + board 85 + port overhang 3 + clearance 2 |
+| Y | 97.5 | exhaust gap 8 + board 56 + HAT overhang 0.5 + plenum 8 + fan 25 |
+| Z | 93.95 | base standoff 10 + stack 75.95 + roof air 8 |
 
-With 3 mm walls: **≈ 101 × 103 × 100 mm, ≈ 1.04 L**. Prints comfortably on the
+With 3 mm walls: **104.5 × 103.5 × 99.95 mm, 1.081 L**. Prints comfortably on the
 Bambu A1's 256³.
+
+> **Revised during implementation (2026-09-17).** X grew 95 → 98.5 and Y 97 → 97.5
+> after reading the product-brief drawings closely for Task 2. Two facts the spec had
+> wrong: the **M.2 HAT+ Compact is 6.5 mm wider than the standard**, and that
+> difference is a tab hanging off the board's −X edge where the PCIe ribbon lands, so
+> the −X wall clears the tab rather than the PCB; and a **56.5 mm HAT over a 56 mm Pi
+> overhangs its +Y edge by 0.5 mm**, so the fan plenum is measured from the HAT, not
+> the board. Volume 1.04 → 1.081 L. The Compact tab's exact position is not resolvable
+> from the drawing, so the envelope claims the worst case — see *Known unresolved*.
 
 ### Wall assignment
 
@@ -245,5 +254,10 @@ and absence.
 - **Slot order is a preference, not a constraint.** The Compact sits in the middle
   because both HAT slots are the same height; if the fallback above is ever needed,
   it moves to the top so its spot fan can mount in the roof.
+- **The M.2 HAT+ Compact's tab position is claimed, not measured.** The brief gives
+  65 across the header edge and 71.5 overall, but its drawing does not resolve where
+  the extra 6.5 mm sits. `hat_compact_overhang_x` claims all of it on −X, which is the
+  direction that costs case width, so the envelope is conservative rather than right.
+  Measuring the real part can only make the case smaller.
 - **The side-plenum layout is the documented thermal upgrade** if a real print runs
   hot: one interior wall and a fan relocation. It is deliberately not built now.
