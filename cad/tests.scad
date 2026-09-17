@@ -16,6 +16,7 @@
 // ============================================================================
 
 include <config.scad>
+use <lib/m2-hat-plus.scad>
 
 test_view = "";
 
@@ -33,3 +34,17 @@ module pi5Pcb() {
 // ----------------------------------------------------------------------------
 
 if (test_view == "pi5-envelope") pi5Pcb();
+
+// -- HATs --------------------------------------------------------------------
+if (test_view == "hat-standard-outline") linear_extrude(1) hatStandardOutline();
+if (test_view == "hat-compact-outline")  linear_extrude(1) hatCompactOutline();
+if (test_view == "hat-standard-solid")   hatStandardSolid();
+if (test_view == "hat-compact-solid")    hatCompactSolid();
+
+// The clearance that the whole slot-2 decision rests on. Both must be empty: the
+// standard HAT+ because Raspberry Pi ship it with a 16mm header for exactly this,
+// the Compact because we raise it onto the same 16mm on custom standoffs.
+if (test_view == "cooler-vs-hat-standard")
+  intersection() { coolerEnvelope(); hatStandardSolid(); }
+if (test_view == "cooler-vs-hat-compact")
+  intersection() { coolerEnvelope(); hatCompactSolid(); }
