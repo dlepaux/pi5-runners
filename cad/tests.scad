@@ -21,6 +21,7 @@ use <lib/m2-hat-plus.scad>
 // `use` imports modules and functions but NOT variables -- they would come back undef
 // and only a WARNING would say so.
 include <lib/placement.scad>
+use <lib/noctua-fan.scad>
 
 test_view = "";
 
@@ -65,6 +66,30 @@ if (test_view == "slot2-solid") slotSlab(2);
 if (test_view == "slot0-vs-slot1") intersection() { slotSlab(0); boardPcb(1); }
 if (test_view == "slot1-vs-slot2") intersection() { slotSlab(1); boardPcb(2); }
 if (test_view == "slot2-vs-roof")  intersection() { slotSlab(2); roofPlane(); }
+
+// -- fan asset ---------------------------------------------------------------
+if (test_view == "fan-mesh-raw") import(fan_asset, center = true);
+
+// fanVisualization80() marks its import with %, the background modifier, so it must
+// contribute NOTHING to a render. If it ever renders geometry, Noctua's mesh is
+// shipping inside every published STL.
+//
+// THE MARKER CUBE IS LOad-BEARING. Asserting "this renders empty" would pass just as
+// happily when the mesh file is missing, the path is wrong or the module is
+// misspelled -- the first version of this check did exactly that and reported a
+// green % while the import was silently failing. Rendering a known 10mm marker
+// ALONGSIDE it turns the assertion into "the marker and nothing else": a missing
+// file still gives 1000mm3, and a % swapped for # adds the fan on top of it.
+if (test_view == "fan-visualization-export") {
+  cube(10);
+  fanVisualization80();
+}
+
+if (test_view == "report-fan-asset") {
+  echo(str("declared = ", fan_asset_extent[0], " ", fan_asset_extent[1], " ",
+           fan_asset_extent[2], " tol ", fan_asset_tol));
+  cube(1);
+}
 
 // -- reporting ---------------------------------------------------------------
 // Echoes the derived geometry so a human (or a test) reads the numbers the parts are

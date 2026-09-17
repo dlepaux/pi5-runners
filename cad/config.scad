@@ -116,10 +116,29 @@ assert(slot_standoff[1] >= slot_h(1) - pi5_pcb[2] + 4,
 // that true: a slot that grows fails here instead of quietly leaving the top board
 // out of the airstream.
 fan_size       = 80;
-fan_depth      = 25;
 fan_bolt_pitch = 71.5;   // standard 80mm pattern. NOT the Compact HAT's 71.5 width --
                          // they are the same number for unrelated reasons.
 fan_hub_d      = 30;
+
+// 25.4, NOT the datasheet's 25. Measured off Noctua's own STEP: the AAO frame's
+// integrated anti-vibration pads stand 0.2 proud of each mounting face. A 25mm pocket
+// makes the fan sit on its pads instead of on the wall, or bows the wall. Model the
+// part, not a box around it.
+fan_depth          = 25.4;
+fan_depth_nominal  = 25;
+
+// The committed mesh. It is in its NATIVE orientation -- axis along Z -- and
+// lib/noctua-fan.scad rotates it into this project's -Y convention at import, which
+// is one line rather than a mesh-rewriting step in the generator.
+//
+// THE PATH IS RELATIVE TO cad/, NOT TO THE LIB THAT IMPORTS IT. import() resolves
+// against the MAIN document while include/use resolve against the calling file, so
+// "../assets/..." written from lib/'s point of view looks for <repo>/assets when
+// tests.scad is the document -- which is how this landed the first time. Only
+// cad/case.scad and cad/tests.scad ever import it and both live in cad/.
+fan_asset        = "assets/noctua/NF-A8.stl";
+fan_asset_extent = [80.1, 80.0, 25.4];   // native X, Y, Z as generated
+fan_asset_tol    = 0.6;                  // tessellation slack; the mesh is not nominal
 
 fan_throat_area = PI * pow(fan_size, 2) / 4 - PI * pow(fan_hub_d, 2) / 4;   // ~4320
 
