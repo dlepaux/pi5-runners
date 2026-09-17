@@ -130,6 +130,24 @@ without error and exports a clean single body.
 13. **An envelope carries the question it was built for.** Ask it a different question
     and you need a different envelope. A deliberate over-estimate is correct for "does
     this touch the shell" and lies about everything finer.
+14. **A check that asserts emptiness passes when the thing under test is missing.** The
+    `%`-modifier check in `test-assets.sh` was written as "this view renders nothing",
+    which is the correct expectation — and it reported green while the mesh import was
+    silently failing on a bad path, because a missing file also renders nothing. It now
+    renders a 10 mm marker cube *beside* the fan and brackets the volume on both sides:
+    the floor catches a broken view, the ceiling catches the mesh leaking into the
+    export. **Anywhere "pass" and "broken" produce the same output, add a witness.**
+15. **OpenCASCADE's bounding box over an un-tessellated shape is not a measurement.**
+    `step-to-stl.py --list` reports the NF-A8's frame as 88.38 mm across; the fan is
+    80. OCC computes a conservative box for curved faces before triangulation. Mesh
+    first, then measure the mesh — which is what `generate-fan-asset.sh` prints.
+16. **Do not assert a belief about a part as if it were a property of the file.**
+    `test-assets.sh` first demanded the fan mesh be one body. A fan is legitimately
+    eleven — frame, eight corner pads, impeller, hub — so the check was encoding a
+    wrong assumption, and "fixing" the asset to satisfy it would have been the real bug.
+17. **A datasheet dimension is not the part.** The NF-A8 is 80 × 80 × 25 on paper and
+    80.1 × 80.0 × **25.4** in Noctua's own model: the AAO frame's anti-vibration pads
+    stand 0.2 proud of each mounting face. A 25 mm pocket sits the fan on its pads.
 
 ## Companion
 
