@@ -1,7 +1,7 @@
 # pi5-runners — 3D-Printable Tower for Three Pi 5 CI Runners
 
 Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Actions
-runners. **≈ 101 × 103 × 100 mm, ≈ 1.04 L**, four printed parts, one 80 mm Noctua.
+runners. **104.5 × 103.9 × 99.95 mm, 1.085 L**, four printed parts, one 80 mm Noctua.
 
 ## Project intent
 
@@ -35,8 +35,10 @@ decision below follows from sustained load rather than from idle.
   side plenum and ~40 mm of extra width to approximate that. `config.scad` asserts the
   fan's swept height covers the stack; if a slot grows, that assert is what fails
 - **The fan wall is +Y, the Pi's GPIO edge.** With the HATs fitted nothing plugs into
-  it and the HAT PCBs (56.5) sit flush with the Pi's 56, so the wall is free. It is
-  also the wall opposite the USB-C inlet
+  it, so the wall is free. It is also the wall opposite the USB-C inlet. Note the HAT
+  PCBs are 56.5 against the Pi's 56 and **overhang that edge by 0.5** — holes 3.5 from
+  the near edge and 4.0 from the far one — so the plenum is measured from the HAT, not
+  the board
 - **Positive pressure.** One filtered intake, exhaust through the −Y wall and the
   roof. Dust can only enter where the filter is, which is the only reason there is
   exactly one filter
@@ -44,8 +46,9 @@ decision below follows from sustained load rather than from idle.
   Two 40 mm fans put a 28 °C room at exactly 50 °C — the ceiling, no margin. The
   NF-A8 puts a 25 °C room at ~29 °C
 - **Six cables leave the box** — 3× Ethernet on +X, 3× USB-C on −Y — on two adjacent
-  walls, because that is where the Pi puts them. The base carries a cable comb so the
-  bundle cannot lever a 1 L case over
+  walls, because that is where the Pi puts them. **There is deliberately no cable
+  comb**: the ports sit 13–30 mm up and a comb on a 9 mm base cannot reach them. If
+  the bundle turns out to lever the case over, the answer is weighted feet
 
 ### The framework has no HAT models
 
