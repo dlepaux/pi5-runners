@@ -1,8 +1,8 @@
 # pi5-runners
 
 A 3D-printable tower for three Raspberry Pi 5s running as self-hosted GitHub Actions
-runners. Roughly **101 × 103 × 100 mm**, about **1 litre**, four printed parts, cooled
-by a single 80 mm Noctua.
+runners. **104.5 × 103.9 × 99.95 mm**, **1.085 L**, four printed parts, cooled by a
+single 80 mm Noctua.
 
 ## What it holds
 
@@ -44,19 +44,46 @@ exactly one filter.
 
 ## Printing
 
-Four parts, none needing support: `base`, `shell`, `roof`, `filter`. PETG. Everything
-fits a 256 mm bed with room to spare.
+Four parts, none needing support. PETG.
+
+| Part | Size |
+|------|------|
+| `base` | 104.5 × 103.9 × 17.0 mm |
+| `shell` | 104.5 × 103.9 × 82.0 mm |
+| `roof` | 104.5 × 103.9 × 22.0 mm |
+| `filter` | 88.0 × 88.0 × 5.5 mm |
 
 ```bash
-./scripts/generate-stl.sh --local
+./scripts/generate-stl.sh          # all four into stl/
+./scripts/generate-stl.sh shell    # just one
 ```
+
+The vents are a triangular lattice: a triangle cannot rack, so the field keeps a 3 mm
+wall stiff at an open-area fraction that would leave round holes floppy. The intake is
+a rounded square on the shell's own corner radius — the fan's throat is its impeller's
+swept annulus whatever shape the hole is, so the square costs no airflow.
+
+The filter is a **retainer for bought media**, not the filtration itself. Its grille is
+71% of the fan's throat, so the media is the restriction rather than the plastic.
 
 ## Development
 
 ```bash
 git submodule update --init --recursive   # SBC_Model_Framework
-./scripts/test.sh                         # every suite
+./scripts/test.sh                         # all five suites, 57 checks
 ```
+
+| Suite | Holds |
+|-------|-------|
+| `test-board-assets.sh` | the declared Pi 5 geometry still matches the framework |
+| `test-assets.sh` | the vendor fan mesh is what `config.scad` says it is |
+| `test-fit.sh` | nothing collides, everything reaches |
+| `test-parts.sh` | one body each, the parts tile the shell, everything fits the bed |
+| `test-airflow.sh` | the exhaust does not choke the intake, no port is blind |
+
+Open `cad/case.scad` for the assembly. `case_part` picks one part, `assembly_space`
+pulls the case apart along Z, and the `show_*` flags toggle the boards, HATs,
+standoffs, fan and filter.
 
 Requires OpenSCAD nightly with the Manifold backend. Every dimension lives in
 `cad/config.scad`.

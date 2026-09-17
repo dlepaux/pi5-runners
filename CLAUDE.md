@@ -81,10 +81,13 @@ modifier and is still included in the export — it does not do this job.
 ## Build and test
 
 ```bash
-./scripts/test.sh                 # every suite — what CI runs
-./scripts/test-board-assets.sh    # declared Pi 5 constants still match the framework
-./scripts/generate-stl.sh --local # the four printed parts + showcase
+./scripts/test.sh                 # all five suites, 57 checks — what CI runs
+./scripts/generate-stl.sh         # base, shell, roof, filter into stl/
+./scripts/generate-fan-asset.sh   # regenerate the NF-A8 mesh (networked, needs uv)
 ```
+
+Open `cad/case.scad` to look at it: `case_part` selects a part, `assembly_space`
+explodes along Z, `show_*` toggles the preview content.
 
 ## OpenSCAD traps that have actually cost time
 

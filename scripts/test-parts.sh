@@ -46,6 +46,25 @@ expect_empty "base does not overlap the roof"  part-base-vs-roof
 # catches a band of the case that no part owns.
 expect_empty "the three parts tile the whole shell" shell-minus-parts
 
+# EVERY PART MUST FIT THE BED. Cheap to check and expensive to discover: a part that
+# is 4mm too tall is found at slicing time, after the design has settled around it.
+BED=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
+      -D 'test_view="report-geometry"' cad/tests.scad 2>&1 \
+    | sed -n 's/.*bed = \[\([0-9]*\), \([0-9]*\), \([0-9]*\)\].*/\1 \2 \3/p')
+read -r BX BY BZ <<<"$BED"
+for view in part-base part-shell part-roof part-filter; do
+    out="$WORK/$view.stl"
+    [ -f "$out" ] || render "$view" "$out"
+    read -r DX DY DZ _ <<<"$(python3 scripts/lib/stl-stats.py "$out" --bboxes | head -1)"
+    if awk -v dx="$DX" -v dy="$DY" -v dz="$DZ" -v bx="$BX" -v by="$BY" -v bz="$BZ" \
+           'BEGIN { exit !(dx <= bx && dy <= by && dz <= bz) }'; then
+        pass "$(printf '%s fits the bed (%.1f x %.1f x %.1f)' "${view#part-}" "$DX" "$DY" "$DZ")"
+    else
+        fail "$(printf '%s is %.1f x %.1f x %.1f, bed is %s x %s x %s' \
+                "${view#part-}" "$DX" "$DY" "$DZ" "$BX" "$BY" "$BZ")"
+    fi
+done
+
 # THE SHOWCASE MUST RENDER CLEAN. It is the only file that touches the framework's
 # board model and the vendor fan mesh, so it is the only place their path assumptions
 # can bite -- and both announce themselves as WARNING rather than ERROR, which is

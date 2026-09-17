@@ -221,5 +221,6 @@ if (test_view == "report-geometry") {
   echo(str("fan_span_z = ", fan_z0, " .. ", fan_z0 + fan_size));
   echo(str("fan_throat_area = ", fan_throat_area));
   echo(str("board0_underside = ", wall + board_z[0]));
+  echo(str("bed = ", bed));
   cube(1);
 }

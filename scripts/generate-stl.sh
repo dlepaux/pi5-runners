@@ -1,0 +1,51 @@
+#!/bin/bash
+# ============================================================================
+# Render every printable part
+# ============================================================================
+#   ./scripts/generate-stl.sh            # everything into stl/
+#   ./scripts/generate-stl.sh base       # just one
+#
+# Each part is rendered from cad/case.scad with case_part set, which is the SAME
+# entry point the assembly uses -- so a part cannot drift from how it is shown.
+# ============================================================================
+set -uo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+OPENSCAD="${OPENSCAD:-}"
+if [ -z "$OPENSCAD" ]; then
+    for c in openscad-nightly openscad /Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD; do
+        if command -v "$c" >/dev/null 2>&1 || [ -x "$c" ]; then OPENSCAD="$c"; break; fi
+    done
+fi
+[ -n "$OPENSCAD" ] || { echo "❌ OpenSCAD not found. Set OPENSCAD=/path/to/openscad"; exit 1; }
+
+BACKEND=""
+"$OPENSCAD" --help 2>&1 | grep -q "\-\-backend" && BACKEND="--backend=Manifold"
+
+PARTS=("$@")
+[ ${#PARTS[@]} -eq 0 ] && PARTS=(base shell roof filter)
+
+mkdir -p stl
+FAILED=""
+for part in "${PARTS[@]}"; do
+    out="stl/$part.stl"
+    printf "  %-8s " "$part"
+    # binstl ALWAYS. The ASCII default writes a header that every downstream reader
+    # parses as a triangle count in the hundreds of millions.
+    # shellcheck disable=SC2086
+    if "$OPENSCAD" $BACKEND --export-format=binstl -o "$out" \
+           -D "case_part=\"$part\"" cad/case.scad >"$out.log" 2>&1 \
+       && ! grep -qE "ERROR:|WARNING:" "$out.log"; then
+        printf "%s\n" "$(python3 scripts/lib/stl-stats.py "$out" --bboxes | head -1 \
+                          | awk '{printf "%.1f x %.1f x %.1f mm", $1, $2, $3}')"
+        rm -f "$out.log"
+    else
+        echo "FAILED"
+        grep -E "ERROR:|WARNING:" "$out.log" | head -3 | sed 's/^/       /'
+        FAILED="$FAILED $part"
+    fi
+done
+
+echo ""
+[ -z "$FAILED" ] && { echo "✅ stl/ written"; exit 0; }
+echo "❌ failed:$FAILED"; exit 1

@@ -175,6 +175,9 @@ interior_y = board_y + pi5_pcb[1] + hat_overhang_y + fan_plenum + fan_depth;
 
 outer = [interior_x + 2 * wall, interior_y + 2 * wall, interior_h + 2 * wall];
 
+// Bambu A1. Every printed part has to fit this, and the shell is the tall one.
+bed = [256, 256, 256];
+
 // ----------------------------------------------------------------------------
 // ASSEMBLY / PREVIEW
 // ----------------------------------------------------------------------------
