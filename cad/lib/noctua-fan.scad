@@ -1,5 +1,5 @@
 // ============================================================================
-// NOCTUA NF-A4x20 5V PWM — two, stacked
+// NOCTUA NF-A4x10 5V — two, stacked
 // ============================================================================
 // Two things live here and they do different jobs.
 //
@@ -70,8 +70,8 @@ module fanEnvelope() {
 // Do NOT use # — that is the debug modifier and it IS included in the export.
 //
 // This model's native axis is +Y. rotate([0,0,-90]) is Rz(-90), which sends +Y to +X:
-// the column sits on the front wall and pushes toward the rear. The NF-A8 it replaced
-// had its axis on Z and needed a different rotation, which is why this is stated here
+// the column sits on the front wall and pushes toward the rear. Noctua's STEPs do not
+// agree on an axis -- the NF-A8 had its axis on Z -- which is why this is stated here
 // rather than assumed. Centred on the column; each fan offset by its own index.
 module fanVisualization() {
   for (k = [0 : fan_count - 1])

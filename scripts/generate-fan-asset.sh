@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# Regenerate cad/assets/noctua/NF-A4x20.stl from Noctua's published STEP
+# Regenerate cad/assets/noctua/NF-A4x10.stl from Noctua's published STEP
 # ============================================================================
 # Networked, and needs OpenCASCADE — a ~500MB install that nothing else in this
 # project requires. The OUTPUT IS COMMITTED, so you only run this when the vendor
@@ -19,13 +19,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-URL="https://cdn.noctua.at/media/NF-A4x20_Public-CAD.zip"
+URL="https://cdn.noctua.at/media/NF-A4x10_Public-CAD.zip"
 VENDOR=".vendor-cad"
-OUT="cad/assets/noctua/NF-A4x20.stl"
+OUT="cad/assets/noctua/NF-A4x10.stl"
 
 # DEFLECTION is the max distance the tessellation may stray from the true surface, in
 # mm. This mesh is a showcase prop, never a boolean, so it is tuned for file size
-# rather than fidelity. 0.2 gives the 40mm fan ~58k triangles and 2.9MB.
+# rather than fidelity. 0.2 gives the NF-A4x10 ~29k triangles and 1.4MB.
 DEFLECTION="${DEFLECTION:-0.2}"
 
 command -v uv >/dev/null 2>&1 || { echo "❌ uv not found — https://docs.astral.sh/uv/"; exit 1; }
@@ -33,16 +33,16 @@ command -v uv >/dev/null 2>&1 || { echo "❌ uv not found — https://docs.astra
 mkdir -p "$VENDOR" cad/assets/noctua
 
 echo "→ downloading $URL"
-curl -fsSL --max-time 180 -o "$VENDOR/NF-A4x20.zip" "$URL" || {
+curl -fsSL --max-time 180 -o "$VENDOR/NF-A4x10.zip" "$URL" || {
     echo "❌ download failed. Noctua move these; check"
     echo "   https://www.noctua.at/en/support/downloads for the current link"
     exit 1
 }
 
 echo "→ unpacking"
-unzip -oq "$VENDOR/NF-A4x20.zip" -d "$VENDOR/NF-A4x20"
+unzip -oq "$VENDOR/NF-A4x10.zip" -d "$VENDOR/NF-A4x10"
 
-STEP=$(find "$VENDOR/NF-A4x20" -iname '*.stp' -o -iname '*.step' | head -1)
+STEP=$(find "$VENDOR/NF-A4x10" -iname '*.stp' -o -iname '*.step' | head -1)
 [ -n "$STEP" ] || { echo "❌ no STEP file inside the archive"; exit 1; }
 
 echo "→ tessellating at ${DEFLECTION}mm (OpenCASCADE via uv, first run downloads ~500MB)"
@@ -55,7 +55,7 @@ echo "→ measuring the MESH, not the BRep"
 # the NF-A8's frame as 88.38mm across. The mesh is the ground truth.
 #
 # And the WHOLE mesh, not --bboxes' first line, which is only the largest body: for
-# this fan that is the frame at 20.1 deep, while the hub label takes the mesh to 21.1.
+# this fan that is the frame at 11.0 deep, while the hub label takes the mesh to 12.0.
 python3 - "$OUT" <<'PY'
 import struct, sys
 lo = [1e9] * 3; hi = [-1e9] * 3

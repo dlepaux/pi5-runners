@@ -11,22 +11,22 @@
 
 echo "Mesh assets"
 
-MESH="cad/assets/noctua/NF-A4x20.stl"
+MESH="cad/assets/noctua/NF-A4x10.stl"
 
 if [ ! -f "$MESH" ]; then
-    fail "NF-A4x20 mesh missing — run ./scripts/generate-fan-asset.sh"
+    fail "NF-A4x10 mesh missing — run ./scripts/generate-fan-asset.sh"
     report "asset checks"
 fi
-pass "NF-A4x20 mesh present"
+pass "NF-A4x10 mesh present"
 
 # NOT a one-body check. A fan is legitimately many solids — frame, eight corner pads,
 # impeller, hub — and demanding one body here would be asserting a wrong belief about
 # the part rather than a property worth holding.
 N=$(comps "$MESH")
 if [ "$N" -ge 1 ] 2>/dev/null; then
-    pass "NF-A4x20 mesh has geometry ($N bodies)"
+    pass "NF-A4x10 mesh has geometry ($N bodies)"
 else
-    fail "NF-A4x20 mesh has no bodies"
+    fail "NF-A4x10 mesh has no bodies"
 fi
 
 # Extents, measured off the MESH. step-to-stl.py --list cannot answer this: OpenCASCADE's
@@ -34,7 +34,7 @@ fi
 # call this 80mm fan 88.38mm across. A measurement tool that cannot see something must
 # not be trusted to answer.
 # The WHOLE mesh, not its largest body. --bboxes lists bodies, and for this fan the
-# largest (the frame) is 20.1 deep while the mesh is 21.1 -- the hub label stands
+# largest (the frame) is 11.0 deep while the mesh is 12.0 -- the hub label stands
 # proud. Reading the first body instead of the union under-sizes the fan by a
 # millimetre, silently. It happened to be harmless on the NF-A8, which is luck.
 read -r X0 Y0 Z0 X1 Y1 Z1 <<<"$(bounds "$MESH")"

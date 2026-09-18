@@ -1,22 +1,23 @@
 # Vendor fan geometry
 
-`NF-A4x20.stl` is derived from Noctua's official public CAD, downloaded from:
+`NF-A4x10.stl` is derived from Noctua's official public CAD, downloaded from:
 
-- <https://cdn.noctua.at/media/NF-A4x20_Public-CAD.zip>
+- <https://cdn.noctua.at/media/NF-A4x10_Public-CAD.zip>
 
 listed on <https://www.noctua.at/en/support/downloads>. `scripts/generate-fan-asset.sh`
 regenerates it; the STEP archive itself lands in `.vendor-cad/`, which is gitignored.
 
-It is every solid in the STEP file — frame, corner pads, impeller, hub, label: 12
-bodies, 58k triangles at 0.2 mm deflection — left in Noctua's **native orientation**,
-axis along **Y** (the NF-A8 this replaced had its axis on Z). `cad/lib/noctua-fan.scad`
-rotates it into this project's +X convention at import, which keeps the file
-byte-identical to what they published. Two copies are drawn, one per fan.
+It is every solid in the STEP file — frame, corner pads, impeller, hub, label: 11
+bodies, 29k triangles at 0.2 mm deflection — left in Noctua's **native orientation**,
+axis along **Y**. `cad/lib/noctua-fan.scad` rotates it into this project's +X
+convention at import, which keeps the file byte-identical to what they published. Two
+copies are drawn, one per fan.
 
-The whole mesh measures **40.0 × 21.1 × 40.0**. The frame alone is 20.1 deep; the hub
-label stands 1 mm proud of it, and `fan_depth` uses the full 21.1. Measure the UNION —
-the first line of `stl-stats.py --bboxes` is only the largest body — and never take
-extents from `step-to-stl.py --list`, whose un-tessellated box over-estimates curves.
+The whole mesh measures **40.0 × 12.0 × 40.0**, against a datasheet 10 mm depth: the
+frame is 11.0 (anti-vibration pads 0.5 proud each side) and the hub label stands 1 mm
+beyond that. `fan_depth` uses 12.0. Measure the UNION — the first line of
+`stl-stats.py --bboxes` is only the largest body — and never take extents from
+`step-to-stl.py --list`, whose un-tessellated box over-estimates curves.
 
 ## What it is for
 
@@ -47,7 +48,7 @@ Noctua's own README, shipped inside the archive:
 
 So: mounting dimensions and outer envelope are trustworthy, which is exactly what this
 case needs from it. The impeller is not. **The airflow figures in this project come
-from the NF-A4x20 datasheet, never from this mesh.**
+from the NF-A4x10 datasheet, never from this mesh.**
 
 ## Licence
 

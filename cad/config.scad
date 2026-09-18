@@ -112,43 +112,40 @@ assert(slot_standoff[1] >= slot_h(1) - pi5_pcb[2] + 4,
        "slot 1 standoff leaves no air channel above the drive");
 
 // ----------------------------------------------------------------------------
-// FANS — two Noctua NF-A4x20 5V PWM, stacked into one 40 x 80 column
+// FANS — two Noctua NF-A4x10 5V, stacked into one 40 x 80 column
 // ----------------------------------------------------------------------------
-// Each: 5000 RPM, 9.4 m3/h, 14.9 dB(A), 2.26 mmH2O -- from the NF-A4x20 PWM (12V)
-// datasheet; the 5V PWM variant is rated the same, as the NF-A8 5V PWM was to its
-// 12V twin. CONFIRM against the 5V PWM sheet before ordering.
+// Each: 4500 RPM, 8.2 m3/h, 17.9 dB(A), 1.78 mmH2O, 0.25W at 5V, 3-pin -- from Noctua's
+// NF-A4x10 5V infosheet. Owned, so nothing to buy.
 //
-// WHY TWO 40s AND NOT ONE 80. The front wall carries the fan, so with an 80 it had to
-// be 86 wide inside while the board needs 60.5 -- the fan, not the boards, set the
-// case's width. Two 40s stacked are a column 40 wide and 80 tall: the same height as
-// the 80, so they still face all three slots, but narrow enough that the BOARD sets
-// the width again. 1.25L -> ~0.87L.
+// 8.2 m3/h, NOT 4.85. An earlier revision of this project used 4.85, which is the
+// fan's CFM figure read as m3/h, and it made every NF-A4x10 number ~40% too
+// pessimistic -- including the one that ruled these fans out and sent the design to
+// an NF-A8. Corrected: two of them put case air ~14.6K over the room, ~10K under the
+// M.2 HAT's 50C ceiling in a 25C room. The NF-A4x20 pair would buy ~2K more.
 //
-// The cost is airflow, and it was chosen with the numbers in front of it: 2 x 9.4
-// against 55.5 m3/h puts case air ~12.7K over the room instead of ~4.3K -- ~12K under
-// the M.2 HAT's 50C ceiling in a 25C room rather than ~21K. The Active Coolers still do
-// the per-chip work; these fans only replace the air around them.
+// NO USB CABLE IN THE BOX (3:2-pin adaptor, OmniJoin set, extension). Both fans take
+// 5V from a Pi's GPIO header -- pins 2 or 4 for 5V, 6 for ground -- at 0.25W each.
 //
-// THE COLUMN MUST FACE THE WHOLE STACK. That is what lets this case have no plenum,
-// and the asserts below are what keep it true.
+// WHY A COLUMN OF TWO 40s. The front wall carries the fans, so it must be as wide as
+// the fan. An 80 made the case 92 wide around a 56 board; a 40 x 80 column is the same
+// HEIGHT, so it still faces all three slots, but narrow enough that the board sets the
+// width. The asserts below keep the column facing the whole stack.
 fan_size       = 40;
 fan_count      = 2;
 fan_col_h      = fan_size * fan_count;   // 80: the column, and what faces the stack
 fan_bolt_pitch = 32;                     // standard 40mm pattern
 
-// MEASURED off Noctua's STEP, not the datasheet. The frame is 20.1 deep, but one face
-// carries a 20mm, 0.5mm disc -- the hub label -- that stands proud to an overall 21.1.
-// Clearance uses the envelope. The same disc gives the hub diameter.
-fan_depth          = 21.1;
-fan_depth_nominal  = 20;
-fan_hub_d          = 20;
+// MEASURED off Noctua's STEP, not the datasheet's 10. The frame is 11.0 deep -- its
+// anti-vibration pads stand 0.5 proud of each face -- and a 16mm, 0.5mm hub label takes
+// the whole mesh to 12.0. Clearance uses the envelope. The label gives the hub size.
+fan_depth          = 12.0;
+fan_depth_nominal  = 10;
+fan_hub_d          = 16;
 
-// The committed mesh, in its NATIVE orientation -- axis along Y for this model, where
-// the NF-A8's was along Z, which is why the rotation lives beside the import rather
-// than being assumed. Path relative to cad/: import() resolves against the MAIN
-// document, and only case.scad and tests.scad import it.
-fan_asset        = "assets/noctua/NF-A4x20.stl";
-fan_asset_extent = [40.0, 21.1, 40.0];   // native X, Y (axis), Z -- whole mesh
+// The committed mesh, NATIVE orientation -- axis along Y. Path relative to cad/:
+// import() resolves against the MAIN document.
+fan_asset        = "assets/noctua/NF-A4x10.stl";
+fan_asset_extent = [40.0, 12.0, 40.0];   // native X, Y (axis), Z -- whole mesh
 fan_asset_tol    = 0.6;
 
 // The fans' combined throat: each bore less its hub.
@@ -213,14 +210,14 @@ case_part = "assembly";
 // THE EXPLODE LIVES ONLY IN case.scad. placement.scad never reads assembly_space, so
 // no fit test can accidentally measure an exploded position -- the checks are
 // structurally incapable of seeing it rather than merely defaulting to 0.
-assembly_space = 0;
+assembly_space = 50;
 
 // Preview geometry. None of it is ever exported: generate-stl.sh renders the parts
 // by name, and the showcase marks vendor geometry with %.
 show_boards    = true;    // the three Pi 5s, from the framework (cooler included)
 show_hats      = true;    // both M.2 HAT+ boards and their drives
 show_standoffs = true;    // the M2.5 stacks the boards sit on
-show_fan       = true;    // the two NF-A4x20 meshes
+show_fan       = true;    // the two NF-A4x10 meshes
 show_filter    = true;    // the intake filter, clipped on from outside
 show_case      = true;    // the printed parts themselves
 
