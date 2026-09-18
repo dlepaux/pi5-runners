@@ -1,8 +1,8 @@
 # pi5-runners
 
 A 3D-printable tower for three Raspberry Pi 5s running as self-hosted GitHub Actions
-runners. **104.5 × 103.9 × 99.95 mm**, **1.085 L**, four printed parts, cooled by a
-single 80 mm Noctua.
+runners. **135.9 × 92 × 99.95 mm**, **1.25 L**, four printed parts, cooled by a single
+80 mm Noctua.
 
 ## What it holds
 
@@ -35,9 +35,19 @@ ducting, and about 40 mm of case width that never had to exist.
 
 ## Airflow
 
-One filtered 80 mm intake on the GPIO-side wall — the one wall nothing plugs into
-once the HATs are fitted, and the one opposite the USB-C inlets. Air crosses all three
-boards and leaves through a vent field on the port wall and a second in the roof.
+Front to back, along the boards' full length. One filtered 80 mm intake on the front —
+the short edge opposite the USB and Ethernet ports — pushes air over the SoCs and the
+NVMe drives, and it leaves at the rear where the ports are and where the Ethernet PHY
+runs hottest.
+
+The exhaust is the rear wall plus the rear portion of both side walls. Never the top:
+a vented lid drops dust straight onto the boards. The rear alone was tried and measured
+— once the port clusters are kept clear it reaches only 57% of the fan's throat, and
+even venting the entire rear wall reaches 99.7% — so the pattern wraps round onto the
+sides. Total exhaust is **147% of the fan's throat**.
+
+Around each board's port cluster the vent pattern stops at a rounded **exclusion zone**,
+the same idea as hexrack's back face, so every connector sits in clean solid material.
 
 Positive pressure, so dust can only enter where the filter is. That is why there is
 exactly one filter.
@@ -48,9 +58,9 @@ Four parts, none needing support. PETG.
 
 | Part | Size |
 |------|------|
-| `base` | 104.5 × 103.9 × 17.0 mm |
-| `shell` | 104.5 × 103.9 × 82.0 mm |
-| `roof` | 104.5 × 103.9 × 22.0 mm |
+| `base` | 135.9 × 92.0 × 17.0 mm |
+| `shell` | 135.9 × 92.0 × 90.0 mm |
+| `roof` | 135.9 × 92.0 × 22.0 mm |
 | `filter` | 88.0 × 88.0 × 5.5 mm |
 
 ```bash
@@ -58,19 +68,20 @@ Four parts, none needing support. PETG.
 ./scripts/generate-stl.sh shell    # just one
 ```
 
-The vents are a triangular lattice: a triangle cannot rack, so the field keeps a 3 mm
-wall stiff at an open-area fraction that would leave round holes floppy. The intake is
+The vents use **hexrack's triangle lattice**, unchanged, so the two projects read as one
+family. A triangle cannot rack, so the field keeps a 3 mm wall stiff at an open-area
+fraction that would leave round holes floppy. The intake is
 a rounded square on the shell's own corner radius — the fan's throat is its impeller's
 swept annulus whatever shape the hole is, so the square costs no airflow.
 
 The filter is a **retainer for bought media**, not the filtration itself. Its grille is
-71% of the fan's throat, so the media is the restriction rather than the plastic.
+76% of the fan's throat, so the media is the restriction rather than the plastic.
 
 ## Development
 
 ```bash
 git submodule update --init --recursive   # SBC_Model_Framework
-./scripts/test.sh                         # all five suites, 57 checks
+./scripts/test.sh                         # all five suites, 59 checks
 ```
 
 | Suite | Holds |
@@ -79,7 +90,7 @@ git submodule update --init --recursive   # SBC_Model_Framework
 | `test-assets.sh` | the vendor fan mesh is what `config.scad` says it is |
 | `test-fit.sh` | nothing collides, everything reaches |
 | `test-parts.sh` | one body each, the parts tile the shell, everything fits the bed |
-| `test-airflow.sh` | the exhaust does not choke the intake, no port is blind |
+| `test-airflow.sh` | the exhaust does not choke the intake, no port is blind, no hole exists that should not |
 
 Open `cad/case.scad` for the assembly. `case_part` picks one part, `assembly_space`
 pulls the case apart along Z, and the `show_*` flags toggle the boards, HATs,

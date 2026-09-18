@@ -16,8 +16,18 @@
 //
 // 2. SWEEPING DRAGS THE OTHER WALLS' CONNECTORS WITH IT. The mask is one object
 //    containing every side connector, so sweeping it toward -Y also drags the RJ45 and
-//    the USB stacks toward -Y, cutting slots where there should be wall. Each sweep is
-//    therefore INTERSECTED WITH THE ONE WALL IT IS FOR, which confines it.
+//    the USB stacks toward -Y.
+//
+//    THIS FILE USED TO CLAIM THAT INTERSECTING WITH THE WALL FIXED THAT. IT DID NOT.
+//    Intersecting with the -Y wall only confines the sweep to the wall's THICKNESS; the
+//    wall spans the case's whole length, so a dragged RJ45 still lands in it -- at its
+//    own x, which is the rear end of the -Y wall. Three spurious notches, one per board,
+//    cut into the corner of the side wall. Every check passed, because every check
+//    asked whether ports were BLOCKED and none asked whether there were holes that
+//    should not exist. A render found it.
+//
+//    So each wall now sweeps ONLY ITS OWN connectors -- maskBeyond() isolates them by
+//    which way they stick out -- and the dragged ones never exist.
 //
 // The heatsink and GPIO masks are disabled: they are top-facing, 40mm tall, and belong
 // to a case with an opening over the cooler. Leaving them in takes the mask from 7
@@ -37,10 +47,13 @@ module ioMaskSides() {
       enablemask = true);
 }
 
-// The mask, smeared along `dir` so it certainly passes through the wall.
-module ioMaskSwept(dir) {
+// One wall's connectors, smeared along that wall's normal so they certainly pass
+// through it. maskBeyond() is defined below with the probes; OpenSCAD resolves module
+// names across the file, so the order does not matter here.
+module ioMaskSwept(which) {
+  dir = which == "-Y" ? [0, -1, 0] : [1, 0, 0];
   for (d = [0 : port_sweep_step : port_sweep_dist])
-    translate(dir * d) ioMaskSides();
+    translate(dir * d) maskBeyond(which);
 }
 
 // The volume of one wall, in the case frame. Grown on the four in-plane edges so an
@@ -54,13 +67,19 @@ module wallSlab(which) {
       cube([wall + 2 * EPS, outer[1] + 2 * g, outer[2] + 2 * g]);
 }
 
+// The +Y wall, for tests. Nothing is cut into it but the side exhaust field.
+module wallSlabYPos() {
+  g = 2 * EPS;
+  translate([-g, outer[1] - wall - EPS, -g])
+    cube([outer[0] + 2 * g, wall + 2 * EPS, outer[2] + 2 * g]);
+}
+
 // Everything to subtract from one wall, for all three boards.
 module portCuts(which) {
-  dir = which == "-Y" ? [0, -1, 0] : [1, 0, 0];
   intersection() {
     union()
       for (i = [0 : 2])
-        onBoard(i) ioMaskSwept(dir);
+        onBoard(i) ioMaskSwept(which);
     wallSlab(which);
   }
 }

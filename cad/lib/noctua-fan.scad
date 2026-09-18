@@ -3,7 +3,7 @@
 // ============================================================================
 // Two things live here and they do different jobs.
 //
-// PARAMETRIC (fanBore, fanBoltPattern) takes every boolean. You cut an opening from
+// PARAMETRIC (fanOpeningProfile, fanBoltProfile) takes every boolean. You cut an opening from
 // fan_size and a bolt circle from fan_bolt_pitch. You do NOT subtract a fan: a mesh
 // is a tessellation, and a bore cut from one is a polygon pretending to be a circle.
 //
@@ -12,8 +12,9 @@
 // deliberately altered; the mounting dimensions and outer envelope are the parts they
 // stand behind, which is exactly what a case needs. See assets/noctua/readme.md.
 //
-// ORIENTATION. Airflow runs along -Y: the fan sits on the +Y wall and pushes toward
-// the boards. The mounting face is at the wall.
+// ORIENTATION. Airflow runs along +X: the fan sits on the -X front wall and pushes
+// toward the boards and out through the rear. The cutting profiles are 2D, so the
+// wall decides the orientation; only the mesh carries a rotation.
 // ============================================================================
 
 include <../config.scad>
@@ -47,18 +48,14 @@ module fanOpeningProfile(clear = 0) {
     square([s - 2 * fan_opening_r, s - 2 * fan_opening_r], center = true);
 }
 
-module fanBore(depth, clear = 0) {
-  rotate([-90, 0, 0])
-    linear_extrude(depth)
-      fanOpeningProfile(clear);
-}
-
-// The four mounting holes on the standard 71.5 x 71.5 pattern.
-module fanBoltPattern(depth, d) {
-  for (sx = [-1, 1], sz = [-1, 1])
-    translate([sx * fan_bolt_pitch / 2, 0, sz * fan_bolt_pitch / 2])
-      rotate([-90, 0, 0])
-        cylinder(h = depth, d = d, center = false);
+// The four mounting holes on the standard 71.5 x 71.5 pattern, as 2D circles centred
+// on the opening. Kept 2D so the wall that carries them decides the orientation --
+// the fan moved walls once already, and a module with a baked-in rotate() is a
+// module that has to be rewritten when it does.
+module fanBoltProfile(d) {
+  for (sx = [-1, 1], sy = [-1, 1])
+    translate([sx * fan_bolt_pitch / 2, sy * fan_bolt_pitch / 2])
+      circle(d = d, $fn = 32);
 }
 
 // The frame's outer envelope — what the shell must not grow into.
@@ -74,11 +71,11 @@ module fanEnvelope() {
 // % is the BACKGROUND modifier: drawn in preview, dropped from the final render.
 // This is what keeps Noctua's geometry out of every STL this project publishes.
 // Do NOT use # — that is the debug modifier and it IS included in the export.
-// rotate([-90,0,0]) maps the mesh's native +Z axis to world -Y: the fan sits on the
-// +Y wall and pushes toward the boards. Doing it here rather than baking it into the
+// rotate([0,90,0]) maps the mesh's native +Z axis to world +X: the fan sits on the
+// front wall and pushes toward the rear. Doing it here rather than baking it into the
 // generator keeps the asset byte-identical to what Noctua published.
 module fanVisualization80() {
-  %rotate([-90, 0, 0])
+  %rotate([0, 90, 0])
     color("SaddleBrown", 1)
       import(fan_asset, center = true);
 }

@@ -2,86 +2,99 @@
 # ============================================================================
 # Airflow and ports
 # ============================================================================
-# Positive pressure: one filtered 80mm intake, and the only way out is the two
-# exhaust fields. If their open area is smaller than the fan's throat, the case is
-# choked and nothing about the geometry says so.
+# Front-to-back through-flow: one filtered 80mm intake on the -X front wall, out
+# through the rear wall and the rear portion of both side walls. If that total open
+# area is smaller than the fan's throat, the case is choked and nothing about the
+# geometry says so.
 #
-# Every check here is paired with its opposite. A port cut that swallowed an entire
-# wall passes "no port is blind" perfectly; a cut that landed nowhere passes "the wall
+# The rear alone CANNOT carry this fan. Measured: with the three port clusters' zones
+# carved out it reaches 57% of the throat, and even venting the whole rear wall with
+# no zones at all reaches 99.7%. That measurement is why the exhaust wraps the sides.
+#
+# Areas are MEASURED from the exact profiles the walls are cut with, never computed.
+# The rear cutter has exclusion zones carved out of it, and a closed-form area would
+# have to re-derive every one of them.
+#
+# Every check is paired with its opposite. A port cut that swallowed a whole wall
+# passes "no port is blind" perfectly; a cut that landed nowhere passes "the wall
 # still exists" perfectly. Neither implies the other.
 # ============================================================================
 . "$(dirname "${BASH_SOURCE[0]}")/lib/openscad-env.sh"
 
+THROAT=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
+          -D 'test_view="report-areas"' cad/tests.scad 2>&1 \
+        | sed -n 's/.*fan_throat_area = \([0-9.]*\).*/\1/p')
+
+pct() { awk -v a="$1" -v t="$THROAT" 'BEGIN { printf "%.0f", a / t * 100 }'; }
+
 echo "Airflow"
 
-areas=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
-        -D 'test_view="report-areas"' cad/tests.scad 2>&1)
-num() { printf '%s' "$areas" | sed -n "s/.*$1 = \([0-9.]*\).*/\1/p" | head -1; }
+render rear-vent-area "$WORK/rear.stl"
+render side-vent-area "$WORK/side.stl"
+REAR=$(vol "$WORK/rear.stl")
+SIDE=$(vol "$WORK/side.stl")
+TOTAL=$(awk -v r="$REAR" -v s="$SIDE" 'BEGIN { print r + 2 * s }')
 
-THROAT=$(num fan_throat_area)
-COMPUTED=$(num exhaust_open_area)
-
-# The DRAWN area, not the computed one. ventOpenArea() is the analytic ideal; what the
-# wall actually gets is offset(r, $fn=24), whose corner arcs are 24-gons and enclose
-# very slightly less. The budget is held against the geometry that exists.
-render vent-field-area "$WORK/vy.stl"
-render vent-roof-area  "$WORK/vr.stl"
-DRAWN=$(python3 -c "print(float('$(vol "$WORK/vy.stl")') + float('$(vol "$WORK/vr.stl")'))")
-
-# ...and the two must agree, or ventOpenArea() has stopped describing ventField() and
-# every assert built on it is measuring a pattern nobody draws.
-if awk -v c="$COMPUTED" -v d="$DRAWN" \
-       'BEGIN { exit !(c > 0 && (c - d) / d < 0.005 && (d - c) / d < 0.005) }'; then
-    pass "$(printf 'computed area %.0f matches drawn %.0f (within 0.5%%)' "$COMPUTED" "$DRAWN")"
+note "$(printf 'rear %.0f + 2 x side %.0f = %.0fmm2' "$REAR" "$SIDE" "$TOTAL")"
+if awk -v a="$TOTAL" -v t="$THROAT" 'BEGIN { exit !(a >= t) }'; then
+    pass "$(printf 'exhaust %.0fmm2 >= fan throat %.0fmm2 (%s%%)' "$TOTAL" "$THROAT" "$(pct "$TOTAL")")"
 else
-    fail "$(printf 'computed area %.0f but drawn %.0f' "$COMPUTED" "$DRAWN")"
-    note "ventOpenArea() no longer describes what ventField() draws"
+    fail "$(printf 'exhaust %.0fmm2 CHOKES the %.0fmm2 throat (%s%%)' "$TOTAL" "$THROAT" "$(pct "$TOTAL")")"
+    note "raise vent_side_depth -- config.scad asserts how far it can go before the ports"
 fi
 
-if awk -v a="$DRAWN" -v t="$THROAT" 'BEGIN { exit !(a >= t) }'; then
-    pass "$(printf 'exhaust %.0fmm2 >= fan throat %.0fmm2 (x%.2f)' \
-            "$DRAWN" "$THROAT" "$(awk -v a="$DRAWN" -v t="$THROAT" 'BEGIN{print a/t}')")"
+# The side fields must actually CUT both walls. Measured as material removed, not as a
+# field that renders: a sweep started at the wrong face runs into open air, removes
+# nothing, and passes every emptiness check in this suite. The +Y wall carries nothing
+# else, so it must lose exactly its field's area times the wall thickness.
+render side-y-pos-removed "$WORK/ypos.stl"
+YPOS=$(vol "$WORK/ypos.stl")
+EXPECT=$(awk -v s="$SIDE" 'BEGIN { print s * 3 }')
+if awk -v a="$YPOS" -v e="$EXPECT" 'BEGIN { exit !(a > e * 0.99 && a < e * 1.01) }'; then
+    pass "$(printf '+Y side field cuts clean through (%.0fmm3 = field x wall)' "$YPOS")"
 else
-    fail "$(printf 'exhaust %.0fmm2 CHOKES the %.0fmm2 throat' "$DRAWN" "$THROAT")"
-    note "widen vent_y_* or vent_roof_*; both feed the same budget"
+    fail "$(printf '+Y side field removed %.0fmm3, expected %.0f' "$YPOS" "$EXPECT")"
+fi
+expect_geometry "-Y side field cuts the wall" side-y-neg-removed
+
+# THE OTHER QUESTION: are there holes that should NOT exist? Every port check above
+# asks whether a port is blocked. None of them would notice an extra hole -- which is
+# how three notches sat in the -Y wall's rear corner through the whole redesign until
+# a render showed them. In the side walls' rear region both walls carry the same field
+# and nothing else, so they must lose identical material.
+render side-y-neg-rear-removed "$WORK/ynegrear.stl"
+YNEG=$(vol "$WORK/ynegrear.stl")
+if awk -v a="$YNEG" -v e="$YPOS" 'BEGIN { exit !(a > e * 0.99 && a < e * 1.01) }'; then
+    pass "$(printf 'no spurious holes: -Y rear loses %.0fmm3, same as +Y' "$YNEG")"
+else
+    fail "$(printf '-Y rear loses %.0fmm3 but +Y loses %.0f — extra holes in the -Y wall' "$YNEG" "$YPOS")"
+    note "a port mask is being dragged into a wall it does not belong to"
 fi
 
-# THE FILTER MUST NOT BE THE RESTRICTION. It sits in series with the intake, so a
-# grille tighter than the fan's throat moves the bottleneck from something measured to
-# something nobody looks at. The printed part is a RETAINER for bought media -- the
-# media is the real pressure drop -- so the floor is "not dominant", not "as open as
-# the fan", which no printable web reaches.
-FILT=$(num filter_open_area)
-render filter-grille-area "$WORK/fg.stl"
-FDRAWN=$(vol "$WORK/fg.stl")
+# The exclusion zones must keep the pattern OFF the port clusters. A zone that missed
+# its cluster leaves a triangle clipped beside a connector -- exactly the untidiness
+# the zones exist to remove.
+expect_empty "exclusion zones keep triangles off the ports" exclusion-holds
 
-if awk -v c="$FILT" -v d="$FDRAWN" \
-       'BEGIN { exit !(c > 0 && (c - d) / d < 0.005 && (d - c) / d < 0.005) }'; then
-    pass "$(printf 'filter computed %.0f matches drawn %.0f' "$FILT" "$FDRAWN")"
+# THE FILTER MUST NOT BE THE RESTRICTION. It sits in series with the intake. The
+# printed grille is a RETAINER for bought media -- the media is the real pressure
+# drop -- so the floor is "the plastic is not dominant", not "as open as the fan",
+# which no printable web reaches.
+render filter-grille-area "$WORK/grille.stl"
+GRILLE=$(vol "$WORK/grille.stl")
+if awk -v a="$GRILLE" -v t="$THROAT" 'BEGIN { exit !(a >= t * 0.6) }'; then
+    pass "$(printf 'filter grille %.0fmm2 is %s%% of throat (floor 60%%)' "$GRILLE" "$(pct "$GRILLE")")"
 else
-    fail "$(printf 'filter computed %.0f but drawn %.0f' "$FILT" "$FDRAWN")"
-    note "filterOpenArea() and the grille disagree — check the cell/web passed to ventField()"
-fi
-
-FLOOR=$(awk -v t="$THROAT" 'BEGIN{print t*0.6}')
-if awk -v a="$FDRAWN" -v f="$FLOOR" 'BEGIN { exit !(a >= f) }'; then
-    pass "$(printf 'filter %.0fmm2 is %.0f%% of throat (floor 60%%)' \
-            "$FDRAWN" "$(awk -v a="$FDRAWN" -v t="$THROAT" 'BEGIN{print a/t*100}')")"
-else
-    fail "$(printf 'filter %.0fmm2 is only %.0f%% of throat' \
-            "$FDRAWN" "$(awk -v a="$FDRAWN" -v t="$THROAT" 'BEGIN{print a/t*100}')")"
-    note "raise filter_cell or lower filter_web/filter_frame"
+    fail "$(printf 'filter grille %.0fmm2 is only %s%% of throat (floor 60%%)' "$GRILLE" "$(pct "$GRILLE")")"
+    note "hexrack's lattice at cell 14 / web 1.6 leaves this much; see filter_frame"
 fi
 
 echo ""
 echo "Ports"
 
-# No connector may be walled in. This is the check the framework mask's own reach
-# fails: as published it is swept ~7-10mm and this wall's outer face is 11mm out, so
-# subtracting it unmodified leaves 2mm of solid PETG over every USB-C and HDMI.
+# No connector may be walled in. The probe is the mask's silhouette extruded from the
+# board edge past the case, so its length owes nothing to the sweep that cut the wall.
 expect_empty    "no port is blind"                 ports-blind
-
-# Both walls must still be walls.
 expect_geometry "the -Y wall still exists"         wall-y-remains
 expect_geometry "the +X wall still exists"         wall-x-remains
 

@@ -128,19 +128,57 @@ if (test_view == "stack-vs-shell")
   intersection() { shellSolid(); union() { slotSlab(0); slotSlab(1); slotSlab(2); } }
 
 // -- vents -------------------------------------------------------------------
-// THE DRAWN AREA AGAINST THE COMPUTED ONE. Extruded 1mm, so volume IS area. If
-// ventOpenArea() ever stops describing what ventField() draws, the exhaust budget
-// becomes a number with no physical meaning and nothing else would notice.
-if (test_view == "vent-field-area") linear_extrude(1) ventField(vent_y_w, vent_y_h);
-if (test_view == "vent-roof-area")  linear_extrude(1) ventField(vent_roof_w, vent_roof_h);
+// MEASURED, not computed. The rear cutter has exclusion zones carved out of it, so a
+// closed-form area would have to re-derive every zone -- the classic two-features-
+// doing-their-own-arithmetic failure. Extruded 1mm, volume IS area, and it is the
+// exact profile ventCuts() sweeps through the wall.
+if (test_view == "rear-vent-area")     linear_extrude(1) rearVentProfile();
+if (test_view == "side-vent-area")     linear_extrude(1) sideVentProfile();
+
+// The side fields must actually cut BOTH side walls. Measured as the wall material
+// removed: the uncut shell's side slab minus the cut one. An onYWall() sweep started at
+// the wrong face runs into open air and removes nothing -- and every emptiness check
+// in the file would pass it.
+if (test_view == "side-y-neg-removed")
+  difference() { intersection() { shellSolid(); wallSlab("-Y"); }
+                 intersection() { shellCut();   wallSlab("-Y"); } }
+// NO SPURIOUS HOLES. The rear portion of the two side walls carries the same field
+// and nothing else -- the -Y wall's USB-C/HDMI cutouts are all forward of it, which
+// config.scad asserts. So in that region the two walls must lose EXACTLY the same
+// material. A port mask dragged sideways into the -Y wall shows up here as extra
+// volume on one side only. Built from the +Y wall, which cannot have port cuts, so it
+// does not share code with the thing it is checking.
+module rearRegion() {
+  x0 = wall + board_x + side_port_cluster_x1 + 1;
+  translate([x0, -1, -1]) cube([outer[0] - x0 + 1, outer[1] + 2, outer[2] + 2]);
+}
+if (test_view == "side-y-neg-rear-removed")
+  intersection() {
+    rearRegion();
+    difference() { intersection() { shellSolid(); wallSlab("-Y"); }
+                   intersection() { shellCut();   wallSlab("-Y"); } }
+  }
+
+if (test_view == "side-y-pos-removed")
+  difference() { intersection() { shellSolid(); wallSlabYPos(); }
+                 intersection() { shellCut();   wallSlabYPos(); } }
+if (test_view == "filter-grille-area") linear_extrude(1) filterGrilleProfile();
+
+// Every exclusion zone must actually keep the vent pattern off its port cluster. The
+// zone is carved from the cutter, so the port-cluster region of the rear cutter must
+// be EMPTY -- if a triangle survives inside a zone, the zone missed.
+if (test_view == "exclusion-holds")
+  intersection() {
+    linear_extrude(1) rearVentProfile();
+    for (i = [0 : 2])
+      linear_extrude(1)
+        translate(exclusionCentre(i))
+          square([exclusion_w - 2 * exclusion_r, exclusion_h - 2 * exclusion_r],
+                 center = true);
+  }
 
 if (test_view == "report-areas") {
   echo(str("fan_throat_area = ", fan_throat_area));
-  echo(str("vent_y_area = ", ventOpenArea(vent_y_w, vent_y_h)));
-  echo(str("vent_roof_area = ", ventOpenArea(vent_roof_w, vent_roof_h)));
-  echo(str("exhaust_open_area = ", ventOpenArea(vent_y_w, vent_y_h)
-                                 + ventOpenArea(vent_roof_w, vent_roof_h)));
-  echo(str("filter_open_area = ", filterOpenArea()));
   cube(1);
 }
 
@@ -175,22 +213,16 @@ if (test_view == "filter-vs-shell")
     // the opening. rotate([-90,0,0]) maps it to +Y and stands the lip off into open
     // air with the plate buried in the wall -- which is what this first did, and the
     // check caught as 2577mm3 of plate inside the shell.
-    translate([wall + interior_x / 2, outer[1] + filter_t,
-               wall + fan_z0 + fan_size / 2])
-      rotate([90, 0, 0])
+    // The filter sits OUTSIDE the -X front wall with its lip pointing +X, into the
+    // opening. rotate([0,90,0]) maps the part's +Z to world +X; translating by
+    // -filter_t puts the plate at x -filter_t..0, outside the wall, and the lip at
+    // x 0..filter_lip_h, inside it.
+    translate([-filter_t, wall + interior_y / 2, wall + fan_z0 + fan_size / 2])
+      rotate([0, 90, 0])
         filterPart();
   }
 
-if (test_view == "filter-grille-area")
-  linear_extrude(1) ventField(fan_opening - 2 * filter_frame,
-                              fan_opening - 2 * filter_frame, filter_cell, filter_web);
 
-if (test_view == "report-filter") {
-  echo(str("filter_open_area = ", filterOpenArea()));
-  echo(str("filter_frac = ", filterOpenArea() / fan_throat_area));
-  echo(str("filter_plate = ", filterPlateSize()));
-  cube(1);
-}
 
 // The retainer must not touch the top board's cooler. Two posts clear it by
 // derivation; this is what notices if the cooler or the hole list ever changes.

@@ -117,11 +117,18 @@ assert(slot_standoff[1] >= slot_h(1) - pi5_pcb[2] + 4,
 // 55.5 m3/h, 17.7 dB(A), 2.37 mmH2O, 0.75W at 5V, with a USB power adaptor cable in
 // the box -- so it feeds from a USB port inside the case, no GPIO wiring and no PSU.
 //
-// THE 80mm IS WHY THIS CASE HAS NO PLENUM. At 80 it spans the whole board stack and
-// presents a fresh-air front to all three slots at once. A 40mm fan needed a side
-// plenum and ~40mm of extra width to approximate that. The assert below is what keeps
-// that true: a slot that grows fails here instead of quietly leaving the top board
-// out of the airstream.
+// THE FAN IS ON THE -X FRONT WALL, opposite the USB/Ethernet cluster. Air enters the
+// front, runs the board's full 85mm LENGTH over the SoC and the drive, and leaves
+// through the rear wall where the ports are and where the Ethernet PHY runs hottest.
+// Crossing the 56mm width instead was shorter and left the exhaust on a blank wall.
+//
+// THE COST IS WIDTH. The front wall spans interior_y, so it has to be at least 80 to
+// carry the fan while the board is only 56. The spare goes on the +Y GPIO side as a
+// side channel and a cable route -- see board_y, which is NOT centred.
+//
+// At 80 the fan still spans the whole board stack, so all three slots get a fresh-air
+// front and there is no plenum. The assert below is what keeps that true: a slot that
+// grows fails here instead of quietly leaving the top board out of the airstream.
 fan_size       = 80;
 fan_bolt_pitch = 71.5;   // standard 80mm pattern. NOT the Compact HAT's 71.5 width --
                          // they are the same number for unrelated reasons.
@@ -158,20 +165,30 @@ assert(fan_z0 + fan_size >= stack_top,
 // ----------------------------------------------------------------------------
 // ENVELOPE
 // ----------------------------------------------------------------------------
-side_clear    = 2;     // board edge (or its overhang) to the inner wall face
-port_overhang = 3;     // RJ45 and the USB-A stacks stand proud of the PCB's +X edge
-fan_plenum    = 8;     // fan's inner face to the HAT's +Y edge
-exhaust_gap   = 8;     // board's -Y edge to the -Y wall
+side_clear     = 2;     // board edge (or its overhang) to the inner wall face
+port_overhang  = 3;     // RJ45 and the USB-A stacks stand proud of the PCB's +X edge
+fan_plenum     = 8;     // fan's inner face to the board's -X edge
+fan_side_clear = 3;     // fan frame to the front wall's own edges
 
-// X: the -X wall clears slot 1's Compact tab, NOT the board edge. The tab hangs
-// 6.5 off the PCB and the wall has to be behind it, which is 6.5mm of case that the
-// standard HAT+ alone would not have cost.
-board_x    = hat_compact_overhang_x + side_clear;
+// X: fan, plenum, the Compact HAT's -X tab, the board, its ports. The tab hangs 6.5
+// off the PCB where the PCIe ribbon lands, and it faces the fan, so the plenum clears
+// the tab rather than the board edge.
+board_x    = fan_depth + fan_plenum + hat_compact_overhang_x;
 interior_x = board_x + pi5_pcb[0] + port_overhang + side_clear;
 
-// Y: exhaust gap, board, the HAT's 0.5 overhang past the Pi's +Y edge, plenum, fan.
-board_y    = exhaust_gap;
-interior_y = board_y + pi5_pcb[1] + hat_overhang_y + fan_plenum + fan_depth;
+// Y: the front wall carries the fan, so interior_y is driven by the FAN, not by the
+// board -- 80 against the board's 56.
+//
+// THE BOARD IS NOT CENTRED IN THAT WIDTH. It sits against -Y so the USB-C and micro-
+// HDMI connectors meet their wall instead of sitting at the bottom of a 15mm recess
+// no plug reaches into. All the spare width goes to +Y, the GPIO side, where nothing
+// plugs in: it becomes a side air channel and the route for six cables.
+interior_y = fan_size + 2 * fan_side_clear;
+board_y    = side_clear;
+
+assert(interior_y >= fan_size, "front wall is narrower than the fan it carries");
+assert(board_y + pi5_pcb[1] + hat_overhang_y < interior_y,
+       "the board does not fit the width the fan forces");
 
 outer = [interior_x + 2 * wall, interior_y + 2 * wall, interior_h + 2 * wall];
 
@@ -213,24 +230,55 @@ show_case      = true;    // the printed parts themselves
 // Positive pressure: one filtered intake, and everything else leaves through these.
 // The -Y field and the roof field feed ONE number, so either can be widened when
 // test-airflow.sh says the intake is choked.
-// TRIANGLES are the shape. They are the stiffest opening you can cut into a thin
-// wall -- a triangle cannot rack, so a field of them keeps a 3mm panel rigid at an
-// open-area fraction that would make a round-hole panel floppy.
-vent_pattern    = "triangles";   // "triangles" | "hex"
-vent_tri_cell   = 12;            // lattice edge length
-vent_tri_radius = 1.2;           // corner rounding on each hole
-vent_hex_cell   = 6;             // across-corners, only when vent_pattern == "hex"
-vent_wall       = 1.6;           // web left between neighbouring holes
+// TRIANGLES, and the same lattice hexrack uses -- cell 14, web 1.6, corner 1.2,
+// stagger 0.5 -- so the two projects look like they came from the same hand. A
+// triangle cannot rack, so the field keeps a 3mm wall stiff at an open-area fraction
+// that would leave round holes floppy.
+vent_pattern    = "triangles";
+vent_tri_cell   = 14;
+vent_wall       = 1.6;
+vent_tri_radius = 1.2;
+vent_tri_stagger = 0.5;
+vent_hex_cell   = 6;             // only when vent_pattern == "hex"
 
-// The -Y wall carries three rows of USB-C/micro-HDMI cutouts as well, so its field is
-// inset from the wall rather than filling it.
-vent_margin = 8;    // solid border left around each field, for stiffness and for the
-                    // port cutouts the -Y wall also has to carry
+// EXHAUST: THE REAR WALL, WRAPPING ONTO THE REAR OF BOTH SIDES. No roof field: a
+// lid with holes in it drops dust straight onto the boards.
+//
+// WHY THE SIDES. Rear-only was tried and MEASURED: the three port clusters' exclusion
+// zones take ~43% of the rear wall, and what is left of it -- hexrack's lattice is
+// ~53% open -- reaches 2451mm2 against the fan's 4320mm2 throat. 57%. Even venting
+// the ENTIRE rear with no zones only reaches 4306, i.e. the rear wall alone cannot
+// carry this fan whatever you do to it. Wrapping onto the rear portion of the side
+// walls restores a matched exit and keeps the top and the front clean.
+vent_margin     = 3;    // solid border left around every field
+vent_rear_w     = interior_y - 2 * vent_margin;
+vent_side_depth = 40;   // how far forward from the rear the side fields reach
 
-vent_y_w    = interior_x - 2 * vent_margin;
-vent_y_h    = interior_h - 2 * vent_margin;
-vent_roof_w = interior_x - 2 * vent_margin;
-vent_roof_h = interior_y - 2 * vent_margin;
+// THE -Y SIDE FIELD MUST STAY BEHIND THE USB-C AND MICRO-HDMI CUTOUTS. Measured off the
+// framework's -Y mask: that cluster ends at board x = 42.60. The field's front edge is
+// derived and asserted against it, so a longer vent_side_depth fails here rather than
+// cutting triangles through the side of a USB-C port.
+side_port_cluster_x1 = 42.60;
+side_field_x0 = interior_x - vent_margin - vent_side_depth;   // interior frame
+assert(side_field_x0 > board_x + side_port_cluster_x1 + 3,
+       "side exhaust field reaches forward into the -Y port cutouts");
+
+// EXCLUSION ZONE, hexrack's idea: a rounded rectangle carved out of the vent CUTTER,
+// per board, so no triangle ever clips a port. The ports then sit in clean solid
+// material with the pattern running around them, which is the whole reason hexrack's
+// back face reads as deliberate rather than as holes that happened to miss.
+// Per board, in the rear wall's plane, around the RJ45/USB cluster.
+//
+// SIZED FROM THE MEASURED CLUSTER, not guessed: the framework's +X mask spans
+// Y 2.33..54.50 and Z 1.65..17.90 in the board frame -- 52.2 x 16.3. The zone is that
+// plus exclusion_pad all round. Every millimetre here comes straight out of the only
+// exhaust this case has, so it is as tight as a clean margin allows.
+exclusion_pad = 1.5;
+exclusion_cluster_y = [2.33, 54.50];
+exclusion_cluster_z = [1.65, 17.90];
+exclusion_w = exclusion_cluster_y[1] - exclusion_cluster_y[0] + 2 * exclusion_pad;
+exclusion_h = exclusion_cluster_z[1] - exclusion_cluster_z[0] + 2 * exclusion_pad;
+exclusion_r = 3;
 
 // ----------------------------------------------------------------------------
 // FAN OPENING AND FILTER
@@ -252,17 +300,9 @@ filter_lip_t     = 1.6;
 filter_clear     = 0.35;   // press fit
 filter_flange    = 4;      // how far the plate oversails the opening
 
-// The grille's own lattice, NOT the wall fields'. Measured: the wall's 12/1.6 leaves
-// the grille at 47% of the fan's throat, which makes the filter the restriction in
-// the whole intake. 16/1.4 gives 71%. A wall field is sized for stiffness across a
-// large panel; this one is sized to get out of the air's way.
-filter_cell      = 16;
-filter_web       = 1.4;
-
-// The printed part is a RETAINER, not the filtration. Like hexrack's, it holds bought
-// media against the intake; the media is what stops dust and what actually costs
-// pressure. So the floor here is "the grille is not the dominant restriction", not
-// "the grille is as open as the fan", which no printable web achieves.
+// The grille uses hexrack's lattice like the rear does. It is a RETAINER for bought
+// media, not the filtration: the floor below is "the plastic is not the dominant
+// restriction", measured by test-airflow.sh against the fan's throat.
 filter_min_open_fraction = 0.6;
 
 // ----------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 # pi5-runners — 3D-Printable Tower for Three Pi 5 CI Runners
 
 Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Actions
-runners. **104.5 × 103.9 × 99.95 mm, 1.085 L**, four printed parts, one 80 mm Noctua.
+runners. **135.9 × 92 × 99.95 mm, 1.25 L**, four printed parts, one 80 mm Noctua.
 
 ## Project intent
 
@@ -30,21 +30,37 @@ decision below follows from sustained load rather than from idle.
   clears the cooler, and `config.scad` asserts it
 - **Case fan: one Noctua NF-A8 5V PWM.** 55.5 m³/h, 17.7 dB(A), 0.75 W at 5 V, USB
   power adaptor cable included, so it feeds from a USB port inside the case
-- **THE 80 mm IS WHY THERE IS NO PLENUM.** At 80 mm the fan spans the whole board
-  stack, presenting a fresh-air front to all three slots at once. A 40 mm fan needed a
-  side plenum and ~40 mm of extra width to approximate that. `config.scad` asserts the
-  fan's swept height covers the stack; if a slot grows, that assert is what fails
-- **The fan wall is +Y, the Pi's GPIO edge.** With the HATs fitted nothing plugs into
-  it, so the wall is free. It is also the wall opposite the USB-C inlet. Note the HAT
-  PCBs are 56.5 against the Pi's 56 and **overhang that edge by 0.5** — holes 3.5 from
-  the near edge and 4.0 from the far one — so the plenum is measured from the HAT, not
-  the board
-- **Positive pressure.** One filtered intake, exhaust through the −Y wall and the
-  roof. Dust can only enter where the filter is, which is the only reason there is
-  exactly one filter
+- **THE FAN IS ON THE FRONT: the −X wall, opposite the USB/Ethernet cluster.** Air
+  enters the front, runs the board's full 85 mm LENGTH over the SoC and the drive, and
+  leaves at the rear where the ports are and the Ethernet PHY runs hottest. At 80 mm it
+  spans the whole stack, so all three slots get a fresh-air front and there is no
+  plenum. `config.scad` asserts the fan's swept height covers the stack
+- **THE FRONT WALL IS 80 WIDE BECAUSE THE FAN IS.** The board is 56 but the wall
+  carrying the fan must be ≥ 80, which is most of why the case is 1.25 L rather than
+  the 1.085 L it was with the fan on the long side. **The board is NOT centred in that
+  width**: it sits against −Y so USB-C and micro-HDMI meet their wall instead of the
+  bottom of a 15 mm recess, and the spare width goes to +Y as a side air channel and
+  cable route
+- **EXHAUST: THE REAR WALL, WRAPPING ONTO THE REAR OF BOTH SIDES. Never the roof.**
+  Rear-only was built and MEASURED: the port clusters' exclusion zones take ~43% of the
+  rear, leaving 57% of the fan's throat; even venting the whole rear with no zones only
+  reaches 99.7%. The rear wall alone cannot carry this fan. Side fields restore a
+  matched exit — **147% of the throat** — and keep the top and front clean. The −Y side
+  field is asserted to stay behind the USB-C/HDMI cutouts
+- **EXCLUSION ZONES, hexrack's back-face idea.** A rounded rectangle per board is carved
+  out of the vent CUTTER around its RJ45/USB cluster, so the ports sit in clean solid
+  material with the pattern running round them. Sized from the MEASURED cluster
+  (52.2 × 16.3), not guessed, because every mm comes out of the only exhaust there is
+- **hexrack's triangle lattice, copied verbatim** — cell 14, web 1.6, corner 1.2,
+  stagger 0.5 — on the rear, the sides and the filter, so the projects read as one
+  family. A triangle cannot rack, so a thin wall stays stiff
+- **Positive pressure.** One filtered intake; dust can only enter where the filter is,
+  which is the only reason there is exactly one filter. The printed grille is a
+  RETAINER for bought media (76% of throat), not the filtration itself
 - **The M.2 HAT+ is rated 0–50 °C ambient**, and that is the number this case holds.
   Two 40 mm fans put a 28 °C room at exactly 50 °C — the ceiling, no margin. The
-  NF-A8 puts a 25 °C room at ~29 °C
+  NF-A8 puts a 25 °C room at ~29 °C. The HAT PCBs are 56.5 against the Pi's 56 and
+  **overhang its +Y edge by 0.5**, which the envelope carries
 - **Six cables leave the box** — 3× Ethernet on +X, 3× USB-C on −Y — on two adjacent
   walls, because that is where the Pi puts them. **There is deliberately no cable
   comb**: the ports sit 13–30 mm up and a comb on a 9 mm base cannot reach them. If
@@ -151,6 +167,23 @@ without error and exports a clean single body.
     `test-assets.sh` first demanded the fan mesh be one body. A fan is legitimately
     eleven — frame, eight corner pads, impeller, hub — so the check was encoding a
     wrong assumption, and "fixing" the asset to satisfy it would have been the real bug.
+18. **A test suite that only asks "is it blocked?" cannot see holes that should not
+    exist.** `portCuts()` swept the WHOLE IO mask along −Y and confined it to the −Y
+    wall's thickness — but the wall spans the case's length, so the RJ45 and USB masks
+    dragged sideways landed in it at their own x: three notches in the side wall's rear
+    corner, one per board. Every check passed, because every check asked whether a port
+    was blocked. **A render found it.** `test-airflow.sh` now compares the two side
+    walls' rear regions, which carry identical fields and nothing else, so an extra hole
+    on one side shows up as extra volume. Each wall now sweeps only its own connectors.
+19. **An assembled case can hide a part that cannot be printed.** With 6 mm seam skirts
+    the 80 mm intake left the SHELL part under 1 mm of wall above and below it — two
+    posts joined by strips. Assembled, the base and roof skirts filled that band, so
+    every fit and tiling check passed. **A render of the part on its own found it.**
+    `shell.scad` now asserts a minimum strip, and that no port cluster straddles a seam.
+20. **Look at it.** 18 and 19 were both invisible to 58 passing checks and obvious in
+    the first rendered image. A suite proves the geometry satisfies the assertions
+    someone thought to write; it says nothing about the ones nobody did. Render the
+    parts and the assembly before calling a layout change done.
 17. **A datasheet dimension is not the part.** The NF-A8 is 80 × 80 × 25 on paper and
     80.1 × 80.0 × **25.4** in Noctua's own model: the AAO frame's anti-vibration pads
     stand 0.2 proud of each mounting face. A 25 mm pocket sits the fan on its pads.

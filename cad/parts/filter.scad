@@ -1,22 +1,26 @@
 // ============================================================================
-// FILTER — the intake dust filter
+// FILTER — the intake dust filter, on the front
 // ============================================================================
-// Press-fits into the fan opening from OUTSIDE the +Y wall. There is exactly one
-// filter in this case and that is not an economy: the case runs positive pressure, so
-// the intake is the only unfiltered path air can take. Every other opening is an
-// exhaust, and air leaving does not carry dust in.
+// Press-fits into the fan opening from OUTSIDE the -X front wall. There is exactly
+// one filter and that is not an economy: the case runs positive pressure, so the
+// intake is the only unfiltered path air can take.
 //
-// Printed flat on its face, grille down. No supports: the lip is the only feature off
-// the plate and it points straight up.
+// A RETAINER FOR BOUGHT MEDIA, like hexrack's, not the filtration itself. The grille
+// holds a pad of filter media against the intake; the media is what stops dust and
+// what costs pressure. The grille only has to get out of its way.
+//
+// hexrack's triangle lattice, same constants as the rear, so the front and back of
+// the case read as one design.
+//
+// Printed flat on its face, grille down. No supports: the lip points straight up.
 // ============================================================================
 
 include <../config.scad>
 use <../lib/vents.scad>
 use <../lib/noctua-fan.scad>
 
-// The plate oversails the opening so it cannot fall inward, and the lip inside it
-// grips the opening's walls.
-function filterPlateSize() = fan_opening + 2 * filter_flange;
+function filterPlateSize()  = fan_opening + 2 * filter_flange;
+function filterGrilleSize() = fan_opening - 2 * filter_frame;
 
 module filterPlateProfile() {
   s = filterPlateSize();
@@ -25,21 +29,21 @@ module filterPlateProfile() {
     square([s - 2 * r, s - 2 * r], center = true);
 }
 
-// The grille area: the opening, less a solid border. filter_frame is what stops the
-// triangles running out to the lip and leaving it hanging off nothing.
-function filterGrilleSize() = fan_opening - 2 * filter_frame;
+// The grille's holes, in the plate's own frame, centred. Exposed so test-airflow.sh
+// can measure exactly the area that is cut.
+module filterGrilleProfile() {
+  g = filterGrilleSize();
+  translate([-g / 2, -g / 2])
+    ventField(g, g);
+}
 
 module filterPart() {
-  g = filterGrilleSize();
-
   difference() {
     union() {
-      // The plate.
       linear_extrude(filter_t) filterPlateProfile();
 
-      // The lip: a rounded-square ring sized to press into the opening. Undersized by
-      // filter_clear on the OUTSIDE so it enters; the case's own tolerance is not
-      // reused here because this is a press fit, not a clearance fit.
+      // The lip: a rounded-square ring that presses into the opening. Undersized by
+      // filter_clear on the OUTSIDE so it enters -- a press fit, not a clearance fit.
       translate([0, 0, filter_t])
         linear_extrude(filter_lip_h)
           difference() {
@@ -48,17 +52,10 @@ module filterPart() {
           }
     }
 
-    // The grille, centred on the plate.
-    translate([-g / 2, -g / 2, -EPS])
+    translate([0, 0, -EPS])
       linear_extrude(filter_t + 2 * EPS)
-        ventField(g, g, filter_cell, filter_web);
+        filterGrilleProfile();
   }
 }
-
-// Open area of the grille, so the airflow test can hold it against the fan's throat.
-// A filter that chokes the intake is worse than no filter: it moves the restriction
-// from somewhere measurable to somewhere nobody looks.
-function filterOpenArea() =
-  ventOpenArea(filterGrilleSize(), filterGrilleSize(), filter_cell, filter_web);
 
 filterPart();

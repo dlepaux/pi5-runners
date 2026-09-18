@@ -1,7 +1,7 @@
 # pi5-runners — three-Pi CI runner tower
 
 **Date:** 2026-09-17
-**Status:** approved design, pending implementation plan
+**Status:** implemented; **airflow and layout revised 2026-09-18** — see *Revision 2* at the end
 
 ## Goal
 
@@ -261,3 +261,39 @@ and absence.
   Measuring the real part can only make the case smaller.
 - **The side-plenum layout is the documented thermal upgrade** if a real print runs
   hot: one interior wall and a fan relocation. It is deliberately not built now.
+
+
+---
+
+## Revision 2 — front intake, rear exhaust (2026-09-18)
+
+Requested after the first implementation. **The sections above describe the original
+layout and are kept as the record of it**; where they conflict, this section wins.
+
+| | Original | Revision 2 |
+|---|---|---|
+| Intake + filter | +Y wall (GPIO long edge) | **−X front** (short edge, opposite USB/Ethernet) |
+| Exhaust | −Y wall + roof | **Rear wall + rear portion of both sides. No roof.** |
+| Air path | across the board's 56 mm width | **along its full 85 mm length** |
+| Vent lattice | project's own triangles | **hexrack's, verbatim**: cell 14, web 1.6, corner 1.2, stagger 0.5 |
+| Rear treatment | plain vent field | **hexrack-style exclusion zones** around each port cluster |
+| Envelope | 104.5 × 103.9 × 99.95, 1.085 L | **135.9 × 92 × 99.95, 1.25 L** |
+| Seams | 6 mm skirts | **2 mm skirts** |
+
+**Why the case grew.** The front wall carries the fan, so it must be ≥ 80 wide while the
+board is 56. The board sits against −Y (USB-C and HDMI meet their wall) and the spare
+width is a side channel on +Y.
+
+**Why the exhaust is not rear-only**, which was the request. Built and measured: the
+three exclusion zones take ~43% of the rear wall, leaving **57%** of the fan's 4320 mm²
+throat. Venting the entire rear with no zones reaches only 99.7%. The rear wall cannot
+carry this fan. Offered three options — accept 57%, wrap onto the sides, or drop the
+zones — and **wrapping onto the rear of the sides was chosen**: 6337 mm², 147%.
+
+**Why the seams moved to 2 mm.** With 6 mm skirts the intake left the shell part under
+1 mm of wall above and below it. Found by rendering the part on its own; the assembled
+case hid it.
+
+**Two defects found by rendering, not by the suite**, both now covered by tests:
+spurious notches cut into the −Y wall by port masks dragged sideways, and the severed
+front wall above. See CLAUDE.md traps 18–20.
