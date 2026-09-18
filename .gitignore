@@ -49,3 +49,6 @@ npm-debug.log*
 
 # Local scratch
 stl/
+
+# Download page build output (scripts/build-site.sh)
+_site/

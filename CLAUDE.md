@@ -154,7 +154,12 @@ modifier and is still included in the export — it does not do this job.
 ./scripts/test.sh                   # all seven suites, geometry in both fan modes
 ./scripts/generate-stl.sh           # module and lid in both fan modes, filter, into stl/
 ./scripts/generate-fan-asset.sh [m] # regenerate a fan mesh (networked, needs uv)
+./scripts/build-site.sh             # STLs + a static download page into _site/
 ```
+
+**CI** (`.github/workflows/deploy.yml`): on every push to main it runs `test.sh`, then
+`build-site.sh`, and publishes `_site/` to GitHub Pages. The page is plain HTML written
+by that script — no Node — and its part sizes are measured off the STLs it links.
 
 Open `cad/case.scad` to look at it: `case_part` selects a part, `fan_model` the fans,
 `assembly_space` pulls the stack apart, `show_*` toggles the preview content.

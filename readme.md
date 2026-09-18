@@ -58,9 +58,13 @@ Five STLs, **none needing support**, in the orientation they come out of
 | `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 122.5 / 131.6 × 63.5 × 8.2 mm |
 | `filter` | ×3, face down, pocket up | 58.9 × 53.8 × 4.0 mm |
 
+**Download them** from the project's GitHub Pages site, rebuilt on every push to main
+once the whole test suite passes. Or render them yourself:
+
 ```bash
 ./scripts/generate-stl.sh          # all five into stl/
 ./scripts/generate-stl.sh filter   # just one
+./scripts/build-site.sh            # the download page, into _site/
 ```
 
 How each part avoids support:

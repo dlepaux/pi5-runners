@@ -1,0 +1,62 @@
+# Test, render every part, publish the download page to GitHub Pages.
+#
+# The page is plain HTML written by scripts/build-site.sh -- no Node, no build step.
+# It only deploys after the whole test suite passes on the pushed commit, so a part
+# the suite rejects is never published.
+name: Deploy parts to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive   # SBC_Model_Framework: the board and its IO mask
+
+      # The snap is sandboxed and cannot see /tmp -- the test harness keeps its
+      # scratch in the tree for exactly this reason.
+      - name: Install OpenSCAD nightly
+        run: |
+          sudo snap install openscad-nightly
+          openscad-nightly --version
+
+      - name: Test
+        run: ./scripts/test.sh
+
+      - name: Build the download page
+        run: ./scripts/build-site.sh _site
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
