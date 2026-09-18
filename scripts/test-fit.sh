@@ -63,22 +63,10 @@ expect_geometry "a module sits on the one below"       module-seated
 expect_geometry "the lid sits on the top module"       lid-seated
 
 echo ""
-echo "Fit — the filter panel"
+echo "Fit — the dust filters"
 
-expect_empty    "panel clears every module and the lid"  panel-vs-stack
-expect_geometry "dovetail rails render"                  rails-alone
-# Every rail must lie inside its channel -- all of it, not merely some.
-render rails-alone       "$WORK/rails.stl"
-render rails-in-channels "$WORK/railsin.stl"
-RAILS=$(vol "$WORK/rails.stl"); RIN=$(vol "$WORK/railsin.stl")
-if awk -v a="$RIN" -v b="$RAILS" 'BEGIN { exit !(b > 0 && a > 0.999 * b) }'; then
-    pass "$(printf 'every rail lies in its channel (%.0f of %.0fmm3)' "$RIN" "$RAILS")"
-else
-    fail "$(printf 'only %.0f of %.0fmm3 of rail is in a channel' "$RIN" "$RAILS")"
-fi
-# ...and the channels HOLD them. A rail leaves a channel through its mouth, when the
-# panel is pulled straight off the stack -- and only the dovetail's flare stops that.
-expect_geometry "the dovetails hold the panel on: rails cannot leave through the mouth" dovetail-holds
+expect_empty    "a filter sits in its recess, touching nothing"  filter-vs-module
+expect_geometry "a filter sits on its recess floor"             filter-seated
 
 echo ""
 echo "Fit — fans"

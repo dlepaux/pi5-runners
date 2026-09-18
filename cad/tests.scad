@@ -91,22 +91,21 @@ if (test_view == "report-fan-asset") {
 module partByName(n) {
   if (n == "module") modulePart();
   if (n == "lid")    lidAt() lidPart();
-  if (n == "filter") panelPart();
+  if (n == "filter") filterMounted();
 }
 // As they print: what the bed check and the printability check measure.
 module printByName(n) {
   if (n == "module") modulePart();
   if (n == "lid")    lidPrint();
-  if (n == "filter") panelPrint();
+  if (n == "filter") filterPart();
 }
 if (test_view == "part")  partByName(part);
 if (test_view == "print") printByName(part);
 
-// The whole case, as it stands: every module, the lid, the filter panel.
+// The whole case, as it stands: every module with its filter, and the lid.
 module wholeCase() {
-  for (k = [0 : module_count - 1]) moduleAt(k) modulePart();
+  for (k = [0 : module_count - 1]) moduleAt(k) { modulePart(); filterMounted(); }
   lidAt() lidPart();
-  panelPart();
 }
 module allModules() {
   for (k = [0 : module_count - 1]) moduleAt(k) modulePart();
@@ -145,7 +144,7 @@ if (test_view == "module-vs-above") intersection() { modulePart(); moduleAt(1) m
 if (test_view == "module-vs-lid")   intersection() { modulePart(); moduleAt(1) lidPart(); }
 // ...and they DO touch. "Nothing overlaps" is also true of a module floating 5mm up;
 // lowered 0.2mm, the module above must bite into this one. moduleBody(), not the part:
-// the dovetail rails run the full height too, and rail on rail would pass this for a
+// anything else running the full height -- rails, once -- would pass this for a
 // module whose walls stop short and whose weight sits on four rail ends.
 if (test_view == "module-seated")
   intersection() { moduleBody(); translate([0, 0, module_pitch - 0.2]) moduleBody(); }
@@ -158,7 +157,8 @@ function allJoints() = concat(
   [ for (j = spigotJoints()) [str("module-", j[0]), socketJoint(j), "module", "module"] ],
   [ for (j = spigotJoints())
       [str("lid-", j[0]),
-       [j[0], j[1] + [0, 0, module_count * module_pitch], j[2], j[3]], "lid", "module"] ]);
+       [j[0], j[1] + [0, 0, module_count * module_pitch], j[2], j[3]], "lid", "module"] ],
+  [ for (j = filterJoints()) [j[0], j, "filter", "module"] ]);
 
 // The mate, as it sits relative to the rib: a spigot rib of the module above, or of
 // the lid, lands in the socket of the module below it.
@@ -166,9 +166,11 @@ module mateOf(row) {
   moduleAt(row[2] == "lid" ? module_count - 1 : 0) modulePart();
 }
 // The mate's own territory -- where a rib must reach to be engaged: the walls of the
-// module below.
+// module below, or for a filter, the front wall it clips into.
 module mateTerritory(row) {
-  moduleAt(row[2] == "lid" ? module_count - 1 : 0)
+  if (row[2] == "filter")
+    cube([front_wall_t, module_w, module_pitch]);
+  else moduleAt(row[2] == "lid" ? module_count - 1 : 0)
     linear_extrude(module_h) difference() { square([module_l, module_w]); insetRect(wall); }
 }
 
@@ -183,25 +185,10 @@ if (test_view == "clip-rib-vs-mate")
 if (test_view == "clip-rib-reach")
   intersection() { clipRib(allJoints()[clip_k][1]); mateTerritory(allJoints()[clip_k]); }
 
-// -- dovetails ---------------------------------------------------------------
-// The panel touches no module and not the lid...
-if (test_view == "panel-vs-stack")
-  intersection() { panelPart(); union() { allModules(); lidAt() lidPart(); } }
-// ...every rail lies inside its channel...
-module stackRails() { for (k = [0 : module_count - 1]) moduleAt(k) dovetailRails(); }
-if (test_view == "rails-alone") stackRails();
-if (test_view == "rails-in-channels") intersection() { stackRails(); dovetailChannels(); }
-// ...and the channels CAPTURE them. A channel's mouth faces the modules, so a rail
-// leaves it by the panel being pulled straight OFF the stack -- and only the
-// dovetail's flare stops that. Rails moved 1mm into the mouth must hit the panel.
-// (Sideways, a rail hits the channel wall, which any plain slot does too.)
-if (test_view == "dovetail-holds")
-  intersection() { panelPart(); translate([1, 0, 0]) stackRails(); }
-
 // -- ports -------------------------------------------------------------------
 // NO PORT MAY BE BLIND: nothing printed may stand in a connector's probe.
 if (test_view == "ports-blind")
-  intersection() { union() { modulePart(); panelPart(); } allPortProbes(); }
+  intersection() { modulePart(); allPortProbes(); }
 // ...and the walls must still EXIST.
 if (test_view == "wall-y-remains") intersection() { modulePart(); wallSlab("-Y"); }
 if (test_view == "wall-x-remains") intersection() { modulePart(); wallSlab("+X"); }
@@ -257,36 +244,64 @@ if (test_view == "fan-vs-boards")
 if (test_view == "fans-seated")
   intersection() { translate([-0.2, 0, 0]) fanAt(0); modulePart(); }
 
-// THE AIR PATH MUST BE OPEN, from outside the panel to each fan: through the panel's
-// window, the front wall's bore -- and the socket front of the module below, which
-// each fan's bore dips into. A probe a hair smaller than the bore, through the whole
-// case.
+// THE AIR PATH MUST BE OPEN, from outside to each fan: through the filter's window
+// and the front wall's bore. A probe a hair smaller than the bore, through the whole
+// case with every filter in place.
 if (test_view == "bores-open")
   intersection() {
     wholeCase();
     for (k = [0 : module_count - 1])
-      moduleAt(k) translate([panel_x0 - 1, fan_yc, fan_zc])
-        rotate([0, 90, 0]) cylinder(d = fan_bore_d - 0.2, h = front_wall_t - panel_x0 + 1, $fn = 96);
+      moduleAt(k) translate([-1, fan_yc, fan_zc])
+        rotate([0, 90, 0]) cylinder(d = fan_bore_d - 0.2, h = front_wall_t + 2, $fn = 96);
   }
 
-// THE FAN NEEDS SOMETHING TO SCREW INTO: a ring round every pilot hole, through the
-// WHOLE front wall, must be solid. A hole down in the spigot band fails this: the band
-// is 2mm deep and the rest of the ring is air -- which is where the screw's tip would
-// stick out and stop the module seating in the one below.
-module pilotAnnuli() {
-  translate([0, fan_yc, fan_zc]) rotate([90, 0, 90])
-    linear_extrude(front_wall_t)
-      difference() { fanBoltProfile(fan_pilot_d + 3); fanBoltProfile(fan_pilot_d); }
+// -- the dust filter ---------------------------------------------------------
+// It sits in its recess touching nothing...
+if (test_view == "filter-vs-module") intersection() { filterMounted(); modulePart(); }
+// ...and it SITS there: pushed 0.2mm further in, it runs into the recess floor.
+if (test_view == "filter-seated")
+  intersection() { translate([0.2, 0, 0]) filterMounted(); modulePart(); }
+
+// -- fan screws --------------------------------------------------------------
+// hexrack's way round: in from outside, heads countersunk into the recess floor.
+module screwAxes() {
+  for (sy = [-1, 1], sz = [-1, 1])
+    translate([0, fan_yc + sy * fan_bolt_pitch / 2, fan_zc + sz * fan_bolt_pitch / 2])
+      children();
 }
-if (test_view == "pilot-material") intersection() { modulePart(); pilotAnnuli(); }
-if (test_view == "pilot-annuli")   pilotAnnuli();
+module seatRings() {
+  screwAxes() translate([filter_depth, 0, 0]) rotate([0, 90, 0])
+    linear_extrude(0.5)
+      difference() { circle(d = fan_csink_d + 1, $fn = 32); circle(d = fan_csink_d, $fn = 32); }
+}
+// Every head lies under the ring. A countersink outside it would sit in the gap round
+// the ring, or cut the recess wall.
+if (test_view == "screw-heads-outside-ring")
+  difference() {
+    screwAxes() translate([filter_depth - 0.2, 0, 0]) rotate([0, 90, 0])
+      cylinder(d = fan_csink_d, h = 0.2, $fn = 32);
+    onFrontWall(-1) linear_extrude(filter_depth + 2) hexProfile(filter_a_out);
+  }
+// Every shank has a clear path from the recess floor, through the wall, to the fan.
+if (test_view == "screw-paths")
+  intersection() {
+    modulePart();
+    screwAxes() translate([filter_depth, 0, 0]) rotate([0, 90, 0])
+      cylinder(d = get_screw_spec(fan_screw, "through_hole_diameter") - 0.2,
+               h = fan_web + 1, $fn = 24);
+  }
+// ...and every head has a SEAT: a ring round each countersink's mouth, in the recess
+// floor, is solid. The corner holes sit 3.6mm outside the bore; this is what notices
+// a countersink breaking into it.
+if (test_view == "screw-seat-annuli") seatRings();
+if (test_view == "screw-seats") intersection() { modulePart(); seatRings(); }
 
 // -- reporting ---------------------------------------------------------------
 // Renders a unit cube on purpose: empty is the PASS everywhere else in this file, so a
 // reporting view that rendered nothing would be indistinguishable from one that died.
 if (test_view == "report-geometry") {
   echo(str("module = ", module_l, " x ", module_w, " x ", module_h, " pitch ", module_pitch));
-  echo(str("stack = ", stack_h, " panel = ", panel_t));
+  echo(str("stack = ", stack_h, " filter apothem = ", filter_a_out));
   echo(str("fan_model = ", fan_model, " fan_throat_area = ", fan_throat_area));
   echo(str("board_z = ", board_z));
   echo(str("bed = ", bed));

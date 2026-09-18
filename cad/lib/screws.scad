@@ -174,6 +174,30 @@ screw_specs = [
     // min_engagement_depth
     10.0,
   ],
+  [
+    // THIS PROJECT'S, not hexrack's: hexrack only carries its 92mm fan's M5. A 40mm
+    // Noctua's corner holes take M3; a flat-head (DIN 7991) M3 through the front wall
+    // self-taps into the fan frame. Head figures are DIN 7991's -- confirm against the
+    // screws actually used before printing.
+    // name
+    "M3-Noctua",
+    // thread_diameter
+    3.0,
+    // pilot_hole_diameter
+    3.0 * pilot_hole_regular_thread_factor,
+    // through_hole_diameter
+    3.4,
+    // head_diameter
+    6.0,
+    // head_height
+    1.7,
+    // countersink_diameter
+    6.3,
+    // countersink_depth
+    1.8,
+    // min_engagement_depth -- the pass-through is cut this deep, past the fan web
+    6.0,
+  ],
 ];
 
 // Helper functions to retrieve screw specifications

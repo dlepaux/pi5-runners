@@ -40,18 +40,20 @@ budget() {
     fi
 }
 
-# LID and FILTER PANEL: nothing at all. Upside down the lid's lap narrows as it
-# rises; the panel prints flat, its channels' flanks 20 degrees off vertical.
+# LID and DUST FILTER: nothing at all. Upside down the lid's lap narrows as it rises;
+# the filter is a flat ring with its ribs' 45-degree faces on its edges.
 budget lid-10 lid    0 0 -D 'fan_model="NF-A4x10"'
 budget lid-20 lid    0 0 -D 'fan_model="NF-A4x20"'
 budget filter filter 0 0
 
-# MODULE: steep -- the fan bore's crown in the 5.2mm front wall (~155), the 1.2mm
-# corner radii at the tops of the lattice triangles, the rounded ends of the -Y
-# connector openings and the pilot holes' crowns (~447 in all).
-# Flat -- the land's 1.3mm underside all round where the wall steps out over the
-# spigot's lap (~446), and the tops of the port openings and of the down-pointing
-# triangles (~1444 in all, ~1467 with the longer 20mm-fan module).
+# MODULE, measured by where it is (NF-A4x10):
+#   steep ~474 -- the 1.2mm corner radii at the tops of the side and rear lattice
+#                 triangles and the port openings' rounded ends (~360); the fan bore's
+#                 crown in the 3mm web and the countersinks' upper halves (~114)
+#   flat ~1457 -- the land's 1.3mm underside on the three lapped sides (~375), the tops
+#                 of the port openings and the down-pointing triangles (~1008), and the
+#                 hexagonal recess's top flat, a 4mm-deep bridge (~74). The 20mm-fan
+#                 module is longer, so its side fields are too: ~1480.
 budget module-10 module 500 1520 -D 'fan_model="NF-A4x10"'
 budget module-20 module 500 1520 -D 'fan_model="NF-A4x20"'
 

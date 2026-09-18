@@ -5,10 +5,10 @@
 //   openscad -D 'assembly_space=30' cad/case.scad          // pull the stack apart
 //   openscad -D 'fan_model="NF-A4x20"' cad/case.scad       // the 20mm fans
 //
-// fan_model changes the module and the lid; the filter panel is the same either way.
+// fan_model changes the module and the lid; the dust filter is the same either way.
 //
 // Every printed part comes out of here IN ITS PRINT ORIENTATION: module floor-down,
-// lid plate-down, filter panel face-down.
+// lid plate-down, dust filter face-down.
 //
 // THIS IS THE ONLY FILE ALLOWED TO TOUCH cad/assets/. The vendor fan mesh enters
 // through fanVisualization(), which marks it with % so it is drawn in preview and
@@ -29,16 +29,15 @@ case_parts = ["module", "lid", "filter"];
 module casePart(name) {
   if (name == "module") modulePart();
   if (name == "lid")    lidPrint();
-  if (name == "filter") panelPrint();
+  if (name == "filter") filterPart();
 }
 
 // ----------------------------------------------------------------------------
-// EXPLODE — modules apart, lid up, filter panel forward
+// EXPLODE — modules apart, lid up, filters forward
 // ----------------------------------------------------------------------------
 // Each module takes its board and its fan with it: both are screwed to it.
 function explodeModule(k) = [0, 0, k * assembly_space];
 function explodeLid()     = [0, 0, module_count * assembly_space + assembly_space];
-function explodePanel()   = [-assembly_space, 0, 0];
 
 // ----------------------------------------------------------------------------
 // PREVIEW CONTENT
@@ -74,9 +73,9 @@ if (case_part == "assembly") {
       if (show_case) modulePart();
       slotContents(slot_kind[k]);
       fanContents();
+      if (show_filter) color("DimGray") filterMounted(assembly_space);
     }
   if (show_case) translate(explodeLid()) lidAt() lidPart();
-  if (show_filter) translate(explodePanel()) color("DimGray") panelPart();
 } else {
   // One printed part, with no preview geometry anywhere near it.
   assert(len([for (p = case_parts) if (p == case_part) p]) == 1,

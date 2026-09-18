@@ -1,53 +1,54 @@
 // ============================================================================
-// FILTER PANEL — the whole front face is the dust filter
+// DUST FILTER — hexrack's, one per module
 // ============================================================================
-// hexrack's filter principle at full size: a printed frame, fabric glued into a
-// shallow pocket on its back, one round window in front of each module's fan. It
-// covers the stack from the desk to the top of the lid and slides DOWN over the two
-// dovetail rails on every module's front face, so it also ties the stack together.
+// A hexagonal ring that sits FLUSH in the recess in a module's front wall, over its
+// fan. Filter fabric is glued into a 0.32mm pocket on its BACK, reaching 4mm out from
+// the window, and spans the window; the ring only frames it. Two 45-degree ribs on its
+// top and bottom flats, at its back, click into grooves in the recess -- hexrack's
+// sectionDust(), sized for a 40mm fan. The ring also covers the fan's four screw heads.
 //
-// Positive pressure: the fans draw through this panel and nothing else, so it is the
-// only place dust can enter -- the only reason there is exactly one filter.
+// ONE DEFINITION OF THE FITTED PART. The ribs come from filterJoints() in the MODULE
+// frame -- the same rows that cut the grooves -- so filterMounted() is the ring placed
+// in the recess plus those ribs, and the printable part is that brought back by the
+// exact inverse of the placement. No second copy of the rib position to drift.
 //
-// PRINTED FLAT, face down (panelPrint): the windows are vertical holes, the glue
-// pocket faces up, and the dovetail channels are grooves in the top face whose flanks
-// lean dovetail_angle off vertical. panelPart() is the panel as it stands on the case.
+// Printed front face down: the fabric pocket faces up, the ribs stand on its edges.
+// Print one per module.
 // ============================================================================
 
-include <../lib/stacking.scad>
+include <../lib/dust-filter.scad>
 
-// One window per module, on its fan's axis.
-module windows() {
-  for (k = [0 : module_count - 1])
-    translate([panel_x0 - 1, fan_yc, k * module_pitch + fan_zc])
-      rotate([0, 90, 0]) cylinder(d = window_d, h = panel_t + 2, $fn = 96);
+// The ring in its own frame: front face at z = 0, thickness up, fabric pocket on top.
+module filterRingLocal() {
+  difference() {
+    linear_extrude(filter_depth) hexProfile(filter_a_out);
+    translate([0, 0, -EPS]) linear_extrude(filter_depth + 2 * EPS) hexProfile(filter_a_in);
+    translate([0, 0, filter_depth - filter_glue_d])
+      linear_extrude(filter_glue_d + EPS) hexProfile(filter_a_in + filter_glue_band);
+  }
 }
 
-// The channels: each rail's section grown by dovetail_clear, the panel's full height.
-module dovetailChannels() {
-  bothSides()
-    translate([0, 0, -1]) linear_extrude(stack_h + 2) dovetailProfile(dovetail_clear);
+// Ring frame -> module frame. Rz(90) then Ry(90): local x -> Y, local y -> Z, local
+// z -> +X. The ring's front face lands on the module's front face.
+function filterOrigin() = [0, fan_yc, fan_zc];
+
+module filterPlace() {
+  translate(filterOrigin()) rotate([0, 90, 0]) rotate([0, 0, 90]) children();
 }
 
-// The fabric's pocket on the back, between the channels, less a border top and bottom.
-module gluePocket() {
-  translate([-panel_gap - filter_glue_d, glue_y0, 2])
-    cube([filter_glue_d + EPS, module_w - 2 * glue_y0, stack_h - 4]);
-}
-
-module panelPart() {
-  render()
-    difference() {
-      translate([panel_x0, 0, 0]) cube([panel_t, module_w, stack_h]);
-      windows();
-      dovetailChannels();
-      gluePocket();
+module filterMounted(pull = 0) {
+  translate([-pull, 0, 0])
+    union() {
+      filterPlace() filterRingLocal();
+      for (j = filterJoints()) clipRib(j);
     }
 }
 
-// Ry(-90) sends x to z: the outer face lands on the bed, the back faces up.
-module panelPrint() {
-  translate([stack_h, 0, -panel_x0]) rotate([0, -90, 0]) panelPart();
+// The exact inverse of filterPlace(): translate back, Ry(-90), Rz(-90).
+module filterPart() {
+  rotate([0, 0, -90]) rotate([0, -90, 0])
+    translate(-filterOrigin())
+      filterMounted();
 }
 
-panelPrint();
+filterPart();

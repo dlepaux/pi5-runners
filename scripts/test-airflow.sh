@@ -2,7 +2,7 @@
 # ============================================================================
 # Airflow and ports
 # ============================================================================
-# Each module's own fan draws through the filter panel and pushes along the board,
+# Each module's own fan draws through its dust filter and pushes along the board,
 # out through the module's rear wall and the rear of both its side walls. If a
 # module's exhaust is smaller than its fan's throat, that module is choked and nothing
 # about the geometry says so.
@@ -76,17 +76,21 @@ expect_geometry "the +X wall still exists" wall-x-remains
 
 echo ""
 echo "Intake"
-expect_empty "every fan's air path is open, panel to fan"  bores-open
+expect_empty "every fan's air path is open, filter to fan"  bores-open
 
-# THE FAN NEEDS SOMETHING TO SCREW INTO.
-render pilot-annuli   "$WORK/annuli.stl"
-render pilot-material "$WORK/pilot.stl"
-ANN=$(vol "$WORK/annuli.stl"); MAT=$(vol "$WORK/pilot.stl")
-if awk -v m="$MAT" -v a="$ANN" 'BEGIN { exit !(a > 0 && m >= 0.9 * a) }'; then
-    pass "$(printf 'every fan screw bites the full front wall (%.0f%% of the pilot rings)' \
-            "$(awk -v m="$MAT" -v a="$ANN" 'BEGIN{print m/a*100}')")"
+echo ""
+echo "Fan screws"
+# In from outside, hexrack's way: countersunk into the recess floor, under the ring.
+expect_empty "every screw head lies under the filter ring"   screw-heads-outside-ring
+expect_empty "every screw has a clear path to the fan"       screw-paths
+render screw-seat-annuli "$WORK/seat-rings.stl"
+render screw-seats       "$WORK/seats.stl"
+RING=$(vol "$WORK/seat-rings.stl"); SEAT=$(vol "$WORK/seats.stl")
+if awk -v m="$SEAT" -v a="$RING" 'BEGIN { exit !(a > 0 && m >= 0.9 * a) }'; then
+    pass "$(printf 'every screw head has a solid seat (%.0f%% of the rings round them)' \
+            "$(awk -v m="$SEAT" -v a="$RING" 'BEGIN{print m/a*100}')")"
 else
-    fail "$(printf 'only %.1fmm3 of %.1f round the fan pilots is wall' "$MAT" "$ANN")"
+    fail "$(printf 'only %.1fmm3 of %.1f round the screw heads is wall — a countersink breaks into the bore?' "$SEAT" "$RING")"
 fi
 
 report "airflow and port checks"

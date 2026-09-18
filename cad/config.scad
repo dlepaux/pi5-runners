@@ -8,12 +8,12 @@
 // printed part: a vented floor the Pi screws to, four walls, the fan on the inside of
 // the front one. Its bottom is a SPIGOT that drops into the module below and clips
 // there; a LID closes the top one. The boards are never connected to each other.
-// The FILTER PANEL is the whole front face: it slides down over dovetails on the
-// modules' front faces, fabric glued behind a window per fan.
+// Each module's front wall carries hexrack's hexagonal DUST FILTER, clipped into a
+// recess over its fan.
 //
 // FRAMES. The MODULE frame: x=0 the front face, y=0 the -Y outer face, z=0 the bottom
 // of the spigot, which is the print bed. The STACK frame is module 0's; module k sits
-// at z = k * module_pitch. The filter panel lives at x < 0.
+// at z = k * module_pitch.
 // ============================================================================
 
 // Both spec tables, INCLUDED not used: `use` imports modules and functions but not
@@ -98,14 +98,15 @@ function slot_h(k) = slot_kind[k] == "bare" ? bare_slot_h : hat_slot_h;
 // FANS — one 40mm Noctua per module, 10 or 20mm deep
 // ----------------------------------------------------------------------------
 // ONE FAN PER PI. Each module carries its own fan on the inside of its front wall,
+// screwed in from outside through the wall, the hexrack way,
 // powered from its own Pi's GPIO 5V -- pins 2 or 4, ground on 6 -- so a module is a
 // complete unit: board, storage, cooler, airflow. Three fans against the two a shared
 // column had is +50% airflow.
 //
 // fan_model is the one mode switch. The fan sits between the front wall and the
 // board, so it sets the MODULE's length -- and the lid's, which is the module's
-// footprint. Switching fans means reprinting modules and lid; the filter panel is the
-// same part either way. generate-stl.sh writes both.
+// footprint. Switching fans means reprinting modules and lid; the dust filters are
+// the same part either way. generate-stl.sh writes both.
 //
 // Depth is MEASURED off Noctua's STEP, never the datasheet's 10 or 20: the frames'
 // anti-vibration pads stand proud of each face and the hub label stands proud of
@@ -140,19 +141,40 @@ fan_clear      = 0.5;    // fan frame to the floor below it and the floor above 
 // A ROUND BORE, NOT A SQUARE OPENING: a square as big as the fan removes the wall
 // exactly where its corner screws go. 38 leaves every corner solid.
 fan_bore_d  = 38;
-fan_pilot_d = 2.5;   // the fan screws in from INSIDE, self-tapping into the front wall
 
 fan_throat_area = PI * pow(fan_bore_d, 2) / 4 - PI * pow(fan_hub_d, 2) / 4;   // per fan
 
 // ----------------------------------------------------------------------------
+// CLIPS — hexrack's 45-degree rib into a groove
+// ----------------------------------------------------------------------------
+// The same joint as hexrack's dust filter: a square-section rib turned 45 degrees,
+// half of it standing proud of one part, dropping into a matching groove in the
+// other. Three ribs on every SPIGOT -- one per side wall, one on the rear -- into
+// grooves in the SOCKET of the module below; and two on every dust filter.
+clip_rib     = 1.7;          // hexrack's dust_clip_length: the rib's square section
+clip_clear   = tolerance;    // groove stands this far off the rib all round
+clip_rib_len = 18;
+
+rib_half    = clip_rib * sqrt(2) / 2;                        // proud of the joint plane
+groove_half = (clip_rib + sqrt(2) * clip_clear) * sqrt(2) / 2;
+
+// THE RIB IS THE SPIGOT'S LAST ELEMENT: its lowest vertex is the spigot's bottom edge,
+// so nothing of the spigot hangs below the clip.
+clip_z = rib_half;
+
+// ----------------------------------------------------------------------------
 // STACKING — the spigot, the socket, the lap between them
 // ----------------------------------------------------------------------------
-// A module's bottom band is a SPIGOT: a ring inset from its outer faces that drops
-// inside the walls of the module below. The walls then meet on a 45-degree LAP: the
-// lower wall's top is bevelled on the inside down to a flat land, and the upper
+// A module's bottom band is a SPIGOT: a U inset from its side and rear faces that
+// drops inside the walls of the module below. The walls then meet on a 45-degree LAP:
+// the lower wall's top is bevelled on the inside down to a flat land, and the upper
 // wall's underside follows that bevel at stack_gap. Outer faces stay flush, the land
-// carries the weight, and the lap centres each module on the one below. All four
-// sides: the front is a wall now, with the fan behind it.
+// carries the weight, and the lap centres each module on the one below.
+//
+// THE FRONT IS A BUTT JOINT. Each module's front wall runs its full height and sits
+// flat on the front wall below, so the stack's front is one continuous face and each
+// module's dust filter lies wholly in its own module. The lower module's side walls
+// stop behind the front wall above their socket, to leave it room.
 //
 // WHY A BEVEL AND NOT A STEP. The module prints floor-down, so the upper wall starts
 // at the top of the spigot, 3mm outboard of it. As a step that is a 3mm ledge printed
@@ -160,7 +182,6 @@ fan_throat_area = PI * pow(fan_bore_d, 2) / 4 - PI * pow(fan_hub_d, 2) / 4;   //
 // only the land -- stack_land + a little -- is left bridging.
 stack_gap  = 0.2;     // spigot to socket, all round
 spigot_t   = 2;       // the spigot ring's own thickness
-spigot_h   = 8;       // how far a module drops into the one below
 stack_land = 1;       // the flat top of each wall that bears the module above
 
 // Inset of the upper module's outer face just below the land, and where its bevel
@@ -170,29 +191,89 @@ lap_inset0   = stack_land + stack_gap * sqrt(2);
 spigot_inset = wall + stack_gap;
 lap_h        = spigot_inset - lap_inset0;   // height of the upper module's bevel
 
+// AS SHORT AS THE CLIP ALLOWS. The groove in the module below must sit wholly under
+// that module's bevel, which starts (wall - stack_land) below its top.
+spigot_h = ceil((clip_z + groove_half + wall - stack_land + 0.3) * 10) / 10;
+
 assert(lap_h > 0, "the stacking bevel has no height -- stack_land is too wide");
-assert(spigot_h > lap_h + 4, "the spigot has no straight band left for its clip ribs");
+assert(clip_z + rib_half <= spigot_h - lap_h,
+       "the spigot rib runs into the spigot's own bevel");
+
+// ----------------------------------------------------------------------------
+// DUST FILTER — hexrack's, one hexagon per module
+// ----------------------------------------------------------------------------
+// hexrack's filter, sized for a 40mm fan: a hexagonal ring, flats top and bottom, that
+// sits FLUSH in a recess in the module's front wall. Fabric is glued into a 0.32mm
+// pocket on its back reaching 4mm out from the window; two 45-degree ribs on the top
+// and bottom flats, at the ring's back, click into grooves in the recess.
+//
+// Flats top and bottom is also how it PRINTS: standing, the recess's slanted sides are
+// 30 degrees off vertical and its top flat is a short bridge. Points up, the upper
+// sides would be 60 degrees off vertical.
+//
+// THE RING COVERS THE FAN SCREWS. They go in from outside, countersunk into the
+// recess floor, so the ring is sized to lie over every head: in the hexagon's own
+// metric a corner hole at (16, 16) sits 16*(cos30 + sin30) = 21.9 out, and its
+// countersink reaches half its diameter further. That -- not the fan -- is what sets
+// the ring's size, and through it the module's height.
+filter_depth     = 4;                    // ring thickness = recess depth
+fan_web          = 3;                    // front wall behind the recess: what the screws pass
+filter_clear     = tolerance / 2;        // ring to recess, all round: hexrack's
+filter_glue_d    = 0.32;                 // hexrack's glue pocket depth
+filter_glue_band = 4;                    // pocket reaches this far out from the window
+
+fan_screw    = "M3-Noctua";
+fan_csink_d  = get_screw_spec(fan_screw, "countersink_diameter");
+fan_screw_hex = fan_bolt_pitch / 2 * (cos(30) + sin(30));   // a corner hole, hexagon metric
+
+// Apothems -- centre to a flat.
+filter_a_in  = fan_bore_d / 2;                          // the window frames the bore
+filter_a_out = fan_screw_hex + fan_csink_d / 2 + 0.5;   // the ring covers every head
+filter_a_recess = filter_a_out + filter_clear;
+filter_side  = 2 * filter_a_out * tan(30);              // a flat's length
+filter_rib_len = 0.6 * filter_side;                     // hexrack's is 30 on a longer flat
+
+assert(filter_a_in + filter_glue_band < filter_a_out - 0.5,
+       "the glue pocket runs off the ring's edge");
+assert(fan_csink_d / 2 < fan_web + filter_depth, "the countersink is deeper than the wall");
+
+// ----------------------------------------------------------------------------
+// FASTENERS — the Pi screws into its own module
+// ----------------------------------------------------------------------------
+// M2.5 heat-set inserts in two rails on the floor, one under each mounting hole.
+// READ FROM lib/theaded-inserts.scad: a Ruthex RX-M2.5x5.7 wants 6.7 of hole, not 5.7.
+// The HAT's M2.5 male-female standoffs thread through the Pi into those inserts.
+//
+// The rails run ALONG X, with the airflow, as hexrack's canoes do.
+insert_m25    = "M2.5";
+boss_d        = get_insert_min_boss(insert_m25);   // 7.2
+canoe_w       = boss_d + 2;
+canoe_overrun = 4;
+
+assert(board_z - get_insert_spec(insert_m25, "hole_depth") >= 1,
+       "the insert pocket would break through the floor");
 
 // ----------------------------------------------------------------------------
 // MODULE — one Pi 5 and its fan, printed floor-down as one piece
 // ----------------------------------------------------------------------------
 // SIZED FOR THE TALLEST BOARD, so there is ONE module part and any board goes in any
-// slot. A bare Pi wastes 11mm of height; three different modules would waste a
-// reprint every time a board changes role.
+// slot. A bare Pi wastes height; three different modules would waste a reprint every
+// time a board changes role.
 floor_t       = 2.4;   // the vented floor: 12 layers at 0.2
 rail_h        = 5.5;   // the insert rails ("canoes") the Pi sits on, above the floor
 plenum_gap    = 3;     // fan's back face to the Compact HAT's tab
-side_clear    = 3;     // board edge to a side wall's inner face
 port_overhang = 3;     // RJ45 and USB-A stand proud of the PCB's +X edge
 rear_clear    = 3;     // those connectors to the rear wall
 module_air    = 5;     // top of the tallest board to the next module's floor, at least
 
-// THE FRONT WALL IS AS THICK AS THE SPIGOT RING IS DEEP. Below the lap, the spigot's
-// front band IS the front wall's lower part, so a front wall of spigot_inset +
-// spigot_t gives the fan ONE flat face to sit on, from the floor to the next module:
-// no step where the spigot ends. Above module_pitch it thins to `wall` -- that is the
-// socket the module above drops into.
-front_wall_t = spigot_inset + spigot_t;
+// SIDES: AS TIGHT AS THE BOARD. The Pi is located by its four screws, not by the
+// walls, so the walls only need to clear it: 0.5 either side of the board and of the
+// HAT's 0.5 overhang on +Y. The -Y connectors reach into their own wall openings.
+side_clear    = 0.5;
+
+// The front wall: the recess the filter sits in, and the web behind it the fan's
+// screws pass through.
+front_wall_t = filter_depth + fan_web;
 
 // The Pi in the module frame: behind the front wall, the fan and the plenum. The
 // Compact's tab hangs 6.5 off the PCB's -X edge, toward the fan, so the plenum is
@@ -204,102 +285,36 @@ board_z = floor_t + rail_h;
 module_l = board_x + pi5_pcb[0] + port_overhang + rear_clear + wall;
 module_w = board_y + pi5_pcb[1] + hat_overhang_y + side_clear + wall;
 
-// The fan, centred across the module, as low as it can sit WITH EVERY SCREW HOLE IN
-// FULL WALL. Below spigot_h the front wall is only the spigot band, 2mm thick, with the
-// socket of the module below standing in front of it: a screw long enough to hold
-// there pokes out of the band and stops the module dropping into its socket. So the
-// lower screw holes clear spigot_h, which is ~3mm higher than the floor alone asks.
-fan_yc = module_w / 2;
-fan_zc = max(floor_t + fan_clear + fan_size / 2,
-             spigot_h + fan_bolt_pitch / 2 + fan_pilot_d / 2 + 0.5);
-
-// Floor to floor: whichever needs more, the tallest board or the fan. It is the fan.
-module_pitch = max(board_z + hat_slot_h + module_air, fan_zc + fan_size / 2 + fan_clear);
+// FLOOR TO FLOOR: whichever needs most -- the tallest board, the fan, or the filter's
+// recess with a clip groove and a millimetre of wall above and below it. It is the
+// filter.
+filter_band_h = 2 * (filter_a_recess + groove_half + 1);
+module_pitch = max(board_z + hat_slot_h + module_air,
+                   floor_t + fan_size + 2 * fan_clear,
+                   filter_band_h);
 module_h     = module_pitch + spigot_h;
+
+// The fan and its filter, centred on the module's front face.
+fan_yc = module_w / 2;
+fan_zc = module_pitch / 2;
 
 module_count = 3;
 lid_t        = 3;     // the lid's plate, above its spigot
 stack_h = module_count * module_pitch + spigot_h + lid_t;   // floor of 0 to lid top
 
-// The module above must drop in without touching this one's board.
 assert(module_pitch - (board_z + hat_slot_h) >= 3,
        "less than 3mm between a HAT and the next module's floor");
-assert(fan_size + 6 <= module_w - 2 * wall, "the fan is wider than the module's inside");
+assert(fan_zc - fan_size / 2 >= floor_t + fan_clear, "the fan sits on the floor");
+assert(2 * filter_a_recess / cos(30) + 2 < module_w,
+       "the filter's recess is wider than the front wall");
+assert(fan_size + 2 <= module_w - 2 * wall, "the fan is wider than the module's inside");
+assert(board_y + pi5_hole_inset - boss_d / 2 >= spigot_inset,
+       "the rail's insert boss would stand outside the spigot");
 
-// THE FAN'S BORE STILL DIPS INTO THE MODULE BELOW. It runs down past spigot_h, where
-// this module's front band sits inside the socket of the one below -- so every module
-// also cuts the bore of the module ABOVE through its own socket front, one pitch up.
-// Lifting the bore clear as well would cost another 2mm a module.
-assert(fan_zc - fan_bolt_pitch / 2 - fan_pilot_d / 2 >= spigot_h,
-       "a fan screw hole lands in the spigot band, where its screw would block stacking");
-
-// The Pi's connectors must cut through FULL wall, not through the spigot band where
-// the wall is inset: the lowest connector starts 1.53 above the PCB underside.
+// The Pi's connectors must cut through FULL wall, not the inset spigot band: the
+// lowest connector starts 1.53 above the PCB underside.
 assert(board_z + 1.5 > spigot_h,
        "a connector would land in the inset spigot band instead of the wall");
-
-// ----------------------------------------------------------------------------
-// CLIPS — hexrack's 45-degree rib into a groove
-// ----------------------------------------------------------------------------
-// The same joint as hexrack's dust filter: a square-section rib turned 45 degrees,
-// half of it standing proud of one part, dropping into a matching groove in the
-// other. Ribs on the SPIGOT's outer faces (every module, and the lid); grooves in the
-// SOCKET, the top of every module's walls. None on the front: the fan bores are there.
-clip_rib     = 1.7;          // hexrack's dust_clip_length: the rib's square section
-clip_clear   = tolerance;    // groove stands this far off the rib all round
-clip_rib_len = 18;
-clip_z       = 3;            // rib centre, above the spigot bottom
-
-rib_half    = clip_rib * sqrt(2) / 2;                        // proud of the joint plane
-groove_half = (clip_rib + sqrt(2) * clip_clear) * sqrt(2) / 2;
-
-assert(rib_half - stack_gap > 0.5, "a spigot rib barely overlaps its own spigot");
-assert(clip_z - groove_half >= 0, "the socket groove would run off the spigot's bottom");
-assert(clip_z + groove_half < spigot_h - lap_h,
-       "the socket groove runs into the bevel above it");
-assert(wall - groove_half >= 1.2, "the socket groove leaves under 1.2mm of wall behind it");
-
-// ----------------------------------------------------------------------------
-// DOVETAILS — the filter panel slides down over them
-// ----------------------------------------------------------------------------
-// A male rail near each edge of every module's FRONT face, vertical. The filter panel
-// carries the channels and slides down over all three modules at once. The rail's
-// bottom is chamfered at 45 degrees: the wall below it is the inset spigot band, so a
-// square-ended rail would start over air.
-dovetail_d     = 2.5;    // how far the rail stands off the face
-dovetail_w     = 6;      // width at the root
-dovetail_angle = 20;     // flank angle from the face's normal
-dovetail_y     = 6.5;    // rail centre, in from each side face
-dovetail_clear = 0.25;   // channel to rail, all round
-
-dovetail_tip_w = dovetail_w + 2 * dovetail_d * tan(dovetail_angle);
-
-// Clear of the fan's bore and of its screw holes.
-assert(dovetail_y + dovetail_tip_w / 2 + 2 < fan_yc - fan_bolt_pitch / 2 - fan_pilot_d,
-       "the dovetail rail runs into the fan's screw holes");
-assert(dovetail_y - dovetail_tip_w / 2 - dovetail_clear >= 2,
-       "the panel has under 2mm outside its dovetail channel");
-
-// ----------------------------------------------------------------------------
-// FILTER PANEL — the whole front face is the dust filter
-// ----------------------------------------------------------------------------
-// hexrack's principle at full size: a printed frame with the fabric glued into a
-// shallow pocket on its back, one round window in front of each fan. It covers the
-// stack from the desk to the lid and slides down over the modules' dovetails.
-//
-// PRINTED FLAT, face down: the windows are vertical holes, the glue pocket faces up,
-// and the dovetail channels are grooves in the top face whose flanks lean 20 degrees
-// off vertical -- well inside what prints without support.
-panel_gap   = 0.3;    // panel's back to the module fronts
-panel_skin  = 2;      // panel in front of the channels' floor
-panel_x0    = -(dovetail_d + dovetail_clear + panel_skin);   // its outer face
-panel_t     = -panel_x0 - panel_gap;
-window_d    = fan_bore_d;   // the bore is the restriction; a bigger window only thins the glue land
-filter_glue_d = 0.32;   // hexrack's glue pocket depth
-
-// The fabric's pocket: between the two channels, the panel's full height less a border.
-glue_y0 = dovetail_y + dovetail_tip_w / 2 + dovetail_clear + 1.5;
-assert(glue_y0 < fan_yc - window_d / 2 - 2, "the glue pocket does not clear the windows");
 
 // ----------------------------------------------------------------------------
 // VENTS — hexrack's triangle lattice
@@ -340,22 +355,6 @@ exclusion_h = exclusion_cluster_z[1] - exclusion_cluster_z[0] + 2 * exclusion_pa
 exclusion_r = 3;
 
 // ----------------------------------------------------------------------------
-// FASTENERS — the Pi screws into its own module
-// ----------------------------------------------------------------------------
-// M2.5 heat-set inserts in two rails on the floor, one under each mounting hole.
-// READ FROM lib/theaded-inserts.scad: a Ruthex RX-M2.5x5.7 wants 6.7 of hole, not 5.7.
-// The HAT's M2.5 male-female standoffs thread through the Pi into those inserts.
-//
-// The rails run ALONG X, with the airflow, as hexrack's canoes do.
-insert_m25    = "M2.5";
-boss_d        = get_insert_min_boss(insert_m25);   // 7.2
-canoe_w       = boss_d + 2;
-canoe_overrun = 4;
-
-assert(board_z - get_insert_spec(insert_m25, "hole_depth") >= 1,
-       "the insert pocket would break through the floor");
-
-// ----------------------------------------------------------------------------
 // ASSEMBLY / PREVIEW
 // ----------------------------------------------------------------------------
 // Open cad/case.scad and set case_part:
@@ -363,18 +362,18 @@ assert(board_z - get_insert_spec(insert_m25, "hole_depth") >= 1,
 //   "module" | "lid" | "filter" - one printed part
 case_part = "assembly";
 
-// Explode distance: modules apart, lid up, filter panel forward. The
+// Explode distance: modules apart, lid up, filters forward. The
 // boards travel with their modules -- each is screwed to its own floor.
 //
 // THE EXPLODE LIVES ONLY IN case.scad. placement.scad never reads it, so no fit test
 // can measure an exploded position even by accident.
 assembly_space = 30;
 
-show_boards    = true;    // the Pi 5s, from the framework (cooler included)
-show_hats      = true;    // both M.2 HAT+ boards and their drives
-show_standoffs = true;    // the HATs' M2.5 standoffs
+show_boards    = false;    // the Pi 5s, from the framework (cooler included)
+show_hats      = false;    // both M.2 HAT+ boards and their drives
+show_standoffs = false;    // the HATs' M2.5 standoffs
 show_fan       = true;    // one fan mesh per module, of fan_model
-show_filter    = true;    // the filter panel
+show_filter    = true;    // the dust filters
 show_case      = true;    // modules and lid
 
 // Bambu A1. Every printed part has to fit.

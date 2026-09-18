@@ -2,17 +2,19 @@
 // MODULE — one Raspberry Pi 5 and its fan, printed as one piece
 // ============================================================================
 // Floor and four walls. The Pi screws into heat-set inserts in two rails on the floor;
-// its fan screws to the inside of the front wall. The module's spigot drops into the
-// module below and clips there; the module above drops into this one's socket. Print
-// it three times.
+// its fan sits on the inside of the front wall, screwed from outside, and hexrack's
+// hexagonal dust filter clips into the front wall over it. The module's spigot drops
+// into the module below and clips there; the module above drops into this one's
+// socket. Print it three times.
 //
 // PRINTED FLOOR-DOWN, AS IT STANDS, WITH NO SUPPORT:
 //   - the vented floor is the first layers, on the bed
 //   - the spigot's outer band steps out to the wall on a 45-degree lap
 //   - the walls rise straight; port and vent openings are short bridges; the fan
 //     bore is an arch in the front wall, its crown a bridge that shortens to nothing
+//   - the filter's hexagonal recess has its flats top and bottom: the slanted sides
+//     are 30 degrees off vertical, the top flat a short bridge
 //   - the socket's bevel and clip grooves face inward and upward
-//   - the filter panel's dovetail rails are vertical prisms with 45-degree feet
 // ============================================================================
 
 include <../lib/stacking.scad>
@@ -20,7 +22,7 @@ include <../lib/placement.scad>
 use <../lib/ports.scad>
 use <../lib/vents.scad>
 use <../lib/sbc-helpers.scad>
-use <../lib/noctua-fan.scad>
+include <../lib/dust-filter.scad>
 
 // ----------------------------------------------------------------------------
 // BODY — spigot, floor, walls, socket
@@ -31,16 +33,13 @@ module moduleBody() {
       spigotSolid();
       translate([0, 0, spigot_h])
         linear_extrude(module_h - spigot_h) square([module_l, module_w]);
+      // The front wall: full width, from the bed to the module above, which sits on it.
+      cube([front_wall_t, module_w, module_pitch]);
     }
     spigotCavity(floor_t);
-    // Up to the next floor the front wall is front_wall_t thick -- one flat face for
-    // the fan, flush with the spigot band's inside. Above it, the socket: `wall` all
-    // round, for the module above to drop into.
     translate([front_wall_t, wall, spigot_h - EPS])
       cube([module_l - front_wall_t - wall, module_w - 2 * wall, module_pitch - spigot_h + 2 * EPS]);
-    translate([0, 0, module_pitch])
-      linear_extrude(module_h - module_pitch + 1) insetRect(wall);
-    socketLap();
+    socketCut();
   }
 }
 
@@ -67,9 +66,12 @@ module canoeFootprint() {
     }
 }
 
+// Clipped to the spigot: with the walls this close to the board, a round-ended rail
+// would otherwise stand out past the spigot band into the module below.
 module canoes() {
   translate([0, 0, floor_t - OVERLAP])
-    linear_extrude(rail_h + OVERLAP) canoeFootprint();
+    linear_extrude(rail_h + OVERLAP)
+      intersection() { canoeFootprint(); insetRect(spigot_inset); }
 }
 
 // Z = 0 of insert_hole_mask() is the entry surface: the rail top, the board's underside.
@@ -125,8 +127,9 @@ module sideVentProfile() {
 // standing over the holes -- a ledge, found when the front stopped being open.
 module floorVentProfile() {
   m = spigot_inset + spigot_t + vent_margin;
+  x0 = front_wall_t + vent_margin;
   difference() {
-    translate([m, m]) ventField(module_l - 2 * m, module_w - 2 * m);
+    translate([x0, m]) ventField(module_l - m - x0, module_w - 2 * m);
     offset(delta = vent_margin) canoeFootprint();
   }
 }
@@ -143,33 +146,24 @@ module ventCuts() {
 }
 
 // ----------------------------------------------------------------------------
-// FAN
+// FAN AND FILTER
 // ----------------------------------------------------------------------------
-// rotate([90,0,90]) maps profile x -> Y, profile y -> Z; extrusion runs +X through the
-// front wall. Centred on the fan.
-module onFront(z) {
-  translate([-EPS, fan_yc, z]) rotate([90, 0, 90]) children();
-}
-
-// This module's bore and the fan's pilot holes, through the whole front wall -- and
-// THE BORE OF THE MODULE ABOVE, one pitch up, through this module's socket front. That
-// bore runs down past its own spigot band into this socket; cut here from the same
-// datum, the two can never disagree.
+// The bore, through the whole front wall, and the fan's four screw holes: hexrack's
+// screw_hole_mask "front" -- countersink and pass-through -- cut from the recess floor
+// inward, so the screws go in from outside and their heads sit flush under the ring.
+// Rotated so the mask's -Z runs +X, into the wall.
 module fanCut() {
-  onFront(fan_zc)
-    linear_extrude(front_wall_t + 2 * EPS) {
-      circle(d = fan_bore_d, $fn = 96);
-      fanBoltProfile(fan_pilot_d);
-    }
-  onFront(fan_zc + module_pitch)
-    linear_extrude(wall + 2 * EPS) circle(d = fan_bore_d, $fn = 96);
+  onFrontWall(-EPS) linear_extrude(front_wall_t + 2 * EPS) circle(d = fan_bore_d, $fn = 96);
+  for (sy = [-1, 1], sz = [-1, 1])
+    translate([filter_depth, fan_yc + sy * fan_bolt_pitch / 2, fan_zc + sz * fan_bolt_pitch / 2])
+      rotate([0, -90, 0]) screw_hole_mask(fan_screw, "front");
 }
 
 // ----------------------------------------------------------------------------
 // THE PART
 // ----------------------------------------------------------------------------
 // render() is NOT optional: preview does not evaluate booleans, and a body cut by
-// ports, four vent fields, two bores and ten clip features blows past OpenSCAD's normalisation
+// ports, four vent fields, a bore, a recess and eight clip features blows past OpenSCAD's normalisation
 // limit -- blank window, perfect export.
 module modulePart() {
   render()
@@ -177,7 +171,6 @@ module modulePart() {
       union() {
         moduleBody();
         canoes();
-        dovetailRails();
         spigotRibs();
       }
       insertPockets();
@@ -185,6 +178,8 @@ module modulePart() {
       allPortCuts();
       ventCuts();
       fanCut();
+      filterRecess();
+      filterGrooves();
     }
 }
 

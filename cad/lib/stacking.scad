@@ -7,7 +7,6 @@
 //   socketLap()    the bevel cut into the top of every module's walls
 //   spigotJoints() the clip ribs on a spigot; the SAME rows, raised by module_pitch,
 //                  are the grooves in the socket of the module below
-//   dovetailProfile() the rails on the modules and the channels in the filter panel
 //
 // All in the MODULE frame: x=0 the front face, y=0 the -Y outer face, z=0 the
 // spigot's bottom. See config.scad.
@@ -20,9 +19,10 @@ include <clips.scad>
 // OUTLINES
 // ----------------------------------------------------------------------------
 
-// The module's footprint inset by d on all four sides.
-module insetRect(d) {
-  translate([d, d]) square([module_l - 2 * d, module_w - 2 * d]);
+// The module's footprint inset by d on its sides and rear -- the three walls that
+// stack on a lap. The front butt-joins, so the front edge stays at x0.
+module insetRect(d, x0 = 0) {
+  translate([x0, d]) square([module_l - d - x0, module_w - 2 * d]);
 }
 
 // A wafer of a 2D outline at height z: hull() between two of these is a frustum,
@@ -46,23 +46,29 @@ module spigotSolid() {
   }
 }
 
-// The spigot ring's inside, from z0 up to spigot_h. A module starts it at its floor's
-// top; the lid is hollow all the way down.
+// The spigot's inside, from z0 up to spigot_h, behind the front wall. A module starts
+// it at its floor's top; the lid is hollow all the way down.
 module spigotCavity(z0) {
   translate([0, 0, z0])
-    linear_extrude(spigot_h - z0 + EPS) insetRect(spigot_inset + spigot_t);
+    linear_extrude(spigot_h - z0 + EPS) insetRect(spigot_inset + spigot_t, front_wall_t);
 }
 
 // ----------------------------------------------------------------------------
 // SOCKET — the top of every module's walls
 // ----------------------------------------------------------------------------
-// The inside of the walls opens at 45 degrees from the wall's inner face up to a
-// stack_land-wide flat at module_h. Carried past module_h at the same slope, so the
+// Above module_pitch the walls are the socket: `wall` thick on the sides and rear,
+// and NOTHING in front of the front wall's line -- the module above stands its own
+// front wall there, full width, on this one's. The inside opens at 45 degrees up to a
+// stack_land-wide flat at module_h, carried past module_h at the same slope so the
 // cut runs out through the top rather than meeting it face to face.
-module socketLap() {
+module socketCut() {
+  translate([0, 0, module_pitch])
+    linear_extrude(module_h - module_pitch + 1) insetRect(wall, -1);
+  translate([-1, -1, module_pitch])
+    cube([front_wall_t + 1, module_w + 2, module_h - module_pitch + 1]);
   hull() {
-    waferAt(module_h - (wall - stack_land)) insetRect(wall);
-    waferAt(module_h + 1) insetRect(stack_land - 1);
+    waferAt(module_h - (wall - stack_land)) insetRect(wall, -1);
+    waferAt(module_h + 1) insetRect(stack_land - 1, -1);
   }
 }
 
@@ -70,56 +76,17 @@ module socketLap() {
 // CLIP JOINTS
 // ----------------------------------------------------------------------------
 // Ribs on the spigot's outer faces, centred on the plane of the lower module's inner
-// wall face. Two per side wall, one on the rear. None on the front: the fan bores
-// run through the front's spigot band.
+// wall face: one per side wall, one on the rear. Three hold a module; five only made
+// it harder to pull apart.
 function spigotJoints() =
-  let (yl = wall, yr = module_w - wall, xr = module_l - wall, z = clip_z)
-  [ ["left-a",  [module_l / 3,     yl, z], "x", clip_rib_len],
-    ["left-b",  [2 * module_l / 3, yl, z], "x", clip_rib_len],
-    ["right-a", [module_l / 3,     yr, z], "x", clip_rib_len],
-    ["right-b", [2 * module_l / 3, yr, z], "x", clip_rib_len],
-    ["rear",    [xr, module_w / 2,     z], "y", clip_rib_len] ];
+  let (yl = wall, yr = module_w - wall, xr = module_l - wall, z = clip_z,
+       xm = (front_wall_t + module_l - wall) / 2)
+  [ ["left",  [xm, yl, z], "x", clip_rib_len],
+    ["right", [xm, yr, z], "x", clip_rib_len],
+    ["rear",  [xr, module_w / 2, z], "y", clip_rib_len] ];
 
 // The same joint, seen from the module below: its groove, in its own frame.
 function socketJoint(j) = [j[0], j[1] + [0, 0, module_pitch], j[2], j[3]];
 
 module spigotRibs()    { for (j = spigotJoints()) clipRib(j); }
 module socketGrooves() { for (j = spigotJoints()) clipGroove(socketJoint(j)); }
-
-// ----------------------------------------------------------------------------
-// DOVETAILS
-// ----------------------------------------------------------------------------
-// One rail's section in the XY plane, near the -Y edge of the front face: root on the
-// face at x = 0, flaring to dovetail_tip_w at x = -dovetail_d. The root runs OVERLAP
-// into the wall so the rail is fused to it, not tangent to it.
-module dovetailProfile(grow = 0) {
-  hr = dovetail_w / 2;
-  ht = dovetail_tip_w / 2;
-  offset(delta = grow)
-    translate([0, dovetail_y])
-      polygon([[OVERLAP, -hr], [OVERLAP, hr], [-dovetail_d, ht], [-dovetail_d, -ht]]);
-}
-
-// Both rails: the +Y one is the -Y one mirrored about the module's centre line.
-module bothSides() {
-  children();
-  translate([0, module_w, 0]) mirror([0, 1, 0]) children();
-}
-
-// A module's male rails: from spigot_h, where the full wall starts, to module_h. The
-// bottom rises at 45 degrees off the face -- below it is the inset spigot band, so a
-// square end would be a 2.5mm ledge over air.
-module dovetailRails() {
-  bothSides() {
-    hull() {
-      waferAt(spigot_h)
-        intersection() {
-          dovetailProfile();
-          translate([-EPS, -1]) square([OVERLAP + EPS, module_w + 2]);
-        }
-      waferAt(spigot_h + dovetail_d) dovetailProfile();
-    }
-    translate([0, 0, spigot_h + dovetail_d])
-      linear_extrude(module_h - spigot_h - dovetail_d) dovetailProfile();
-  }
-}

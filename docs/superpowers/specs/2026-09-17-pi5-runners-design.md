@@ -1,7 +1,7 @@
 # pi5-runners — three-Pi CI runner tower
 
 **Date:** 2026-09-17
-**Status:** implemented; revised 2026-09-18 — see *Revisions 2–6* at the end. **Revision 5 replaced the architecture; Revision 6 is current**
+**Status:** implemented; revised 2026-09-18 — see *Revisions 2–7* at the end. **Revision 5 replaced the architecture; Revision 7 is current**
 
 ## Goal
 
@@ -475,3 +475,36 @@ change and is now 2.6.
 spigot's new front band — a ledge, caught by the flat-overhang budget (CLAUDE.md trap
 29). And the geometry suites now run in both fan modes, since the mode changes the
 module.
+
+
+---
+
+## Revision 7 — hexrack's hexagonal filters, fans screwed from outside (2026-09-18)
+
+Requested after Revision 6. Where it conflicts with Revision 6, this section wins.
+
+| | Revision 6 | Revision 7 |
+|---|---|---|
+| Fan screws | from inside, self-tapping into the wall | **from outside, hexrack's `screw_hole_mask` "front": countersunk M3 into the fan** |
+| Dust filter | one flat panel on dovetails | **hexrack's hexagonal ring, one per module, clipped into its front wall** |
+| Front joint | lap on all four sides | **butt joint: full-height front walls stand on each other** |
+| Spigot ribs | 5, 8 mm spigot | **3, the rib the spigot's last element: 5.2 mm spigot** |
+| Side clearance | 3 mm | **0.5 mm** |
+| Envelope (NF-A4x10) | 125.5 × 68.5 × 149.75 | **122.5 × 63.5 × 178** |
+
+**Why the case grew 28 mm.** With the screws in from outside, their countersunk heads
+sit in the filter's recess floor and the hexagon has to cover them. A 40 mm fan's corner
+holes are only 2.6 mm outside its bore, and in the hexagon's own metric they sit 21.9
+out; with their countersinks the ring needs an apothem of 25.5, the recess is 51.4
+across its flats, and with its clip grooves each module's front is 56.6 tall. The board
+needs 36.45. **This was put to the owner with the alternative**: screws from inside let
+the hexagon only frame the bore, for about 15 mm less stack.
+
+**Why the front is a butt joint.** With a lapped front, a module's visible front band is
+its pitch less the spigot band, and the filter recess would cross into the module below.
+Butt-jointed, each module's front wall is its own full pitch, full width, and the filter
+lies wholly in it.
+
+**Why only the fan screws' ring decides the filter.** The ring's window frames the 38 mm
+bore; its outer edge covers the heads; the glue pocket reaches hexrack's 4 mm out from
+the window, inside that.
