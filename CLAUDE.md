@@ -1,7 +1,8 @@
 # pi5-runners — 3D-Printable Tower for Three Pi 5 CI Runners
 
 Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Actions
-runners. **131.6 × 66.5 × 99.95 mm, 0.87 L**, four printed parts, two stacked 40 mm Noctuas.
+runners. **127.5 × 68.5 × 99.95 mm, 0.87 L**, seven printed parts clipped together with
+no screws, two stacked 40 mm Noctuas.
 
 ## Project intent
 
@@ -28,10 +29,11 @@ decision below follows from sustained load rather than from idle.
   fit the Active Cooler beneath it". Slot 2 raises it to the same 16 mm on custom
   standoffs. **This is not re-openable as a preference** — it is the height that
   clears the cooler, and `config.scad` asserts it
-- **Case fans: two Noctua NF-A4x20 5V PWM, stacked into one 40 × 80 column.** Each
-  9.4 m³/h, 14.9 dB(A), 2.26 mmH₂O (12 V PWM datasheet; confirm the 5 V PWM sheet
-  before ordering). **Measured off Noctua's STEP at 21.1 deep, not 20** — the hub
-  label stands 1 mm proud of the frame
+- **Case fans: the user's two Noctua NF-A4x10 5V, stacked into one 40 × 80 column.**
+  Each 8.2 m³/h, 17.9 dB(A), 1.78 mmH₂O, 0.25 W, 3-pin — powered from the Pi's GPIO
+  5 V, since they have no USB adaptor. **8.2 m³/h, not 4.85**: an earlier revision read
+  the CFM figure as m³/h and wrongly ruled these fans out. **Measured off Noctua's STEP
+  at 12.0 deep, not 10** — pads 0.5 proud each face, hub label 1 mm beyond
 - **THE FAN IS ON THE FRONT: the −X wall, opposite the USB/Ethernet cluster.** Air
   enters the front, runs the board's full 85 mm LENGTH over the SoC and the drive, and
   leaves at the rear where the ports are and the Ethernet PHY runs hottest. At 80 mm it
@@ -41,37 +43,62 @@ decision below follows from sustained load rather than from idle.
   had to be 86 wide inside while the board needs 60.5 — the fan set the case's width.
   A 40 × 80 column is the same HEIGHT, so it still faces all three slots, but narrow
   enough that the board sets the width again: 1.25 L → 0.87 L. **The cost is airflow,
-  chosen knowingly**: ~12.7 K case-air rise instead of ~4.3 K, ~12 K under the HAT's
-  50 °C limit in a 25 °C room instead of ~21 K. The user's two NF-A4x10s were ruled out
-  (≈ 0 K margin). The board sits against −Y so USB-C and micro-HDMI meet their wall
+  chosen knowingly**: ~14.6 K case-air rise instead of ~4.3 K, ~10 K under the HAT's
+  50 °C limit in a 25 °C room instead of ~21 K. The board sits against −Y so USB-C and
+  micro-HDMI meet their wall
 - **EXHAUST: THE REAR WALL, WRAPPING ONTO THE REAR OF BOTH SIDES. Never the roof.**
   Rear-only was built and MEASURED: the port clusters' exclusion zones take ~43% of the
   rear, leaving 57% of the fan's throat; even venting the whole rear with no zones only
   reaches 99.7%. The rear wall alone cannot carry this fan. Side fields restore a
-  matched exit — **268% of the fans' throat** — and keep the top and front clean. The −Y side
+  matched exit — **206% of the fans' throat** — and keep the top and front clean. The −Y side
   field is asserted to stay behind the USB-C/HDMI cutouts
 - **EXCLUSION ZONES, hexrack's back-face idea.** A rounded rectangle per board is carved
   out of the vent CUTTER around its RJ45/USB cluster, so the ports sit in clean solid
   material with the pattern running round them. Sized from the MEASURED cluster
   (52.2 × 16.3), not guessed, because every mm comes out of the only exhaust there is
 - **hexrack's triangle lattice, copied verbatim** — cell 14, web 1.6, corner 1.2,
-  stagger 0.5 — on the rear, the sides and the filter, so the projects read as one
+  stagger 0.5 — on the rear and the sides, so the projects read as one
   family. A triangle cannot rack, so a thin wall stays stiff
 - **Positive pressure.** One filtered intake; dust can only enter where the filter is,
-  which is the only reason there is exactly one filter. The printed grille is a
-  RETAINER for bought media (80% of throat), not the filtration itself. **One 40 × 80
-  opening and one filter for the whole column** — two openings would leave a bar across
-  the airstream exactly where the frames meet
+  which is the only reason there is exactly one filter. **The filter is hexrack's**: a
+  printed ring sits flush in a 4 mm recess in the front wall, fabric media is glued
+  into a 0.32 mm pocket on its back, and two 45° ribs click it into grooves in the
+  recess. The ring's opening covers both fan bores, so only fabric is in the airstream.
+  Behind the recess each fan has its own Ø38 bore, and the fans screw in from inside
+  into 3 mm of solid wall: a single square opening had left the screw holes over air
 - **The M.2 HAT+ is rated 0–50 °C ambient**, and that is the number this case holds.
-  The two NF-A4x20s put a 25 °C room at ~38 °C of case air — ~12 K of margin. Two
-  NF-A4x10s would put it at ~50 °C, the ceiling itself, which is why they are not used.
-  **If a real print runs hot, the NF-A8 layout (Revision 2 in the spec) is the known
-  fallback**: +21 K of margin for 0.38 L of case. The HAT PCBs are 56.5 against the Pi's 56 and
-  **overhang its +Y edge by 0.5**, which the envelope carries
+  The two NF-A4x10s put a 25 °C room at ~40 °C of case air — ~10 K of margin. **If a
+  real print runs hot, the NF-A8 layout (Revision 2 in the spec) is the known
+  fallback**: +21 K of margin for 0.38 L of case. The HAT PCBs are 56.5 against the
+  Pi's 56 and **overhang its +Y edge by 0.5**, which the envelope carries
 - **Six cables leave the box** — 3× Ethernet on +X, 3× USB-C on −Y — on two adjacent
   walls, because that is where the Pi puts them. **There is deliberately no cable
   comb**: the ports sit 13–30 mm up and a comb on a 9 mm base cannot reach them. If
   the bundle turns out to lever the case over, the answer is weighted feet
+
+## The case parts — four walls, clipped, no screws
+
+The shell is **cut once and claimed six ways**: `shellCut()` is one hollow box with
+every port, vent, bore, recess and clip groove cut into it, and base, front, rear,
+left, right and roof are that solid intersected with six disjoint claims. Parts cannot
+disagree about where an opening is — there is one of each. The front and rear walls
+own the corners; the side walls fit between them.
+
+- **Every joint is hexrack's 45° rib into a groove** — the dust-filter clip. hexrack
+  also has a `snap-fit.scad`, but it is **dead code**: never included, dimensions
+  undefined. Do not port it
+- **One table, three readers.** `clipJoints()` in `cad/lib/clips.scad` lists all 23
+  joints. The parts add their ribs from it, the shell cuts the grooves from it, and
+  `test-clips.sh` checks every row: the rib clears its mate at rest AND reaches into
+  it. hexrack once had a groove 9 mm off its rib with both parts exporting clean
+- **Order of assembly**: the tower screws to the base; front and rear walls drop onto
+  the base's rim; the side walls slide down between the corner flanges; the roof
+  clips onto the side walls; the filter pushes into its recess
+- **The tower is one screwed unit.** M2.5 male-female standoffs; the lowest ones
+  thread into heat-set inserts in the base's two rails (hexrack's "canoes"), which run
+  along X — with the airflow, not across it. There is no roof retainer
+- **The explode moves the case, never the boards.** `assembly_space` pulls each wall
+  straight out from its face; the tower stays where it is screwed
 
 ### The framework has no HAT models
 
@@ -107,13 +134,13 @@ modifier and is still included in the export — it does not do this job.
 ## Build and test
 
 ```bash
-./scripts/test.sh                 # all five suites, 61 checks — what CI runs
-./scripts/generate-stl.sh         # base, shell, roof, filter into stl/
-./scripts/generate-fan-asset.sh   # regenerate the NF-A4x20 mesh (networked, needs uv)
+./scripts/test.sh                 # all six suites, 115 checks — what CI runs
+./scripts/generate-stl.sh         # base, front, rear, left, right, roof, filter into stl/
+./scripts/generate-fan-asset.sh   # regenerate the NF-A4x10 mesh (networked, needs uv)
 ```
 
 Open `cad/case.scad` to look at it: `case_part` selects a part, `assembly_space`
-explodes along Z, `show_*` toggles the preview content.
+pulls each part out from its face, `show_*` toggles the preview content.
 
 ## OpenSCAD traps that have actually cost time
 
@@ -202,6 +229,16 @@ without error and exports a clean single body.
 22. **"The first line of --bboxes" is the largest BODY, not the mesh.** For the NF-A8 the
     frame happened to be the whole envelope. For the NF-A4x20 the frame is 20.1 deep and
     the mesh 21.1. Both the generator and `test-assets.sh` measure the union now.
+23. **"Some overlap" is not "inside".** `pockets-in-rails` asked whether the insert
+    pockets overlap the rails at all, and a pocket lifted 3 mm — too shallow for the
+    insert, its mouth in the air — still passed. Found by perturbing the geometry to
+    see which check fails. `pockets-outside-rails` now demands the pocket be WHOLLY in
+    the rail. **Break every new check on purpose once**; one that nothing fails is
+    decoration.
+24. **A volume sum sees overlap, not a shifted claim.** Panels that overlap sum to more
+    than the shell — but a claim SHIFTED 1 mm overlaps its neighbour and leaves a gap
+    of almost the same volume, and the sum moved by 3 mm³. Tiling needs both checks:
+    the sum for overlap, `shell-minus-parts` for the gap.
 
 
 

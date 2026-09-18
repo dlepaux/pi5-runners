@@ -26,7 +26,7 @@ in `cad/lib/noctua-fan.scad` — you cut an opening from `fan_size`, you do not 
 a fan. `cad/config.scad` declares the mesh's extents in `fan_asset_extent` and
 `scripts/test-assets.sh` holds the file and that declaration together.
 
-`fanVisualization80()` marks its import with OpenSCAD's **`%` background modifier**:
+`fanVisualization()` marks its import with OpenSCAD's **`%` background modifier**:
 drawn in preview, dropped from the final render. That is what keeps Noctua's geometry
 out of every STL this project publishes. `#` is the *debug* modifier and is still
 included in the export — it does not do this job.

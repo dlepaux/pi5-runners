@@ -28,6 +28,7 @@ use <lib/ports.scad>
 use <parts/filter.scad>
 use <parts/base.scad>
 use <parts/roof.scad>
+use <parts/walls.scad>
 
 test_view = "";
 
@@ -98,58 +99,62 @@ if (test_view == "report-fan-asset") {
 }
 
 // -- printed parts -----------------------------------------------------------
-if (test_view == "part-base")  basePart();
-if (test_view == "part-shell") shellPanel("shell");
-if (test_view == "part-roof")  roofPart();
+module partByName(n) {
+  if (n == "base")   basePart();
+  if (n == "front")  frontPart();
+  if (n == "rear")   rearPart();
+  if (n == "left")   leftPart();
+  if (n == "right")  rightPart();
+  if (n == "roof")   roofPart();
+  if (n == "filter") filterPart();
+}
 
-// Disjoint: no two parts may claim the same material.
-if (test_view == "part-base-vs-shell")
-  intersection() { shellPanel("base");  shellPanel("shell"); }
-if (test_view == "part-roof-vs-shell")
-  intersection() { shellPanel("roof");  shellPanel("shell"); }
-if (test_view == "part-base-vs-roof")
-  intersection() { shellPanel("base");  shellPanel("roof"); }
+part = "";      // set with -D for the per-part views below
+clip_k = -1;    // set with -D for the per-joint views below
 
-// Complete: nothing of the shell may be left unclaimed. Disjointness alone would be
-// satisfied by three parts with a gap between them, which prints a case with a band
-// missing and passes every other check in the file.
+if (test_view == "part")  partByName(part);
+if (test_view == "panel") shellPanel(part);
+if (test_view == "shell-cut") shellCut();
+
+// COMPLETE: nothing of the cut shell may be left unclaimed. A gap between two claims
+// prints a case with a slot missing and passes every other check in the file.
+// (DISJOINT is checked by volume in test-parts.sh: with six panels there are fifteen
+// pairs, but overlapping panels always sum to MORE than the shell, so one comparison
+// catches all fifteen.)
 if (test_view == "shell-minus-parts")
   difference() {
     shellCut();
-    shellPanel("base");
-    shellPanel("shell");
-    shellPanel("roof");
+    for (n = shell_parts) shellPanel(n);
   }
 
-// Every slot must be inside the shell, not embedded in its walls. This is the check
-// that a frame error hides from: slot-vs-slot and slot-vs-roof all pass while the
-// entire stack sits one wall-thickness into the floor.
-if (test_view == "stack-vs-shell")
-  intersection() { shellSolid(); union() { slotSlab(0); slotSlab(1); slotSlab(2); } }
+// NOTHING PRINTED MAY TOUCH THE BOARD TOWER. Rims, flanges, rails and ribs all live
+// inside the case, which is where the boards are. This also catches the frame error
+// that hides from slot-vs-slot checks: the whole stack sitting a wall-thickness into
+// the floor.
+if (test_view == "parts-vs-stack")
+  intersection() {
+    union() for (n = shell_parts) partByName(n);
+    union() { slotSlab(0); slotSlab(1); slotSlab(2); }
+  }
 
 // -- vents -------------------------------------------------------------------
-// MEASURED, not computed. The rear cutter has exclusion zones carved out of it, so a
-// closed-form area would have to re-derive every zone -- the classic two-features-
-// doing-their-own-arithmetic failure. Extruded 1mm, volume IS area, and it is the
-// exact profile ventCuts() sweeps through the wall.
+// MEASURED, not computed: extruded 1mm, volume IS area, and it is the exact profile
+// ventCuts() sweeps through the wall.
 if (test_view == "rear-vent-area")     linear_extrude(1) rearVentProfile();
 if (test_view == "side-vent-area")     linear_extrude(1) sideVentProfile();
 
-// The side fields must actually cut BOTH side walls. Measured as the wall material
-// removed: the uncut shell's side slab minus the cut one. An onYWall() sweep started at
-// the wrong face runs into open air and removes nothing -- and every emptiness check
-// in the file would pass it.
+// The side fields must actually cut BOTH side walls -- measured as material removed.
+// An onYWall() sweep started at the wrong face runs into open air and removes nothing.
 if (test_view == "side-y-neg-removed")
   difference() { intersection() { shellSolid(); wallSlab("-Y"); }
                  intersection() { shellCut();   wallSlab("-Y"); } }
-// NO SPURIOUS HOLES. The rear portion of the two side walls carries the same field
-// and nothing else -- the -Y wall's USB-C/HDMI cutouts are all forward of it, which
-// config.scad asserts. So in that region the two walls must lose EXACTLY the same
-// material. A port mask dragged sideways into the -Y wall shows up here as extra
-// volume on one side only. Built from the +Y wall, which cannot have port cuts, so it
-// does not share code with the thing it is checking.
+
+// NO SPURIOUS HOLES. In the rear region both side walls carry the same field and
+// nothing else, so they must lose exactly the same material. Now that the walls also
+// carry clip grooves, the region's comparison still holds: both side walls get the
+// same grooves, mirrored.
 module rearRegion() {
-  x0 = wall + board_x + side_port_cluster_x1 + 1;
+  x0 = wall_front + board_x + side_port_cluster_x1 + 1;
   translate([x0, -1, -1]) cube([outer[0] - x0 + 1, outer[1] + 2, outer[2] + 2]);
 }
 if (test_view == "side-y-neg-rear-removed")
@@ -158,15 +163,14 @@ if (test_view == "side-y-neg-rear-removed")
     difference() { intersection() { shellSolid(); wallSlab("-Y"); }
                    intersection() { shellCut();   wallSlab("-Y"); } }
   }
+if (test_view == "side-y-pos-rear-removed")
+  intersection() {
+    rearRegion();
+    difference() { intersection() { shellSolid(); wallSlabYPos(); }
+                   intersection() { shellCut();   wallSlabYPos(); } }
+  }
 
-if (test_view == "side-y-pos-removed")
-  difference() { intersection() { shellSolid(); wallSlabYPos(); }
-                 intersection() { shellCut();   wallSlabYPos(); } }
-if (test_view == "filter-grille-area") linear_extrude(1) filterGrilleProfile();
-
-// Every exclusion zone must actually keep the vent pattern off its port cluster. The
-// zone is carved from the cutter, so the port-cluster region of the rear cutter must
-// be EMPTY -- if a triangle survives inside a zone, the zone missed.
+// Every exclusion zone must keep the vent pattern off its port cluster.
 if (test_view == "exclusion-holds")
   intersection() {
     linear_extrude(1) rearVentProfile();
@@ -183,71 +187,88 @@ if (test_view == "report-areas") {
 }
 
 // -- ports -------------------------------------------------------------------
-// NO PORT MAY BE BLIND. Any wall material left standing inside a connector's mask is
-// a port you cannot plug into -- and it renders, exports and previews perfectly. The
-// finished panels are cut by the same allPortCuts() the parts use, so this measures
-// the real thing rather than a re-derivation of it.
+// NO PORT MAY BE BLIND: no printed part may stand inside a connector's probe.
 if (test_view == "ports-blind")
   intersection() {
-    union() { basePart(); shellPanel("shell"); roofPart(); }
+    union() for (n = shell_parts) partByName(n);
     allPortProbes();
   }
 
-// ...and the other direction: the walls must still EXIST. A cut that swallowed a
-// whole wall passes the check above perfectly.
-if (test_view == "wall-y-remains")
-  intersection() { shellPanel("shell"); wallSlab("-Y"); }
-if (test_view == "wall-x-remains")
-  intersection() { shellPanel("shell"); wallSlab("+X"); }
+// ...and the walls must still EXIST.
+if (test_view == "wall-y-remains") intersection() { shellCut(); wallSlab("-Y"); }
+if (test_view == "wall-x-remains") intersection() { shellCut(); wallSlab("+X"); }
 
-// -- filter ------------------------------------------------------------------
-if (test_view == "part-filter") filterPart();
+// -- intake and filter -------------------------------------------------------
+// The filter ring sits in the front wall's recess touching nothing: ring outline
+// clears the recess by filter_clear, and its ribs sit in their grooves.
+if (test_view == "filter-vs-front") intersection() { filterMounted(); frontPart(); }
 
-// The lip must actually enter the opening. Modelled as the filter placed at the wall
-// and intersected with the SHELL: the flange sits proud and only the lip goes in, so
-// any collision here is a lip that is too fat to fit.
-if (test_view == "filter-vs-shell")
-  intersection() {
-    shellCut();
-    // rotate([90,0,0]) maps the filter's local +Z to world -Y, so the lip points INTO
-    // the opening. rotate([-90,0,0]) maps it to +Y and stands the lip off into open
-    // air with the plate buried in the wall -- which is what this first did, and the
-    // check caught as 2577mm3 of plate inside the shell.
-    filterMounted();
+// The ring must not restrict the air: both round bores behind it must lie inside its
+// opening. Only the fabric is allowed in the airstream.
+if (test_view == "bores-outside-ring")
+  linear_extrude(1) difference() { fanBoreProfile(); fanOpeningProfile(); }
+
+// THE FANS NEED SOMETHING TO SCREW INTO. This is the check that was missing while
+// every screw hole sat inside a square opening over empty air: a ring of wall round
+// each pilot hole, through the 3mm behind the recess floor, must be solid.
+module pilotAnnuli() {
+  onXWall(filter_depth)
+    linear_extrude(wall_front - filter_depth)
+      translate(fanCentreYZ())
+        difference() { fanBoltProfile(fan_pilot_d + 3); fanBoltProfile(fan_pilot_d); }
+}
+if (test_view == "pilot-material") intersection() { frontPart(); pilotAnnuli(); }
+if (test_view == "pilot-annuli")   pilotAnnuli();
+
+// -- base rails and inserts --------------------------------------------------
+if (test_view == "canoes-alone")    canoes();
+if (test_view == "canoes-vs-board") intersection() { canoes(); boardPcb(0); }
+// A pocket must be VOID in the finished part...
+if (test_view == "pockets-vs-base") intersection() { insertPockets(); basePart(); }
+// ...and must sit INSIDE a rail, not in open air beside it. Both directions.
+if (test_view == "pockets-in-rails") intersection() { insertPockets(); canoes(); }
+// ...and WHOLLY inside. The check above only asks for some overlap, so a pocket lifted
+// 3mm -- too shallow to take the insert, its mouth in the air -- still passes it. Only
+// the mask's 0.01mm mouth sliver may stand proud of the rail top.
+if (test_view == "pockets-outside-rails")
+  difference() {
+    insertPockets();
+    canoes();
+    translate([-1, -1, wall + base_standoff]) cube([outer[0] + 2, outer[1] + 2, 0.05]);
   }
 
+// -- clips -------------------------------------------------------------------
+// One joint at a time, by index into clipJoints(): -D clip_k=N.
+if (test_view == "report-clips") {
+  for (k = [0 : len(clipJoints()) - 1])
+    echo(str("CLIP ", k, " ", clipJoints()[k][0], " ", clipJoints()[k][4],
+             " ", clipJoints()[k][5]));
+  cube(1);
+}
+// At rest the rib touches nothing of the part it clips into: it is in its groove.
+if (test_view == "clip-rib-vs-mate")
+  intersection() { clipRib(clipJoints()[clip_k]); partByName(clipJoints()[clip_k][5]); }
+// ...and it actually reaches INTO that part's territory, so it is engaged, not just
+// clear. Emptiness above would pass for a rib that stops short of its groove.
+if (test_view == "clip-rib-reach")
+  intersection() { clipRib(clipJoints()[clip_k]); claimVolume(clipJoints()[clip_k][5]); }
+if (test_view == "clip-rib")
+  clipRib(clipJoints()[clip_k]);
 
-
-// The retainer must not touch the top board's cooler. Two posts clear it by
-// derivation; this is what notices if the cooler or the hole list ever changes.
-if (test_view == "retainer-vs-cooler")
-  intersection() {
-    roofRetainer();
-    onBoard(2) coolerEnvelope();
-  }
-
-// The bosses must reach the bottom board and carry an insert.
-// The bosses must MEET the board, not pass through it: their top face is the board's
-// underside, so the correct relationship is contact and the correct volume is zero.
-// "reach" is therefore a measurement, not an intersection -- test-fit.sh reads the
-// boss bbox's top against board 0's underside.
-if (test_view == "bosses-alone")     baseBosses();
-if (test_view == "bosses-vs-board")  intersection() { baseBosses(); boardPcb(0); }
-
+// -- fans --------------------------------------------------------------------
 // The fan column's body must clear every slot -- in particular slot 1's Compact tab,
-// which hangs 6.5 off the board TOWARD the fans. fan_plenum is what separates them,
-// and fan_depth changed when the 80 became two 40s, so this is the check that notices
-// if the plenum is ever eaten.
+// which hangs 6.5 off the board TOWARD the fans -- and every printed part.
+module fanColumn() {
+  interiorOrigin()
+    translate([0, interior_y / 2, fan_col_zc])
+      rotate([0, 0, -90])
+        fanEnvelope();
+}
 if (test_view == "fans-vs-stack")
-  intersection() {
-    interiorOrigin()
-      translate([0, interior_y / 2, fan_col_zc])
-        rotate([0, 0, -90])
-          fanEnvelope();
-    union() { slotSlab(0); slotSlab(1); slotSlab(2); }
-  }
-if (test_view == "fans-alone")
-  interiorOrigin() translate([0, interior_y / 2, fan_col_zc]) rotate([0, 0, -90]) fanEnvelope();
+  intersection() { fanColumn(); union() { slotSlab(0); slotSlab(1); slotSlab(2); } }
+if (test_view == "fans-vs-case")
+  intersection() { fanColumn(); union() for (n = shell_parts) partByName(n); }
+if (test_view == "fans-alone") fanColumn();
 
 // -- reporting ---------------------------------------------------------------
 // Echoes the derived geometry so a human (or a test) reads the numbers the parts are

@@ -1,53 +1,75 @@
 // ============================================================================
-// BASE — floor, board bosses, feet
+// BASE — floor, rim, insert rails
 // ============================================================================
-// The base carries the whole stack through four points: board 0 bolts to these
-// bosses and boards 1 and 2 stand on standoffs from it.
-// ============================================================================
-
-include <../config.scad>
-use <../lib/shell.scad>
-use <../lib/sbc-helpers.scad>
-use <../lib/placement.scad>
-
-// One boss: a post from the floor to the bottom board's underside, with a heat-set
-// insert pocket down from its top.
+// The base is where the case starts and where the board tower is fixed. The four
+// walls push down onto its rim and click in; the tower screws into its inserts.
 //
-// HULLED ONTO A WAFER, not stood on the floor. A cylinder tangent to a plane is not
-// attached to it -- it meets it along a line, zero contact area -- and the union
-// renders, previews correctly, and exports as a plate plus four loose pucks.
-module bossAt(x, y) {
-  wafer_d = boss_d + 3;
-  difference() {
-    hull() {
-      translate([x, y, 0]) cylinder(d = wafer_d, h = 0.6);
-      translate([x, y, 0]) cylinder(d = boss_d, h = base_standoff);
-    }
-    translate([x, y, base_standoff - insert_m25_depth])
-      cylinder(d = insert_m25_d, h = insert_m25_depth + EPS);
-  }
+// NO PRINTED FEET. Feet below the floor leave the whole floor printing over air, and
+// the base's other face carries the rim and rails, so either way up needs support.
+// The underside is flat on the bed instead; stick-on rubber bumpons go on it.
+// ============================================================================
+
+include <../lib/shell.scad>
+include <../lib/placement.scad>
+use <../lib/sbc-helpers.scad>
+
+// A band just inside the walls, rim_gap off each wall's inner face. The walls slide
+// down over it; ribs on its outer face click into grooves in the walls.
+module baseRim() {
+  o = [wall_front + rim_gap, wall + rim_gap];
+  s = [interior_x - 2 * rim_gap, interior_y - 2 * rim_gap];
+  translate([0, 0, wall - OVERLAP])
+    linear_extrude(rim_h + OVERLAP)
+      difference() {
+        translate(o) square(s);
+        translate(o + [rim_t, rim_t]) square(s - [2 * rim_t, 2 * rim_t]);
+      }
 }
 
-module baseBosses() {
+// The Pi's mounting holes, grouped into the two rows the rails run along.
+function holeRows() =
+  let (holes = pi5MountingHoles(),
+       ys = [for (h = holes) h[1]])
+  [ for (y = [min(ys), max(ys)]) [ for (h = holes) if (h[1] == y) h ] ];
+
+// One rail per row, running along X -- along the airflow -- from its first hole to its
+// last and canoe_overrun beyond. Rounded ends: a hull of two posts.
+module canoes() {
   interiorOrigin()
-    translate([board_x, board_y, 0])
-      for (p = pi5MountingHoles())
-        bossAt(p[0], p[1]);
+    translate([board_x, board_y, -OVERLAP])
+      for (row = holeRows()) {
+        xs = [for (h = row) h[0]];
+        y  = row[0][1];
+        hull()
+          for (x = [min(xs) - canoe_overrun + canoe_w / 2,
+                    max(xs) + canoe_overrun - canoe_w / 2])
+            translate([x, y, 0])
+              cylinder(d = canoe_w, h = base_standoff + OVERLAP, $fn = 48);
+      }
 }
 
-// Feet. Low and wide, under the four corners, clear of the walls' corner radius.
-module feet() {
-  inset = foot_d / 2 + 4;
-  for (x = [inset, outer[0] - inset], y = [inset, outer[1] - inset])
-    translate([x, y, -foot_h])
-      cylinder(d1 = foot_d - 2, d2 = foot_d, h = foot_h + EPS);
+// An M2.5 heat-set insert pocket at the top of the rail under every mounting hole.
+// Z = 0 of insert_hole_mask() is the entry surface, so it is placed at the rail top:
+// the board's underside.
+module insertPockets() {
+  interiorOrigin()
+    translate([board_x, board_y, base_standoff])
+      for (h = pi5MountingHoles())
+        translate([h[0], h[1], 0])
+          insert_hole_mask("M2.5");
 }
 
 module basePart() {
   union() {
-    shellPanel("base");
-    baseBosses();
-    feet();
+    difference() {
+      union() {
+        shellPanel("base");
+        baseRim();
+        canoes();
+      }
+      insertPockets();
+    }
+    ribsFor("base");
   }
 }
 

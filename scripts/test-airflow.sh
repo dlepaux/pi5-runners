@@ -2,7 +2,7 @@
 # ============================================================================
 # Airflow and ports
 # ============================================================================
-# Front-to-back through-flow: one filtered 80mm intake on the -X front wall, out
+# Front-to-back through-flow: one filtered intake for the two stacked 40mm fans on the -X front wall, out
 # through the rear wall and the rear portion of both side walls. If that total open
 # area is smaller than the fan's throat, the case is choked and nothing about the
 # geometry says so.
@@ -45,25 +45,26 @@ fi
 
 # The side fields must actually CUT both walls. Measured as material removed, not as a
 # field that renders: a sweep started at the wrong face runs into open air, removes
-# nothing, and passes every emptiness check in this suite. The +Y wall carries nothing
-# else, so it must lose exactly its field's area times the wall thickness.
-render side-y-pos-removed "$WORK/ypos.stl"
-YPOS=$(vol "$WORK/ypos.stl")
-EXPECT=$(awk -v s="$SIDE" 'BEGIN { print s * 3 }')
-if awk -v a="$YPOS" -v e="$EXPECT" 'BEGIN { exit !(a > e * 0.99 && a < e * 1.01) }'; then
-    pass "$(printf '+Y side field cuts clean through (%.0fmm3 = field x wall)' "$YPOS")"
-else
-    fail "$(printf '+Y side field removed %.0fmm3, expected %.0f' "$YPOS" "$EXPECT")"
-fi
+# nothing, and passes every emptiness check in this suite.
 expect_geometry "-Y side field cuts the wall" side-y-neg-removed
 
-# THE OTHER QUESTION: are there holes that should NOT exist? Every port check above
-# asks whether a port is blocked. None of them would notice an extra hole -- which is
-# how three notches sat in the -Y wall's rear corner through the whole redesign until
-# a render showed them. In the side walls' rear region both walls carry the same field
-# and nothing else, so they must lose identical material.
+# THE OTHER QUESTION: are there holes that should NOT exist? Every port check asks
+# whether a port is blocked. None of them would notice an extra hole -- which is how
+# three notches sat in the -Y wall's rear corner through a whole redesign until a
+# render showed them. In the rear region both side walls carry the same field and the
+# same clip grooves, mirrored, and nothing else, so they must lose identical material.
+# The +Y side must also lose at least its field's area through the wall: that is the
+# witness that the comparison is not two empty regions agreeing.
+render side-y-pos-rear-removed "$WORK/yposrear.stl"
 render side-y-neg-rear-removed "$WORK/ynegrear.stl"
+YPOS=$(vol "$WORK/yposrear.stl")
 YNEG=$(vol "$WORK/ynegrear.stl")
+FIELD=$(awk -v s="$SIDE" 'BEGIN { print s * 3 }')
+if awk -v a="$YPOS" -v e="$FIELD" 'BEGIN { exit !(a >= e * 0.99) }'; then
+    pass "$(printf '+Y side field cuts clean through (%.0fmm3 >= field x wall %.0f)' "$YPOS" "$FIELD")"
+else
+    fail "$(printf '+Y rear lost %.0fmm3, less than its field x wall %.0f' "$YPOS" "$FIELD")"
+fi
 if awk -v a="$YNEG" -v e="$YPOS" 'BEGIN { exit !(a > e * 0.99 && a < e * 1.01) }'; then
     pass "$(printf 'no spurious holes: -Y rear loses %.0fmm3, same as +Y' "$YNEG")"
 else
@@ -76,19 +77,6 @@ fi
 # the zones exist to remove.
 expect_empty "exclusion zones keep triangles off the ports" exclusion-holds
 
-# THE FILTER MUST NOT BE THE RESTRICTION. It sits in series with the intake. The
-# printed grille is a RETAINER for bought media -- the media is the real pressure
-# drop -- so the floor is "the plastic is not dominant", not "as open as the fan",
-# which no printable web reaches.
-render filter-grille-area "$WORK/grille.stl"
-GRILLE=$(vol "$WORK/grille.stl")
-if awk -v a="$GRILLE" -v t="$THROAT" 'BEGIN { exit !(a >= t * 0.6) }'; then
-    pass "$(printf 'filter grille %.0fmm2 is %s%% of throat (floor 60%%)' "$GRILLE" "$(pct "$GRILLE")")"
-else
-    fail "$(printf 'filter grille %.0fmm2 is only %s%% of throat (floor 60%%)' "$GRILLE" "$(pct "$GRILLE")")"
-    note "hexrack's lattice at cell 14 / web 1.6 leaves this much; see filter_frame"
-fi
-
 echo ""
 echo "Ports"
 
@@ -99,8 +87,25 @@ expect_geometry "the -Y wall still exists"         wall-y-remains
 expect_geometry "the +X wall still exists"         wall-x-remains
 
 echo ""
-echo "Filter"
-expect_geometry "filter renders"                   part-filter
-expect_empty    "filter lip enters the opening"    filter-vs-shell
+echo "Intake and filter"
+
+expect_geometry "filter renders"                        part -D 'part="filter"'
+expect_empty    "filter sits in its recess, touching nothing" filter-vs-front
+# The ring is not allowed in the airstream: only its fabric is. Each round bore must
+# lie inside the ring's opening.
+expect_empty    "both fan bores lie inside the filter's opening" bores-outside-ring
+
+# THE FANS NEED SOMETHING TO SCREW INTO. A ring of wall round each pilot hole must be
+# solid -- the check that was missing while every screw hole sat over empty air.
+render pilot-annuli   "$WORK/annuli.stl"
+render pilot-material "$WORK/pilot.stl"
+ANN=$(vol "$WORK/annuli.stl")
+MAT=$(vol "$WORK/pilot.stl")
+if awk -v m="$MAT" -v a="$ANN" 'BEGIN { exit !(a > 0 && m >= 0.9 * a) }'; then
+    pass "$(printf 'fan screws bite solid wall (%.0f%% of the pilot rings)' \
+            "$(awk -v m="$MAT" -v a="$ANN" 'BEGIN{print m/a*100}')")"
+else
+    fail "$(printf 'only %.1fmm3 of %.1f round the fan pilots is wall' "$MAT" "$ANN")"
+fi
 
 report "airflow and port checks"

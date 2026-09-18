@@ -1,47 +1,34 @@
 // ============================================================================
-// ROOF — lid, exhaust field, top-board retainer
+// ROOF — lid and clip rim
 // ============================================================================
-// The retainer is a SPACER, not a fixing: it presses on the top board so the stack
-// cannot flex, and nothing is screwed into it.
+// Clicks straight down onto the side walls, the same joint as the base. No retainer:
+// the board tower is screwed into the base's inserts and holds itself.
 //
-// ONLY TWO POSTS, AND THE COOLER IS WHY. The Active Cooler's footprint is 58 x 40
-// seated at the board's 3.5 inset, so it covers the mounting holes at y = 3.5
-// entirely. The pair at y = 52.5 is the only one standing in clear air. Four posts
-// would render, export and print, and two of them would land on a fan.
+// The rim is a U, not a ring: along both side walls and the front, NOT the rear. At
+// the rear the top board's USB stack stands up to z 94.2, and a rim there would sit
+// in front of it.
 // ============================================================================
 
-include <../config.scad>
-use <../lib/shell.scad>
-use <../lib/sbc-helpers.scad>
-use <../lib/placement.scad>
+include <../lib/shell.scad>
 
-// The holes the cooler does not cover. Derived from the cooler's own footprint rather
-// than listed, so a different cooler moves the posts instead of silently fouling them.
-function retainerHoles() =
-  [ for (p = pi5MountingHoles())
-      if (p[1] > pi5_hole_inset + cooler_footprint[1]) p ];
-
-// Reach from the roof's inner face down to the top board's PCB top.
-function retainerDrop() =
-  (outer[2] - wall) - (wall + board_z[2] + pi5_pcb[2]);
-
-module roofRetainer() {
-  drop = retainerDrop();
-  assert(drop > 0, "the roof is below the top board — retainer would be inside it");
-  assert(len(retainerHoles()) >= 2,
-         "fewer than two retainer posts clear the cooler");
-
-  interiorOrigin()
-    translate([board_x, board_y, 0])
-      for (p = retainerHoles())
-        translate([p[0], p[1], board_z[2] + pi5_pcb[2]])
-          cylinder(d = retainer_d, h = drop);
+module roofRim() {
+  z0 = outer[2] - wall - rim_h;
+  h  = rim_h + OVERLAP;
+  x0 = wall_front + rim_gap;
+  x1 = outer[0] - wall - rim_gap;
+  // -Y and +Y sides
+  for (y = [wall + rim_gap, outer[1] - wall - rim_gap - rim_t])
+    translate([x0, y, z0]) cube([x1 - x0, rim_t, h]);
+  // front
+  translate([x0, wall + rim_gap, z0])
+    cube([rim_t, interior_y - 2 * rim_gap, h]);
 }
 
 module roofPart() {
   union() {
     shellPanel("roof");
-    roofRetainer();
+    roofRim();
+    ribsFor("roof");
   }
 }
 

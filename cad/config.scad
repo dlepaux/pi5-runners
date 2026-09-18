@@ -18,6 +18,14 @@ tolerance = 0.4;      // general print fit
 $fn       = 64;
 wall      = 3;
 
+// THE FRONT WALL IS THICKER. It carries the dust filter the hexrack way: a ring that
+// sits FLUSH in a recess in the face, its fabric glued into a pocket on its back, held
+// by 45-degree ribs. hexrack's ring is ~4 deep, and a 3mm wall cannot hold a 4mm
+// recess, so the front is its own thickness -- and interiorOrigin() stops being
+// [wall, wall, wall]. Everything that meets the shell goes through that one module.
+filter_depth = 4;                    // ring thickness = recess depth
+wall_front   = wall + filter_depth;  // 7: 3 behind the recess floor
+
 // ----------------------------------------------------------------------------
 // RASPBERRY PI 5
 // ----------------------------------------------------------------------------
@@ -26,7 +34,6 @@ wall      = 3;
 pi5_pcb          = [85, 56, 1.65];
 pi5_hole_pattern = [58, 49];
 pi5_hole_inset   = 3.5;
-pi5_hole_d       = 2.7;
 
 // The Active Cooler's top, above the PCB's TOP face. Derived from the framework's
 // rpi5_oem model, NOT measured on real hardware. It sets slot 2's custom standoff and
@@ -139,7 +146,6 @@ fan_bolt_pitch = 32;                     // standard 40mm pattern
 // anti-vibration pads stand 0.5 proud of each face -- and a 16mm, 0.5mm hub label takes
 // the whole mesh to 12.0. Clearance uses the envelope. The label gives the hub size.
 fan_depth          = 12.0;
-fan_depth_nominal  = 10;
 fan_hub_d          = 16;
 
 // The committed mesh, NATIVE orientation -- axis along Y. Path relative to cad/:
@@ -148,8 +154,20 @@ fan_asset        = "assets/noctua/NF-A4x10.stl";
 fan_asset_extent = [40.0, 12.0, 40.0];   // native X, Y (axis), Z -- whole mesh
 fan_asset_tol    = 0.6;
 
+// A ROUND BORE BEHIND EACH FAN, NOT ONE SQUARE OPENING. A square as big as the fan
+// removes the wall exactly where the fan's corner screws go: every bolt of the 40 x 80
+// column -- and of the NF-A8 before it -- sat inside the opening, over empty air. The
+// fans had nothing to screw into and no check looked for material round a bolt hole.
+// A 38 bore leaves the four corners solid and a 2mm bar between the two fans, which
+// is where their frames are solid anyway, so the bar costs no airflow.
+//
+// The ROUNDED RECTANGLE is kept where it is seen: the filter ring and its recess.
+fan_bore_d  = 38;
+fan_pilot_d = 2.5;   // the fans screw in from INSIDE, self-tapping into the front wall,
+                     // so no head sits in the recess under the filter fabric
+
 // The fans' combined throat: each bore less its hub.
-fan_throat_area = fan_count * (PI * pow(fan_size, 2) / 4 - PI * pow(fan_hub_d, 2) / 4);
+fan_throat_area = fan_count * (PI * pow(fan_bore_d, 2) / 4 - PI * pow(fan_hub_d, 2) / 4);
 
 fan_z0     = (interior_h - fan_col_h) / 2;
 fan_col_zc = fan_z0 + fan_col_h / 2;
@@ -164,7 +182,8 @@ assert(fan_z0 + fan_col_h >= stack_top,
 // ----------------------------------------------------------------------------
 // ENVELOPE
 // ----------------------------------------------------------------------------
-side_clear     = 2;     // board edge (or its overhang) to the inner wall face
+side_clear     = 3;     // board edge to the inner wall face. 3, not 2: the rear corner
+                        // flanges pass the bottom PCB edge at 0.2mm otherwise
 port_overhang  = 3;     // RJ45 and the USB-A stacks stand proud of the PCB's +X edge
 fan_plenum     = 8;     // fan's inner face to the board's -X edge
 fan_side_clear = 3;     // fan frame to the front wall's own edges
@@ -187,7 +206,7 @@ interior_y = max(fan_size + 2 * fan_side_clear,
 assert(interior_y >= fan_size + 2 * fan_side_clear,
        "front wall is narrower than the fan column it carries");
 
-outer = [interior_x + 2 * wall, interior_y + 2 * wall, interior_h + 2 * wall];
+outer = [interior_x + wall_front + wall, interior_y + 2 * wall, interior_h + 2 * wall];
 
 // Bambu A1. Every printed part has to fit this, and the shell is the tall one.
 bed = [256, 256, 256];
@@ -222,6 +241,34 @@ show_filter    = true;    // the intake filter, clipped on from outside
 show_case      = true;    // the printed parts themselves
 
 // ----------------------------------------------------------------------------
+// CLIPS — hexrack's 45-degree rib into a groove, and nothing else
+// ----------------------------------------------------------------------------
+// The shell is SIX parts -- base, four walls, roof -- joined without screws or
+// dovetails. Every joint is the one hexrack's dust filter uses: a square-section rib
+// turned 45 degrees, half of it standing proud of one part, sitting in a matching
+// groove in the other. It cams over as the parts are pushed together and drops in.
+//
+// (hexrack also carries a cylindrical snap in components/snap-fit.scad. It is dead
+// code -- nothing includes it and its dimensions are defined nowhere -- so it is not
+// the thing to copy.)
+//
+// EVERY JOINT ENGAGES BY PUSHING STRAIGHT DOWN, so the case assembles in one
+// direction: base; front and rear walls onto the base rim; side walls down between
+// the front and rear walls' corner flanges; roof down onto its rim.
+clip_rib      = 1.7;        // hexrack's dust_clip_length: the rib's square section
+clip_clear    = tolerance;  // groove stands this far off the rib all round
+clip_rib_len  = 18;         // each rib's length
+
+rim_t      = 2;    // base and roof rims: a band just inside the walls
+rim_h      = 6;    // below the fan column's bottom (fan_z0 ~7) so the rim clears it
+flange_t   = 1.6;  // front/rear walls' corner flanges, lying on the side walls' faces
+flange_lap = 10;   // how far along the side wall each flange reaches
+
+assert(clip_rib * sqrt(2) / 2 < min(rim_t, flange_t),
+       "a rib is deeper than the rim or flange that carries half of it");
+assert(rim_h < fan_z0, "the base rim reaches up into the fan column");
+
+// ----------------------------------------------------------------------------
 // VENTS — the exhaust budget
 // ----------------------------------------------------------------------------
 // Positive pressure: one filtered intake, and everything else leaves through these.
@@ -231,12 +278,10 @@ show_case      = true;    // the printed parts themselves
 // stagger 0.5 -- so the two projects look like they came from the same hand. A
 // triangle cannot rack, so the field keeps a 3mm wall stiff at an open-area fraction
 // that would leave round holes floppy.
-vent_pattern    = "triangles";
 vent_tri_cell   = 14;
 vent_wall       = 1.6;
 vent_tri_radius = 1.2;
 vent_tri_stagger = 0.5;
-vent_hex_cell   = 6;             // only when vent_pattern == "hex"
 
 // EXHAUST: THE REAR WALL, WRAPPING ONTO THE REAR OF BOTH SIDES. No roof field: a
 // lid with holes in it drops dust straight onto the boards.
@@ -249,14 +294,17 @@ vent_hex_cell   = 6;             // only when vent_pattern == "hex"
 // walls restores a matched exit and keeps the top and the front clean.
 vent_margin     = 3;    // solid border left around every field
 vent_rear_w     = interior_y - 2 * vent_margin;
-vent_side_depth = 40;   // how far forward from the rear the side fields reach
+vent_side_depth = 32;   // how far forward from the rear the side fields reach -- the most
+                        // that stays behind the -Y ports once the rear flange takes its lap
 
 // THE -Y SIDE FIELD MUST STAY BEHIND THE USB-C AND MICRO-HDMI CUTOUTS. Measured off the
 // framework's -Y mask: that cluster ends at board x = 42.60. The field's front edge is
 // derived and asserted against it, so a longer vent_side_depth fails here rather than
 // cutting triangles through the side of a USB-C port.
 side_port_cluster_x1 = 42.60;
-side_field_x0 = interior_x - vent_margin - vent_side_depth;   // interior frame
+// Ends before the rear wall's corner flange, which overlaps the side wall's inner face
+// and would otherwise sit over triangles -- see CLIPS below.
+side_field_x0 = interior_x - flange_lap - vent_margin - vent_side_depth;   // interior
 assert(side_field_x0 > board_x + side_port_cluster_x1 + 3,
        "side exhaust field reaches forward into the -Y port cutouts");
 
@@ -278,29 +326,29 @@ exclusion_h = exclusion_cluster_z[1] - exclusion_cluster_z[0] + 2 * exclusion_pa
 exclusion_r = 3;
 
 // ----------------------------------------------------------------------------
-// FAN OPENING AND FILTER
+// DUST FILTER — hexrack's principle
 // ----------------------------------------------------------------------------
-// A ROUNDED SQUARE, not a circle. The case is a square-cornered box and an 80mm disc
-// cut into its face fights that; a square opening on the same corner radius as the
-// shell reads as part of the design. It is also strictly more open area than the bore
-// it replaces, so it cannot be the restriction.
-fan_opening      = [fan_size, fan_col_h];   // one opening for the whole column
-fan_opening_r    = 6;            // corner rounding
-fan_screw_d      = 4.3;          // M4 clearance for the fan's own screws
+// A RING that sits FLUSH in a recess in the front wall. The filter fabric is glued
+// into a shallow pocket on the ring's back and spans the opening; the ring only
+// frames it. Two 45-degree ribs, top and bottom, click into grooves in the recess --
+// the same joint as every other in this case.
+//
+// The ring's inner opening is the ROUNDED RECTANGLE over the whole column: it is what
+// is seen from the front, and it is wider than both round bores behind it, so the
+// plastic restricts nothing -- the fabric is the only thing in the airstream.
+fan_opening      = [fan_size, fan_col_h];   // the ring's inner opening
+fan_opening_r    = 6;
 
-// The filter press-fits into that opening from outside. Positive pressure means this
-// is the only way dust can get in, which is the only reason there is exactly one.
-filter_t         = 2;      // grille plate
-filter_frame     = 3;      // solid border around the grille
-filter_lip_h     = 3.5;    // how deep the lip reaches into the opening
-filter_lip_t     = 1.6;
-filter_clear     = 0.35;   // press fit
-filter_flange    = 4;      // how far the plate oversails the opening
+// Bands round the opening. The top and bottom are thin because the front wall part
+// only has ~7mm above and below the column, and the groove needs wall behind it.
+filter_band_side = 6;
+filter_band_v    = 3.5;
+filter_clear     = 0.3;    // ring to recess, all round
+filter_glue_d    = 0.32;   // hexrack's glue pocket depth, on the ring's back
+filter_glue_lip  = 1;      // solid lip left at the ring's outer edge, round the pocket
 
-// The grille uses hexrack's lattice like the rear does. It is a RETAINER for bought
-// media, not the filtration: the floor below is "the plastic is not the dominant
-// restriction", measured by test-airflow.sh against the fan's throat.
-filter_min_open_fraction = 0.6;
+function filterOuter() = fan_opening + 2 * [filter_band_side, filter_band_v];
+function filterOuterR() = fan_opening_r + filter_band_v;
 
 // ----------------------------------------------------------------------------
 // FASTENERS AND BASE FEATURES
@@ -311,30 +359,15 @@ filter_min_open_fraction = 0.6;
 // millimetre takes displaced plastic and screw-tip overrun. A pocket cut to the
 // insert's own length leaves the board seating on the screw instead of the standoff.
 insert_m25        = "M2.5";
-insert_m25_d      = get_insert_spec(insert_m25, "hole_diameter");
-insert_m25_depth  = get_insert_spec(insert_m25, "hole_depth");
 insert_m25_boss   = get_insert_min_boss(insert_m25);
 
-// The bottom board's four bosses stand on the floor and carry the whole stack.
-boss_d = max(insert_m25_boss, 6.5);
+// The bottom board sits on two RAILS, hexrack's "canoes", with an M2.5 heat-set insert
+// under each mounting hole. The standoff tower's lowest male threads go down through
+// board 0 into those inserts, clamping it: the whole stack is one screwed unit.
+//
+// hexrack runs its canoes ALONG ITS AIRFLOW, and so do these -- front to back, along X.
+// Run across, a 10mm rail under the bottom board is a dam in the airstream.
+boss_d        = insert_m25_boss;   // 7.2, from the insert table
+canoe_w       = boss_d + 2;        // a millimetre of wall either side of the boss
+canoe_overrun = 4;                 // rail runs this far past its outer holes
 
-// Feet. Low and wide: the case is 1.1L and light, and the cable bundle leaving two
-// adjacent walls is the thing most likely to tip it.
-foot_h = 4;
-foot_d = 14;
-
-// Cable comb. Six cables leave the box -- 3x Ethernet on +X, 3x USB-C on -Y -- and
-// the comb is what stops the bundle levering the case over.
-comb_slot_w = 7;
-comb_slot_h = 5;
-comb_t      = 3;
-
-// The roof's retainer presses on the top board's four mounting points so the stack
-// cannot flex. It is a spacer, not a fixing: nothing is screwed into it.
-// The Active Cooler's footprint, from the framework's rpi5_oem model. Named because
-// the roof retainer derives its post positions from it: a different cooler then moves
-// the posts instead of quietly landing one on a fan.
-cooler_footprint = [58, 40];
-
-retainer_d     = 8;
-retainer_clear = 0.4;

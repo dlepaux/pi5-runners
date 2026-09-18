@@ -10,7 +10,7 @@ set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 FAILED=""
-for suite in board-assets assets fit parts airflow; do
+for suite in board-assets assets fit parts clips airflow; do
     echo ""
     echo "=============================================================="
     echo "  $suite"

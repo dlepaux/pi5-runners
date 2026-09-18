@@ -23,7 +23,7 @@ BACKEND=""
 "$OPENSCAD" --help 2>&1 | grep -q "\-\-backend" && BACKEND="--backend=Manifold"
 
 PARTS=("$@")
-[ ${#PARTS[@]} -eq 0 ] && PARTS=(base shell roof filter)
+[ ${#PARTS[@]} -eq 0 ] && PARTS=(base front rear left right roof filter)
 
 mkdir -p stl
 FAILED=""

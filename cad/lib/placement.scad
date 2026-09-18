@@ -27,7 +27,7 @@ use <m2-hat-plus.scad>
 // to each other -- slot against slot, slot against roof -- passes perfectly while the
 // whole stack sits 3mm inside the floor.
 module interiorOrigin() {
-  translate([wall, wall, wall]) children();
+  translate([wall_front, wall, wall]) children();
 }
 
 // Board i's frame: the Pi's PCB underside at z=0, its left-rear corner at [0,0].

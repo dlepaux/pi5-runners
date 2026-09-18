@@ -1,50 +1,64 @@
 // ============================================================================
 // CASE — assembly and per-part entry point
 // ============================================================================
-// Open this file and set case_part in config.scad, or override it:
-//
-//   openscad -D 'case_part="shell"' cad/case.scad
-//   openscad -D 'assembly_space=30' cad/case.scad     // pull it apart to look at it
+//   openscad -D 'case_part="left"' cad/case.scad
+//   openscad -D 'assembly_space=30' cad/case.scad     // pull the case apart
 //
 // THIS IS THE ONLY FILE ALLOWED TO TOUCH cad/assets/. The vendor fan mesh enters
-// through fanVisualization80(), which marks it with % so it is drawn in preview and
-// dropped from every render. scripts/test-assets.sh is what holds that true.
+// through fanVisualization(), which marks it with % so it is drawn in preview and
+// dropped from every render. scripts/test-assets.sh holds that true.
 //
-// THE EXPLODE LIVES HERE AND NOWHERE ELSE. placement.scad has no idea assembly_space
-// exists, so a fit test cannot measure an exploded position even by accident.
+// THE EXPLODE MOVES THE CASE, NEVER THE BOARDS. The boards are one screwed tower
+// fixed to the base's inserts, so they stay exactly where they sit and the case comes
+// apart around them: each wall straight out from its face, the base down, the roof
+// up. placement.scad has no idea assembly_space exists, so no fit test can measure an
+// exploded position even by accident.
 // ============================================================================
 
 include <config.scad>
 include <lib/placement.scad>
-use <lib/shell.scad>
+include <lib/shell.scad>
 use <lib/m2-hat-plus.scad>
 use <lib/noctua-fan.scad>
 use <lib/sbc-helpers.scad>
-use <parts/filter.scad>
 use <parts/base.scad>
 use <parts/roof.scad>
+use <parts/walls.scad>
+use <parts/filter.scad>
 
 // ----------------------------------------------------------------------------
-// EXPLODE
+// PARTS BY NAME
 // ----------------------------------------------------------------------------
-// Along Z, because that is the axis this case stacks on. The shell stays put and
-// everything else moves away from it: base down, roof up, and each board fans out by
-// its own index so you can see into the slots.
-function explode_z(which) =
-    which == "base"   ? -assembly_space
-  : which == "roof"   ?  assembly_space
-  : which == "filter" ?  0
-  :                      0;
+case_parts = concat(shell_parts, ["filter"]);
 
-module exploded(which) {
-  translate([0, 0, explode_z(which)]) children();
+module casePart(name) {
+  if (name == "base")   basePart();
+  if (name == "front")  frontPart();
+  if (name == "rear")   rearPart();
+  if (name == "left")   leftPart();
+  if (name == "right")  rightPart();
+  if (name == "roof")   roofPart();
+  if (name == "filter") filterPart();
 }
+
+// ----------------------------------------------------------------------------
+// EXPLODE — each part straight out from the face it forms
+// ----------------------------------------------------------------------------
+function explode(which) =
+  let (s = assembly_space)
+    which == "base"  ? [0, 0, -s]
+  : which == "roof"  ? [0, 0,  s]
+  : which == "front" ? [-s, 0, 0]
+  : which == "rear"  ? [ s, 0, 0]
+  : which == "left"  ? [0, -s, 0]
+  : which == "right" ? [0,  s, 0]
+  :                    [0, 0, 0];
 
 // ----------------------------------------------------------------------------
 // PREVIEW CONTENT
 // ----------------------------------------------------------------------------
 
-// The M2.5 stack under board i, drawn at each of the framework's four hole positions.
+// The M2.5 standoffs under board i, at the framework's four hole positions.
 module standoffsUnder(i) {
   h = i == 0 ? base_standoff : slot_standoff[i - 1];
   color("Silver")
@@ -54,50 +68,40 @@ module standoffsUnder(i) {
 }
 
 module assemblyContents() {
+  // The tower: never exploded.
   for (i = [0 : 2]) {
-    // Each board rises by i * assembly_space so the stack opens up.
-    translate([0, 0, i * assembly_space]) {
-      if (show_boards)
-        onBoard(i) pi5Board();
-
-      if (show_hats && slot_is_hat[i])
-        onBoard(i) hatVisualization(i == 1);
-
-      if (show_standoffs)
-        onBoard(i) standoffsUnder(i);
-    }
+    if (show_boards)
+      onBoard(i) pi5Board();
+    if (show_hats && slot_is_hat[i])
+      onBoard(i) hatVisualization(i == 1);
+    if (show_standoffs)
+      onBoard(i) standoffsUnder(i);
   }
 
-  // The filter, pressed into the front intake from outside. Explodes along -X.
-  if (show_filter)
-    color("DimGray") filterMounted(assembly_space);
-
-  // The fan column, just inside the -X front wall, facing the stack along +X. Placed
-  // by the column's centre; fanVisualization() offsets each fan from it.
+  // The fans are screwed to the front wall, so they travel with it.
   if (show_fan)
-    interiorOrigin()
-      translate([fan_depth / 2, interior_y / 2, fan_col_zc])
-        fanVisualization();
+    translate(explode("front"))
+      interiorOrigin()
+        translate([fan_depth / 2, interior_y / 2, fan_col_zc])
+          fanVisualization();
+
+  // The filter clicks into the front wall's recess: it goes out twice as far, so it
+  // clears the wall it came out of.
+  if (show_filter)
+    color("DimGray") filterMounted(2 * assembly_space);
 }
 
 // ----------------------------------------------------------------------------
 // ENTRY
 // ----------------------------------------------------------------------------
-
 if (case_part == "assembly") {
-  if (show_case) {
-    exploded("base")  basePart();
-                      shellPanel("shell");
-    exploded("roof")  roofPart();
-  }
+  if (show_case)
+    for (p = shell_parts)
+      translate(explode(p)) casePart(p);
   assemblyContents();
-} else if (case_part == "filter") {
-  filterPart();
-} else if (case_part == "base") {
-  basePart();
-} else if (case_part == "roof") {
-  roofPart();
 } else {
-  // One printed part, at the origin, with no preview geometry anywhere near it.
-  shellPanel(case_part);
+  // One printed part, with no preview geometry anywhere near it.
+  assert(len([for (p = case_parts) if (p == case_part) p]) == 1,
+         str("unknown case_part: ", case_part));
+  casePart(case_part);
 }

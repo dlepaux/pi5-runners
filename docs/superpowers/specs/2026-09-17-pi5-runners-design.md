@@ -1,7 +1,7 @@
 # pi5-runners — three-Pi CI runner tower
 
 **Date:** 2026-09-17
-**Status:** implemented; revised 2026-09-18 — see *Revision 2* and *Revision 3* at the end
+**Status:** implemented; revised 2026-09-18 — see *Revisions 2–4* at the end
 
 ## Goal
 
@@ -326,3 +326,54 @@ measured 21.1, not the datasheet's 20.
 Found on the way: the filter's placement had been rotated 90° all along, hidden by a
 square fan; and the asset tooling measured the largest body rather than the mesh.
 Both fixed and covered — CLAUDE.md traps 21–22.
+
+
+---
+
+## Revision 4 — owned NF-A4x10s, four clipped walls, a real filter (2026-09-18)
+
+Requested after Revision 3. Where it conflicts with anything above, this section wins.
+
+**The fans are the owned NF-A4x10 5V, and Revision 3's table was wrong about them.**
+It used 4.85 — the CFM figure — as m³/h. Noctua's sheet gives **8.2 m³/h**, which puts
+the pair at **≈ 14.6 K** of case-air rise and **≈ 10 K** of margin under the HAT's
+50 °C in a 25 °C room, against 12 K for the NF-A4x20s. Close enough that buying new
+fans is not justified. They are 3-pin with no USB adaptor, so they run from a Pi's GPIO
+5 V. Measured depth 12.0, not the datasheet's 10.
+
+| | Revision 3 | Revision 4 |
+|---|---|---|
+| Fans | 2 × NF-A4x20 5V PWM | **2 × NF-A4x10 5V, owned** |
+| Shell | one printed tube | **front, rear, left, right — four walls** |
+| Joints | lip and seams | **hexrack's 45° rib-into-groove clip, 23 joints, no screws** |
+| Filter | clip-on grille frame | **hexrack's ring: flush in a 4 mm recess, fabric glued behind** |
+| Intake | one 40 × 80 rounded opening | **two Ø38 bores, fans screwed from inside** |
+| Board fixing | four bosses, roof retainer | **two rails with heat-set inserts; no retainer** |
+| Feet | printed | **none — bumpons on a flat underside** |
+| Envelope | 131.6 × 66.5 × 99.95 | **127.5 × 68.5 × 99.95, 0.87 L** |
+| Exhaust | 268% of throat | **206%** (3844 mm² against 1866) |
+
+**Why four walls.** The single shell printed standing as a 94 mm tube with every
+opening on a vertical face — hard to print well. Four walls print flat or on a face.
+The front and rear own the corners and carry corner flanges; the sides slide down
+between them; everything stands on the base's rim; the roof clips onto the side walls.
+
+**Why hexrack's filter clip and not its `snap-fit.scad`.** The latter is dead code in
+hexrack — never included, its dimensions undefined. The 45° rib is the live, printed,
+proven one. Every joint is one row of `clipJoints()`, read by the rib's owner, by the
+shell that cuts the groove, and by `test-clips.sh`.
+
+**Why two round bores.** The square intake had removed the material every fan screw
+needed: the screw holes sat over air. Found while adding the filter; now tested
+(`pilot-material`).
+
+**Why no printed feet.** Feet below the floor meant the floor printed over air, and
+the other face carries the rim and rails, so the base needed support either way up —
+a defect since the first implementation.
+
+**The front wall, printed on its outer face, has one bridge**: the recess floor across
+the web between the bores, ~52 mm at its longest.
+
+**Why the sides grew 2 → 3 mm of clearance, and the side vent field shrank 40 → 32.**
+The rear corner flanges would otherwise pass 0.2 mm from the PCB, and the shorter case
+pulled the −Y side field onto the USB-C/HDMI cutouts. The assert caught the second one.
