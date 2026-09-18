@@ -77,7 +77,7 @@ if (test_view == "fan-mesh-raw") import(fan_asset, center = true);
 // file still gives 1000mm3, and a % swapped for # adds the fan on top of it.
 if (test_view == "fan-visualization-export") {
   cube(10);
-  fanVisualization();
+  fanVisualization() import(fan_asset, center = true);
 }
 
 if (test_view == "report-fan-asset") {

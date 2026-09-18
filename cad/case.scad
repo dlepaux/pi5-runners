@@ -61,7 +61,8 @@ module slotContents(kind) {
 // The fan on the inside of the front wall, pushing toward the rear.
 module fanContents() {
   if (show_fan)
-    translate([front_wall_t + fan_depth / 2, fan_yc, fan_zc]) fanVisualization();
+    translate([front_wall_t + fan_depth / 2, fan_yc, fan_zc])
+      fanVisualization() import(fan_asset, center = true);
 }
 
 // ----------------------------------------------------------------------------

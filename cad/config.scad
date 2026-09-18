@@ -130,7 +130,7 @@ assert(!is_undef(fan_row), str("unknown fan_model: ", fan_model));
 
 fan_depth        = fan_row[1];
 fan_hub_d        = fan_row[2];
-fan_asset        = fan_row[3];   // relative to cad/: import() resolves against the MAIN document
+fan_asset        = fan_row[3];   // relative to cad/: import() it only from a file IN cad/ -- see noctua-fan.scad
 fan_asset_extent = fan_row[4];
 fan_asset_tol    = 0.6;
 

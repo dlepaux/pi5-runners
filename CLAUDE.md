@@ -202,9 +202,13 @@ without error and exports a clean single body.
 11. **A claim asks for a volume slightly LARGER than the part, in both directions.** A
     subtraction whose faces are exactly coincident with what it subtracts leaves a
     zero-volume skin: one body, right genus, bounding box a fraction too wide.
-12. **`import()` resolves against the MAIN document, `include` against the calling
-    file.** A relative asset path in a lib file finds a different directory depending on
-    which `.scad` is open — and `generate-stl.sh` renders every part standalone.
+12. **What a relative `import()` path is relative to CHANGED between OpenSCAD builds.**
+    2026.01 resolves it against the MAIN document; the 2026.09 snap CI installs
+    resolves it against the file the statement is written in. The fan mesh imported
+    in `lib/noctua-fan.scad` passed every local run and failed its first CI run —
+    `cad/lib/assets/…` does not exist. **Write every `import()` in a file that lives in
+    `cad/`** (`case.scad`, `tests.scad`), where both rules agree; lib modules take the
+    mesh as a child. A local toolchain is one data point: CI is the second.
 13. **An envelope carries the question it was built for.** Ask it a different question
     and you need a different envelope. A deliberate over-estimate is correct for "does
     this touch the shell" and lies about everything finer.

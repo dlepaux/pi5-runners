@@ -60,8 +60,14 @@ module fanEnvelope() {
 // This model's native axis is +Y. rotate([0,0,-90]) is Rz(-90), which sends +Y to +X:
 // the fan pushes toward the rear. Noctua's STEPs do not agree on an axis -- the NF-A8
 // had its axis on Z -- which is why this is stated here rather than assumed. Centred.
+//
+// THE import() IS THE CALLER'S, passed in as a child: fanVisualization() import(...).
+// OpenSCAD builds disagree on what a relative import() path is relative to -- the
+// MAIN document in 2026.01, the file the statement is written in by 2026.09 -- and a
+// statement written here, in cad/lib/, found cad/lib/assets/ on CI and nothing at all.
+// Written in case.scad or tests.scad, which live in cad/, both rules land on cad/assets/.
 module fanVisualization() {
   %rotate([0, 0, -90])
     color("SaddleBrown", 1)
-      import(fan_asset, center = true);
+      children();
 }
