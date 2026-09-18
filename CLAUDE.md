@@ -167,6 +167,9 @@ without error and exports a clean single body.
     `test-assets.sh` first demanded the fan mesh be one body. A fan is legitimately
     eleven — frame, eight corner pads, impeller, hub — so the check was encoding a
     wrong assumption, and "fixing" the asset to satisfy it would have been the real bug.
+17. **A datasheet dimension is not the part.** The NF-A8 is 80 × 80 × 25 on paper and
+    80.1 × 80.0 × **25.4** in Noctua's own model: the AAO frame's anti-vibration pads
+    stand 0.2 proud of each mounting face. A 25 mm pocket sits the fan on its pads.
 18. **A test suite that only asks "is it blocked?" cannot see holes that should not
     exist.** `portCuts()` swept the WHOLE IO mask along −Y and confined it to the −Y
     wall's thickness — but the wall spans the case's length, so the RJ45 and USB masks
@@ -184,9 +187,7 @@ without error and exports a clean single body.
     the first rendered image. A suite proves the geometry satisfies the assertions
     someone thought to write; it says nothing about the ones nobody did. Render the
     parts and the assembly before calling a layout change done.
-17. **A datasheet dimension is not the part.** The NF-A8 is 80 × 80 × 25 on paper and
-    80.1 × 80.0 × **25.4** in Noctua's own model: the AAO frame's anti-vibration pads
-    stand 0.2 proud of each mounting face. A 25 mm pocket sits the fan on its pads.
+
 
 ## Companion
 
