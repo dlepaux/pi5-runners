@@ -3,8 +3,8 @@
 # Render every printable part
 # ============================================================================
 #   ./scripts/generate-stl.sh            # everything into stl/
-#   ./scripts/generate-stl.sh module     # just one
-#   ./scripts/generate-stl.sh front-NF-A4x20
+#   ./scripts/generate-stl.sh filter              # just one
+#   ./scripts/generate-stl.sh module-NF-A4x20
 #
 # Each part is rendered from cad/case.scad with case_part set, which is the SAME
 # entry point the assembly uses -- so a part cannot drift from how it is shown.
@@ -23,17 +23,17 @@ fi
 BACKEND=""
 "$OPENSCAD" --help 2>&1 | grep -q "\-\-backend" && BACKEND="--backend=Manifold"
 
-# The front face is the only part fan_model changes, so both are always written.
-# Everything else is one part whichever fans are fitted.
+# fan_model sets the module's and the lid's length, so both are always written in
+# both. The filter panel is one part whichever fans are fitted.
 TARGETS=("$@")
-[ ${#TARGETS[@]} -eq 0 ] && TARGETS=(module lid front-NF-A4x10 front-NF-A4x20 filter)
+[ ${#TARGETS[@]} -eq 0 ] && TARGETS=(module-NF-A4x10 lid-NF-A4x10 module-NF-A4x20 lid-NF-A4x20 filter)
 
 mkdir -p stl
 FAILED=""
 for target in "${TARGETS[@]}"; do
     part="${target%%-NF-*}"
     args=(-D "case_part=\"$part\"")
-    [ "$part" != "$target" ] && args+=(-D "fan_model=\"${target#front-}\"")
+    [ "$part" != "$target" ] && args+=(-D "fan_model=\"${target#"$part"-}\"")
     out="stl/$target.stl"
     printf "  %-16s " "$target"
     # binstl ALWAYS. The ASCII default writes a header that every downstream reader

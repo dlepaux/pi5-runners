@@ -20,6 +20,17 @@ for suite in board-assets assets fit parts clips airflow print; do
     fi
 done
 
+# The fan mode sets the module's length: every geometry suite again, in the other one.
+for suite in fit clips airflow; do
+    echo ""
+    echo "=============================================================="
+    echo "  $suite (NF-A4x20)"
+    echo "=============================================================="
+    if ! FAN_MODEL=NF-A4x20 "./scripts/test-$suite.sh"; then
+        FAILED="$FAILED $suite(NF-A4x20)"
+    fi
+done
+
 echo ""
 if [ -z "$FAILED" ]; then
     echo "✅ all suites passed"

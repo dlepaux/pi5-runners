@@ -63,10 +63,10 @@ expect_geometry "a module sits on the one below"       module-seated
 expect_geometry "the lid sits on the top module"       lid-seated
 
 echo ""
-echo "Fit — the front face"
+echo "Fit — the filter panel"
 
-expect_empty    "front face clears every module and the lid"  front-vs-stack
-expect_geometry "dovetail rails render"                       rails-alone
+expect_empty    "panel clears every module and the lid"  panel-vs-stack
+expect_geometry "dovetail rails render"                  rails-alone
 # Every rail must lie inside its channel -- all of it, not merely some.
 render rails-alone       "$WORK/rails.stl"
 render rails-in-channels "$WORK/railsin.stl"
@@ -76,18 +76,16 @@ if awk -v a="$RIN" -v b="$RAILS" 'BEGIN { exit !(b > 0 && a > 0.999 * b) }'; the
 else
     fail "$(printf 'only %.0f of %.0fmm3 of rail is in a channel' "$RIN" "$RAILS")"
 fi
-# ...and the channels HOLD them. A rail escapes a channel through its mouth, toward
-# the module, and only the dovetail's flare stops that -- so each side is pulled that
-# way on its own. Pulled outward, a rail hits the channel floor, which proves nothing.
-expect_geometry "the -Y dovetails hold: the rails cannot leave through the mouth" dovetail-holds-left
-expect_geometry "the +Y dovetails hold: the rails cannot leave through the mouth" dovetail-holds-right
-expect_geometry "the dovetails hold the face against pulling forward"            dovetail-holds-x
+# ...and the channels HOLD them. A rail leaves a channel through its mouth, when the
+# panel is pulled straight off the stack -- and only the dovetail's flare stops that.
+expect_geometry "the dovetails hold the panel on: rails cannot leave through the mouth" dovetail-holds
 
 echo ""
 echo "Fit — fans"
 
-expect_geometry "fan column renders"                    fans-alone
-expect_empty    "fan column clears every printed part"  fans-vs-case
-expect_geometry "fan column sits on the plate"          fans-seated
+expect_geometry "fans render"                             fans-alone
+expect_empty    "every fan clears every printed part"     fans-vs-case
+expect_empty    "the fan clears every kind of board"      fan-vs-boards
+expect_geometry "the fan sits on its front wall"          fans-seated
 
 report "fit checks"

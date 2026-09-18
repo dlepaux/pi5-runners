@@ -44,6 +44,13 @@ if "$OPENSCAD" --help 2>&1 | grep -q "\-\-backend"; then
     BACKEND="--backend=Manifold"
 fi
 
+# FAN_MODEL=NF-A4x20 runs a suite against the other fan mode: it sets the module's
+# length, so the geometry suites have to hold in both. Every render gets it; an
+# explicit -D fan_model in a check still wins, because it comes later on the line.
+# ${MODE[@]+...}: bash 3.2 calls an empty array unbound under `set -u`.
+MODE=()
+[ -n "${FAN_MODEL:-}" ] && MODE=(-D "fan_model=\"$FAN_MODEL\"")
+
 # Scratch lives IN THE TREE, not in /tmp. A snap-confined OpenSCAD — which is what
 # `apt install openscad-nightly` gives you on the CI runner — cannot see /tmp at all,
 # and fails by writing nothing rather than by complaining.
@@ -71,7 +78,7 @@ render() {
     # millions — a collision that reads as a pass, or the reverse.
     # shellcheck disable=SC2086
     "$OPENSCAD" $BACKEND --export-format=binstl -o "$out" \
-        -D "test_view=\"$view\"" "$@" cad/tests.scad >"$out.log" 2>&1
+        -D "test_view=\"$view\"" ${MODE[@]+"${MODE[@]}"} "$@" cad/tests.scad >"$out.log" 2>&1
 }
 
 tris() {

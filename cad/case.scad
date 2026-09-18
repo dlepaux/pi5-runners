@@ -5,8 +5,10 @@
 //   openscad -D 'assembly_space=30' cad/case.scad          // pull the stack apart
 //   openscad -D 'fan_model="NF-A4x20"' cad/case.scad       // the 20mm fans
 //
+// fan_model changes the module and the lid; the filter panel is the same either way.
+//
 // Every printed part comes out of here IN ITS PRINT ORIENTATION: module floor-down,
-// lid plate-down, front face standing, filter face-down.
+// lid plate-down, filter panel face-down.
 //
 // THIS IS THE ONLY FILE ALLOWED TO TOUCH cad/assets/. The vendor fan mesh enters
 // through fanVisualization(), which marks it with % so it is drawn in preview and
@@ -20,25 +22,23 @@ use <lib/noctua-fan.scad>
 use <lib/sbc-helpers.scad>
 use <parts/module.scad>
 use <parts/lid.scad>
-use <parts/front.scad>
 use <parts/filter.scad>
 
-case_parts = ["module", "lid", "front", "filter"];
+case_parts = ["module", "lid", "filter"];
 
 module casePart(name) {
   if (name == "module") modulePart();
   if (name == "lid")    lidPrint();
-  if (name == "front")  frontPart();
-  if (name == "filter") filterPart();
+  if (name == "filter") panelPrint();
 }
 
 // ----------------------------------------------------------------------------
-// EXPLODE — modules apart, lid up, front face forward
+// EXPLODE — modules apart, lid up, filter panel forward
 // ----------------------------------------------------------------------------
-// Each module takes its board with it: the Pi is screwed to its own floor.
+// Each module takes its board and its fan with it: both are screwed to it.
 function explodeModule(k) = [0, 0, k * assembly_space];
 function explodeLid()     = [0, 0, module_count * assembly_space + assembly_space];
-function explodeFront()   = [-assembly_space, 0, 0];
+function explodePanel()   = [-assembly_space, 0, 0];
 
 // ----------------------------------------------------------------------------
 // PREVIEW CONTENT
@@ -59,13 +59,10 @@ module slotContents(kind) {
   }
 }
 
-module frontContents() {
-  if (show_front) color("SteelBlue") frontPart();
+// The fan on the inside of the front wall, pushing toward the rear.
+module fanContents() {
   if (show_fan)
-    translate([-front_d + plate_t + fan_depth / 2, fan_col_yc, fan_col_zc])
-      fanVisualization();
-  if (show_filter)
-    color("DimGray") filterMounted(assembly_space);
+    translate([front_wall_t + fan_depth / 2, fan_yc, fan_zc]) fanVisualization();
 }
 
 // ----------------------------------------------------------------------------
@@ -76,9 +73,10 @@ if (case_part == "assembly") {
     translate(explodeModule(k)) moduleAt(k) {
       if (show_case) modulePart();
       slotContents(slot_kind[k]);
+      fanContents();
     }
   if (show_case) translate(explodeLid()) lidAt() lidPart();
-  translate(explodeFront()) frontContents();
+  if (show_filter) translate(explodePanel()) color("DimGray") panelPart();
 } else {
   // One printed part, with no preview geometry anywhere near it.
   assert(len([for (p = case_parts) if (p == case_part) p]) == 1,

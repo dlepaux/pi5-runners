@@ -1,9 +1,9 @@
 # pi5-runners
 
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
-runners. **Three identical modules, one Pi each**, a lid, and a front face carrying two
-stacked 40 mm Noctuas behind a dust filter. **124.5 × 78.2 × 120.35 mm** with the
-10 mm fans, 133.6 mm deep with the 20 mm ones. Nothing in the case is screwed together.
+runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a lid, and a
+filter panel that is the whole front face. **125.5 × 68.5 × 149.75 mm** with the 10 mm
+fans, 134.6 mm deep with the 20 mm ones. Nothing in the case is screwed together.
 
 ## What it holds
 
@@ -17,9 +17,10 @@ Every module is the same part, sized for the tallest board, so any board goes in
 module. Each Pi screws into heat-set inserts in its own module's floor; the boards are
 never connected to each other.
 
-Plus two **Noctua 40 mm 5V fans**, stacked into a 40 × 80 mm column and powered from a
-Pi's GPIO 5 V header: either the **NF-A4x10** or the **NF-A4x20**. Set `fan_model` in
-`cad/config.scad`; it only changes the front face.
+Plus **three Noctua 40 mm 5V fans**, one per module, each powered from its own Pi's
+GPIO 5 V header: either the **NF-A4x10** or the **NF-A4x20**. Set `fan_model` in
+`cad/config.scad`. The fan sits between the front wall and the board, so it sets the
+module's length: switching fans means reprinting the modules and the lid.
 
 ## Why this shape
 
@@ -28,17 +29,19 @@ CI runners hold 100% CPU for 30–50 minutes at a stretch, three boards at once 
 
 | Fans | Case air rise | Margin to the HAT's 50 °C, 25 °C room |
 |------|---------------|---------------------------------------|
-| **2 × NF-A4x10 5V** | **≈ 14.6 K** | **≈ 10 K** |
-| 2 × NF-A4x20 5V | ≈ 12.7 K | ≈ 12 K |
+| **3 × NF-A4x10 5V** | **≈ 9.7 K** | **≈ 15 K** |
+| 3 × NF-A4x20 5V | ≈ 8.5 K | ≈ 16.5 K |
 
-The 20 mm fans move 15% more air and push 27% more static pressure, which is what
-counts behind a filter. That buys a couple of kelvin, not a different class of cooling.
+One fan per Pi is 50% more air than the two-fan column an earlier version shared. The
+20 mm fans move 15% more again and push 27% more static pressure, which is what counts
+behind a filter — about a kelvin, not a different class of cooling.
 
-**Airflow** runs front to back along each board's full length. The fans blow into a
-plenum between the front face and the modules' open fronts; each module draws from it
-and exhausts through its rear wall and the rear of both side walls — never the lid,
-which would drop dust onto a board. Total exhaust is **249% of the fans' throat**, and
-every floor is a lattice too, so each module also breathes into the one above.
+**Airflow** runs front to back along each board's full length. Each fan draws through
+the filter panel and its module's front wall, pushes over its own SoC and drive, and
+the module exhausts through its rear wall and the rear of both side walls — never the
+lid, which would drop dust onto a board. Each module's exhaust is **246% of its fan's
+throat**, and every floor is a lattice too, so each module also breathes into the one
+above.
 
 Around the rear port cluster the vent pattern stops at an **exclusion zone**, hexrack's
 back-face idea, so every connector sits in clean solid wall.
@@ -46,64 +49,61 @@ back-face idea, so every connector sits in clean solid wall.
 ## Printing
 
 Five STLs, **none needing support**, in the orientation they come out of
-`generate-stl.sh`. PETG.
+`generate-stl.sh`. PETG. Print the module and lid for the fans you fit.
 
 | Part | Print | Size |
 |------|-------|------|
-| `module` | ×3, floor down | 102.5 × 73.5 × 44.5 mm |
-| `lid` | plate down | 102.5 × 68.5 × 11.0 mm |
-| `front-NF-A4x10` or `front-NF-A4x20` | standing, as it sits | 34.0 / 43.1 × 78.2 × 120.3 mm |
-| `filter` | face down, pocket up | 49.0 × 86.0 × 4.0 mm |
+| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 123.2 / 132.3 × 68.5 × 54.2 mm |
+| `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 120.7 / 129.8 × 68.5 × 11.0 mm |
+| `filter` | face down, pocket up | 149.8 × 68.5 × 4.5 mm |
 
 ```bash
 ./scripts/generate-stl.sh          # all five into stl/
-./scripts/generate-stl.sh module   # just one
+./scripts/generate-stl.sh filter   # just one
 ```
 
 How each part avoids support:
 
 - **Module.** The bottom is a spigot inset from the walls; the wall steps out to full
   width on a **45° lap** that matches a bevel inside the top of the module below. The
-  dovetail rails' feet are chamfered 45°. The floor lattice is the first layers.
+  dovetail rails' feet are chamfered 45°. The floor lattice is the first layers. The
+  fan's bore is an arch in the front wall whose crown prints as a short bridge.
 - **Lid.** Upside down, its lap narrows as it rises.
-- **Front face.** The dovetail channels and filter grooves run up the print. The
-  plenum's floor is on the bed and its ceiling rises at 45°. The fan bores and the pill
-  recess are arches in a vertical face — their crowns print as short bridges, and all
-  of them are behind the filter.
+- **Filter panel.** Flat: the windows are plain holes, the glue pocket faces up, and
+  the dovetail channels' flanks lean 20° off vertical.
 
 ## Assembly
 
 1. Press M2.5 heat-set inserts into each module's rails. Screw each Pi in; the HAT's
    M2.5 male-female standoffs thread through the Pi into the inserts.
-2. Stack the modules. Each one's spigot drops into the one below and clicks in on
+2. Screw each fan to the inside of its module's front wall with four M3 self-tappers
+   through the fan's corner holes — **M3 × 16** for the NF-A4x10, **M3 × 25** for the
+   NF-A4x20 — and plug it into that Pi's GPIO: 5 V on pin 2 or 4, ground on pin 6.
+3. Stack the modules. Each one's spigot drops into the one below and clicks in on
    hexrack's 45° rib-and-groove clip. Click the lid onto the top one.
-3. Screw the fans to the inside of the front face, from the plenum side, with M3
-   self-tappers through each fan's corner holes: **M3 × 14** for the NF-A4x10, **M3 ×
-   24** for the NF-A4x20. That bites the full 3 mm of plate and stops short of the filter.
-4. Slide the front face down over the dovetails on the modules' sides.
-5. Glue filter fabric into the pocket on the back of the filter ring and push the ring
-   into the pill-shaped recess until it clicks.
+4. Glue filter fabric into the pocket on the back of the filter panel, across all three
+   windows, and slide the panel down over the dovetails on the modules' front faces.
 
 ## Development
 
 ```bash
 git submodule update --init --recursive   # SBC_Model_Framework
-./scripts/test.sh                         # all seven suites
+./scripts/test.sh                         # all seven suites, geometry in both fan modes
 ```
 
 | Suite | Holds |
 |-------|-------|
 | `test-board-assets.sh` | the declared Pi 5 geometry still matches the framework |
 | `test-assets.sh` | both fan meshes are what `config.scad` says they are |
-| `test-fit.sh` | every board fits its module; modules, lid and front face touch only where they should and seat where they must; the dovetails hold |
-| `test-parts.sh` | one body each, both front faces, everything fits the bed, the showcase renders |
+| `test-fit.sh` | every board fits its module and clears its fan; modules, lid and panel touch only where they should and seat where they must; the dovetails hold |
+| `test-parts.sh` | one body each, in both fan modes, everything fits the bed, the showcase renders |
 | `test-clips.sh` | every clip rib sits in its groove at rest and reaches into the part it holds |
-| `test-airflow.sh` | the exhaust does not choke the fans, no port is blind, no hole exists that should not |
+| `test-airflow.sh` | no module's exhaust chokes its fan, every fan's air path is open, no port is blind, no hole exists that should not |
 | `test-print.sh` | every part prints without support, as exported |
 
 Open `cad/case.scad` for the assembly. `case_part` picks one part, `fan_model` the fans,
 `assembly_space` pulls the stack apart, and the `show_*` flags toggle the boards, HATs,
-standoffs, fans, filter and front face.
+standoffs, fans and filter panel.
 
 Requires OpenSCAD nightly with the Manifold backend. Every dimension lives in
 `cad/config.scad`.

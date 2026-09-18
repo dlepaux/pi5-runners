@@ -6,8 +6,8 @@
 # preview looks right, and the part exports as a plate plus loose pucks. Counting
 # bodies is what catches that, and nothing else in the suite can.
 #
-# The front face is checked in BOTH fan modes: fan_model changes its depth, and a
-# mode nobody renders is a mode that quietly stops working.
+# The module and the lid are checked in BOTH fan modes: fan_model sets their length,
+# and a mode nobody renders is a mode that quietly stops working.
 # ============================================================================
 . "$(dirname "${BASH_SOURCE[0]}")/lib/openscad-env.sh"
 
@@ -43,11 +43,11 @@ check_part() {
     fi
 }
 
-check_part module   module
-check_part lid      lid
-check_part filter   filter
-check_part front-10 front -D 'fan_model="NF-A4x10"'
-check_part front-20 front -D 'fan_model="NF-A4x20"'
+check_part module-10 module -D 'fan_model="NF-A4x10"'
+check_part module-20 module -D 'fan_model="NF-A4x20"'
+check_part lid-10    lid    -D 'fan_model="NF-A4x10"'
+check_part lid-20    lid    -D 'fan_model="NF-A4x20"'
+check_part filter    filter
 
 # THE SHOWCASE MUST RENDER CLEAN. It is the only file that touches the framework's
 # board model and the vendor fan meshes, so it is the only place their path
@@ -73,6 +73,6 @@ showcase "assembly renders closed"                 -D 'case_part="assembly"' -D 
 showcase "assembly renders with the 20mm fans"     -D 'case_part="assembly"' -D 'fan_model="NF-A4x20"'
 showcase "assembly renders with nothing on"        -D 'case_part="assembly"' \
          -D 'show_boards=false' -D 'show_hats=false' -D 'show_standoffs=false' \
-         -D 'show_fan=false' -D 'show_filter=false' -D 'show_front=false'
+         -D 'show_fan=false' -D 'show_filter=false'
 
 report "part checks"

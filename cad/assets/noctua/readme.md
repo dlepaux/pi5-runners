@@ -12,8 +12,8 @@ gitignored. `fan_model` in `cad/config.scad` picks which one the case is built f
 Each is every solid in its STEP file — frame, corner pads, impeller, hub, label — at
 0.2 mm deflection, left in Noctua's **native orientation**, axis along **Y**.
 `cad/lib/noctua-fan.scad` rotates it into this project's +X convention at import,
-which keeps the files byte-identical to what was generated. Two copies are drawn, one
-per fan.
+which keeps the files byte-identical to what was generated. One copy is drawn per
+module.
 
 | Mesh | Bodies | Measures | Datasheet depth | Why deeper |
 |------|--------|----------|-----------------|------------|

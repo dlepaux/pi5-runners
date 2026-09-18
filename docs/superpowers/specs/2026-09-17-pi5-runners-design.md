@@ -1,7 +1,7 @@
 # pi5-runners — three-Pi CI runner tower
 
 **Date:** 2026-09-17
-**Status:** implemented; revised 2026-09-18 — see *Revisions 2–5* at the end. **Revision 5 replaced the architecture**
+**Status:** implemented; revised 2026-09-18 — see *Revisions 2–6* at the end. **Revision 5 replaced the architecture; Revision 6 is current**
 
 ## Goal
 
@@ -430,3 +430,48 @@ holds with 0.4 mm to spare in the 20 mm mode.
   the dovetails. It reads as a bezel.
 - **The bottom module's floor lattice faces the desk.** Harmless under positive
   pressure; a stand-off base is the fix if it ever matters.
+
+
+---
+
+## Revision 6 — one fan per module, the filter as the front face (2026-09-18)
+
+Requested after Revision 5: put a 40 mm fan in every module, drop the separate front
+face, and make the dust filter the whole front, held by dovetails on the modules'
+front faces. Where it conflicts with Revision 5, this section wins.
+
+| | Revision 5 | Revision 6 |
+|---|---|---|
+| Fans | 2 stacked in the front face | **1 per module, inside its front wall, on its own Pi's GPIO** |
+| Module front | open | **a 5.2 mm wall with the fan's bore** |
+| Spigot and lap | three sides | **four sides** |
+| Front part | U-channel with fans and a plenum | **a flat filter panel, printed face-down** |
+| Dovetails | on the modules' sides | **on the modules' front faces** |
+| `fan_model` changes | the front face | **the module and the lid** |
+| Envelope (NF-A4x10) | 124.5 × 78.2 × 120.35 | **125.5 × 68.5 × 149.75** |
+| Case-air rise | ≈ 14.6 K | **≈ 9.7 K** |
+
+**Why it is better.** Three fans move 50% more air than two, each Pi gets its own, and
+a module becomes a complete unit — board, storage, cooler, fan. The plenum and the
+wide front face both disappear. **A third fan has to be bought.**
+
+**Why the stack grew 29 mm.** The fan needs more height between floors than the
+tallest board does, and its screw holes have to clear the spigot band: below
+`spigot_h` the front wall is only the 2 mm band with the module below standing in
+front of it, so a screw that holds would poke out and stop the module seating. Found
+while writing the screw sizes into the readme; now asserted in config and measured
+by the pilot check.
+
+**Why each module cuts its neighbour's bore.** The bore still dips below `spigot_h`,
+into the socket front of the module below. Every module cuts the bore of the module
+above from the same datum, as it already does the clip grooves. `bores-open` probes
+the whole air path, panel to fan.
+
+**Why the panel's windows are the bore's diameter.** A bigger window only narrows the
+glue land between the window and the dovetail channel, which was 1.1 mm before this
+change and is now 2.6.
+
+**Found on the way:** closing the front put the floor lattice's first row under the
+spigot's new front band — a ledge, caught by the flat-overhang budget (CLAUDE.md trap
+29). And the geometry suites now run in both fan modes, since the mode changes the
+module.

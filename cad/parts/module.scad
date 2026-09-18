@@ -1,16 +1,18 @@
 // ============================================================================
-// MODULE — one Raspberry Pi 5, printed as one piece
+// MODULE — one Raspberry Pi 5 and its fan, printed as one piece
 // ============================================================================
-// Floor, three walls and an open front. The Pi screws into heat-set inserts in two
-// rails on the floor; the module's spigot drops into the module below and clips there;
-// the module above drops into this one's socket. Print it three times.
+// Floor and four walls. The Pi screws into heat-set inserts in two rails on the floor;
+// its fan screws to the inside of the front wall. The module's spigot drops into the
+// module below and clips there; the module above drops into this one's socket. Print
+// it three times.
 //
 // PRINTED FLOOR-DOWN, AS IT STANDS, WITH NO SUPPORT:
 //   - the vented floor is the first layers, on the bed
 //   - the spigot's outer band steps out to the wall on a 45-degree lap
-//   - the walls rise straight; port and vent openings are short bridges
+//   - the walls rise straight; port and vent openings are short bridges; the fan
+//     bore is an arch in the front wall, its crown a bridge that shortens to nothing
 //   - the socket's bevel and clip grooves face inward and upward
-//   - the dovetail rails are vertical prisms with 45-degree feet
+//   - the filter panel's dovetail rails are vertical prisms with 45-degree feet
 // ============================================================================
 
 include <../lib/stacking.scad>
@@ -18,6 +20,7 @@ include <../lib/placement.scad>
 use <../lib/ports.scad>
 use <../lib/vents.scad>
 use <../lib/sbc-helpers.scad>
+use <../lib/noctua-fan.scad>
 
 // ----------------------------------------------------------------------------
 // BODY — spigot, floor, walls, socket
@@ -30,8 +33,13 @@ module moduleBody() {
         linear_extrude(module_h - spigot_h) square([module_l, module_w]);
     }
     spigotCavity(floor_t);
-    translate([0, 0, spigot_h - EPS])
-      linear_extrude(module_h - spigot_h + 1) insetRect(wall, 1);
+    // Up to the next floor the front wall is front_wall_t thick -- one flat face for
+    // the fan, flush with the spigot band's inside. Above it, the socket: `wall` all
+    // round, for the module above to drop into.
+    translate([front_wall_t, wall, spigot_h - EPS])
+      cube([module_l - front_wall_t - wall, module_w - 2 * wall, module_pitch - spigot_h + 2 * EPS]);
+    translate([0, 0, module_pitch])
+      linear_extrude(module_h - module_pitch + 1) insetRect(wall);
     socketLap();
   }
 }
@@ -111,14 +119,14 @@ module sideVentProfile() {
     ventField(side_field_x[1] - side_field_x[0], vent_z1 - vent_z0);
 }
 
-// The floor: inside the spigot ring, clear of the rails. It is what lets each module
-// breathe into the one above, and it is the first layers of the print.
+// The floor: inside the spigot ring on all four sides, clear of the rails. It is what
+// lets each module breathe into the one above, and it is the first layers of the
+// print. INSIDE THE RING: a field that reaches under the ring leaves the ring's band
+// standing over the holes -- a ledge, found when the front stopped being open.
 module floorVentProfile() {
-  x0 = vent_margin;
-  x1 = module_l - spigot_inset - spigot_t - vent_margin;
-  y0 = spigot_inset + spigot_t + vent_margin;
+  m = spigot_inset + spigot_t + vent_margin;
   difference() {
-    translate([x0, y0]) ventField(x1 - x0, module_w - 2 * y0);
+    translate([m, m]) ventField(module_l - 2 * m, module_w - 2 * m);
     offset(delta = vent_margin) canoeFootprint();
   }
 }
@@ -135,10 +143,33 @@ module ventCuts() {
 }
 
 // ----------------------------------------------------------------------------
+// FAN
+// ----------------------------------------------------------------------------
+// rotate([90,0,90]) maps profile x -> Y, profile y -> Z; extrusion runs +X through the
+// front wall. Centred on the fan.
+module onFront(z) {
+  translate([-EPS, fan_yc, z]) rotate([90, 0, 90]) children();
+}
+
+// This module's bore and the fan's pilot holes, through the whole front wall -- and
+// THE BORE OF THE MODULE ABOVE, one pitch up, through this module's socket front. That
+// bore runs down past its own spigot band into this socket; cut here from the same
+// datum, the two can never disagree.
+module fanCut() {
+  onFront(fan_zc)
+    linear_extrude(front_wall_t + 2 * EPS) {
+      circle(d = fan_bore_d, $fn = 96);
+      fanBoltProfile(fan_pilot_d);
+    }
+  onFront(fan_zc + module_pitch)
+    linear_extrude(wall + 2 * EPS) circle(d = fan_bore_d, $fn = 96);
+}
+
+// ----------------------------------------------------------------------------
 // THE PART
 // ----------------------------------------------------------------------------
 // render() is NOT optional: preview does not evaluate booleans, and a body cut by
-// ports, three vent fields and ten clip features blows past OpenSCAD's normalisation
+// ports, four vent fields, two bores and ten clip features blows past OpenSCAD's normalisation
 // limit -- blank window, perfect export.
 module modulePart() {
   render()
@@ -153,6 +184,7 @@ module modulePart() {
       socketGrooves();
       allPortCuts();
       ventCuts();
+      fanCut();
     }
 }
 
