@@ -1,13 +1,14 @@
 #!/bin/bash
 # ============================================================================
-# Regenerate cad/assets/noctua/NF-A4x10.stl from Noctua's published STEP
+# Regenerate cad/assets/noctua/<model>.stl from Noctua's published STEP
 # ============================================================================
 # Networked, and needs OpenCASCADE — a ~500MB install that nothing else in this
 # project requires. The OUTPUT IS COMMITTED, so you only run this when the vendor
 # publishes a new model or the deflection needs changing. Building and testing the
 # case needs neither the network nor OCP.
 #
-#   ./scripts/generate-fan-asset.sh
+#   ./scripts/generate-fan-asset.sh              # NF-A4x10
+#   ./scripts/generate-fan-asset.sh NF-A4x20
 #
 # The STEP archive lands in .vendor-cad/, which is gitignored: Noctua's licence
 # covers redistribution and the archive is theirs. The derived preview mesh is
@@ -19,9 +20,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-URL="https://cdn.noctua.at/media/NF-A4x10_Public-CAD.zip"
+MODEL="${1:-NF-A4x10}"
+case "$MODEL" in
+    NF-A4x10|NF-A4x20) ;;
+    *) echo "❌ unknown model $MODEL — NF-A4x10 or NF-A4x20"; exit 1 ;;
+esac
+URL="https://cdn.noctua.at/media/${MODEL}_Public-CAD.zip"
 VENDOR=".vendor-cad"
-OUT="cad/assets/noctua/NF-A4x10.stl"
+OUT="cad/assets/noctua/$MODEL.stl"
 
 # DEFLECTION is the max distance the tessellation may stray from the true surface, in
 # mm. This mesh is a showcase prop, never a boolean, so it is tuned for file size
@@ -33,16 +39,16 @@ command -v uv >/dev/null 2>&1 || { echo "❌ uv not found — https://docs.astra
 mkdir -p "$VENDOR" cad/assets/noctua
 
 echo "→ downloading $URL"
-curl -fsSL --max-time 180 -o "$VENDOR/NF-A4x10.zip" "$URL" || {
+curl -fsSL --max-time 180 -o "$VENDOR/$MODEL.zip" "$URL" || {
     echo "❌ download failed. Noctua move these; check"
     echo "   https://www.noctua.at/en/support/downloads for the current link"
     exit 1
 }
 
 echo "→ unpacking"
-unzip -oq "$VENDOR/NF-A4x10.zip" -d "$VENDOR/NF-A4x10"
+unzip -oq "$VENDOR/$MODEL.zip" -d "$VENDOR/$MODEL"
 
-STEP=$(find "$VENDOR/NF-A4x10" -iname '*.stp' -o -iname '*.step' | head -1)
+STEP=$(find "$VENDOR/$MODEL" -iname '*.stp' -o -iname '*.step' | head -1)
 [ -n "$STEP" ] || { echo "❌ no STEP file inside the archive"; exit 1; }
 
 echo "→ tessellating at ${DEFLECTION}mm (OpenCASCADE via uv, first run downloads ~500MB)"

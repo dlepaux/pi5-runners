@@ -11,79 +11,82 @@
 
 echo "Mesh assets"
 
-MESH="cad/assets/noctua/NF-A4x10.stl"
+# Both fan modes ship a mesh, and each must be what config.scad says it is.
+for MODEL in NF-A4x10 NF-A4x20; do
 
-if [ ! -f "$MESH" ]; then
-    fail "NF-A4x10 mesh missing — run ./scripts/generate-fan-asset.sh"
-    report "asset checks"
-fi
-pass "NF-A4x10 mesh present"
+    MESH="cad/assets/noctua/$MODEL.stl"
+    if [ ! -f "$MESH" ]; then
+        fail "$MODEL mesh missing — run ./scripts/generate-fan-asset.sh $MODEL"
+        continue
+    fi
+    pass "$MODEL mesh present"
 
-# NOT a one-body check. A fan is legitimately many solids — frame, eight corner pads,
-# impeller, hub — and demanding one body here would be asserting a wrong belief about
-# the part rather than a property worth holding.
-N=$(comps "$MESH")
-if [ "$N" -ge 1 ] 2>/dev/null; then
-    pass "NF-A4x10 mesh has geometry ($N bodies)"
-else
-    fail "NF-A4x10 mesh has no bodies"
-fi
+    # NOT a one-body check. A fan is legitimately many solids — frame, eight corner pads,
+    # impeller, hub — and demanding one body here would be asserting a wrong belief about
+    # the part rather than a property worth holding.
+    N=$(comps "$MESH")
+    if [ "$N" -ge 1 ] 2>/dev/null; then
+        pass "$MODEL mesh has geometry ($N bodies)"
+    else
+        fail "$MODEL mesh has no bodies"
+    fi
 
-# Extents, measured off the MESH. step-to-stl.py --list cannot answer this: OpenCASCADE's
-# bounding box over an un-tessellated shape over-estimates curved faces badly enough to
-# call this 80mm fan 88.38mm across. A measurement tool that cannot see something must
-# not be trusted to answer.
-# The WHOLE mesh, not its largest body. --bboxes lists bodies, and for this fan the
-# largest (the frame) is 11.0 deep while the mesh is 12.0 -- the hub label stands
-# proud. Reading the first body instead of the union under-sizes the fan by a
-# millimetre, silently. It happened to be harmless on the NF-A8, which is luck.
-read -r X0 Y0 Z0 X1 Y1 Z1 <<<"$(bounds "$MESH")"
-EX=$(awk -v a="$X0" -v b="$X1" 'BEGIN{printf "%.3f", b-a}')
-EY=$(awk -v a="$Y0" -v b="$Y1" 'BEGIN{printf "%.3f", b-a}')
-EZ=$(awk -v a="$Z0" -v b="$Z1" 'BEGIN{printf "%.3f", b-a}')
+    # Extents, measured off the MESH. step-to-stl.py --list cannot answer this: OpenCASCADE's
+    # bounding box over an un-tessellated shape over-estimates curved faces badly enough to
+    # call this 80mm fan 88.38mm across. A measurement tool that cannot see something must
+    # not be trusted to answer.
+    # The WHOLE mesh, not its largest body. --bboxes lists bodies, and for this fan the
+    # largest (the frame) is 11.0 deep while the mesh is 12.0 -- the hub label stands
+    # proud. Reading the first body instead of the union under-sizes the fan by a
+    # millimetre, silently. It happened to be harmless on the NF-A8, which is luck.
+    read -r X0 Y0 Z0 X1 Y1 Z1 <<<"$(bounds "$MESH")"
+    EX=$(awk -v a="$X0" -v b="$X1" 'BEGIN{printf "%.3f", b-a}')
+    EY=$(awk -v a="$Y0" -v b="$Y1" 'BEGIN{printf "%.3f", b-a}')
+    EZ=$(awk -v a="$Z0" -v b="$Z1" 'BEGIN{printf "%.3f", b-a}')
 
-DECL=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
-        -D 'test_view="report-fan-asset"' cad/tests.scad 2>&1 \
-      | sed -n 's/.*declared = \([0-9.]*\) \([0-9.]*\) \([0-9.]*\) tol \([0-9.]*\).*/\1 \2 \3 \4/p')
-read -r DX DY DZ TOL <<<"$DECL"
+    DECL=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
+            -D 'test_view="report-fan-asset"' -D "fan_model=\"$MODEL\"" cad/tests.scad 2>&1 \
+          | sed -n 's/.*declared = \([0-9.]*\) \([0-9.]*\) \([0-9.]*\) tol \([0-9.]*\).*/\1 \2 \3 \4/p')
+    read -r DX DY DZ TOL <<<"$DECL"
 
-if [ -z "$TOL" ]; then
-    fail "could not read fan_asset_extent from cad/tests.scad"
-else
-    for pair in "X $EX $DX" "Y $EY $DY" "Z $EZ $DZ"; do
-        read -r axis measured declared <<<"$pair"
-        if awk -v m="$measured" -v d="$declared" -v t="$TOL" \
-               'BEGIN { exit !((m - d < t) && (d - m < t)) }'; then
-            pass "$(printf 'mesh %s = %s, declared %s' "$axis" "$measured" "$declared")"
-        else
-            fail "$(printf 'mesh %s = %s but config declares %s (tol %s)' \
-                    "$axis" "$measured" "$declared" "$TOL")"
-            note "regenerate with ./scripts/generate-fan-asset.sh, or fix fan_asset_extent"
-        fi
-    done
-fi
+    if [ -z "$TOL" ]; then
+        fail "could not read fan_asset_extent from cad/tests.scad"
+    else
+        for pair in "X $EX $DX" "Y $EY $DY" "Z $EZ $DZ"; do
+            read -r axis measured declared <<<"$pair"
+            if awk -v m="$measured" -v d="$declared" -v t="$TOL" \
+                   'BEGIN { exit !((m - d < t) && (d - m < t)) }'; then
+                pass "$(printf '%s %s = %s, declared %s' "$MODEL" "$axis" "$measured" "$declared")"
+            else
+                fail "$(printf 'mesh %s = %s but config declares %s (tol %s)' \
+                        "$axis" "$measured" "$declared" "$TOL")"
+                note "regenerate with ./scripts/generate-fan-asset.sh, or fix fan_asset_extent"
+            fi
+        done
+    fi
 
-# The mesh must actually render through OpenSCAD's importer, not merely exist. A file
-# OpenSCAD cannot read fails here rather than silently contributing nothing to a showcase.
-expect_geometry "fan mesh imports and renders" fan-mesh-raw
+    # The mesh must actually render through OpenSCAD's importer, not merely exist. A file
+    # OpenSCAD cannot read fails here rather than silently contributing nothing to a showcase.
+    expect_geometry "$MODEL mesh imports and renders" fan-mesh-raw -D "fan_model=\"$MODEL\""
 
-# And the visualization module must contribute NOTHING to an export: % is the
-# background modifier. If someone swaps it for #, this is what notices — otherwise
-# Noctua's geometry ships inside every STL the website publishes.
-#
-# Volume, not emptiness, and BOUNDED ON BOTH SIDES. The view renders a 10mm marker
-# beside the fan, so the assertion reads "the marker and nothing else":
-#   - a floor catches the marker going missing, which is what a broken view looks like
-#   - a ceiling catches the fan mesh leaking into the export
-# An emptiness check here would pass when the mesh is simply missing, which is how the
-# first version of this reported a green % while the import was silently failing.
-render fan-visualization-export "$WORK/viz.stl"
-VIZ=$(vol "$WORK/viz.stl")
-if awk -v v="$VIZ" 'BEGIN { exit !(v > 999 && v < 1001) }'; then
-    pass "$(printf 'render is the %.0fmm3 marker alone — %% excludes the mesh' "$VIZ")"
-else
-    fail "$(printf 'render is %.0fmm3, expected the 1000mm3 marker alone' "$VIZ")"
-    note "below 1000: the view is broken. above: fanVisualization() uses # not %"
-fi
+    # And the visualization module must contribute NOTHING to an export: % is the
+    # background modifier. If someone swaps it for #, this is what notices — otherwise
+    # Noctua's geometry ships inside every STL the website publishes.
+    #
+    # Volume, not emptiness, and BOUNDED ON BOTH SIDES. The view renders a 10mm marker
+    # beside the fan, so the assertion reads "the marker and nothing else":
+    #   - a floor catches the marker going missing, which is what a broken view looks like
+    #   - a ceiling catches the fan mesh leaking into the export
+    # An emptiness check here would pass when the mesh is simply missing, which is how the
+    # first version of this reported a green % while the import was silently failing.
+    render fan-visualization-export "$WORK/viz.stl" -D "fan_model=\"$MODEL\""
+    VIZ=$(vol "$WORK/viz.stl")
+    if awk -v v="$VIZ" 'BEGIN { exit !(v > 999 && v < 1001) }'; then
+        pass "$(printf '%s: render is the %.0fmm3 marker alone — %% excludes the mesh' "$MODEL" "$VIZ")"
+    else
+        fail "$(printf 'render is %.0fmm3, expected the 1000mm3 marker alone' "$VIZ")"
+        note "below 1000: the view is broken. above: fanVisualization() uses # not %"
+    fi
+done
 
 report "asset checks"

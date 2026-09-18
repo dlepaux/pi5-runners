@@ -1,9 +1,9 @@
 // ============================================================================
-// NOCTUA NF-A4x10 5V — two, stacked
+// NOCTUA 40mm FANS — two, stacked; NF-A4x10 or NF-A4x20 (config.scad fan_model)
 // ============================================================================
 // Two things live here and they do different jobs.
 //
-// PARAMETRIC (fanOpeningProfile, fanBoltProfile) takes every boolean. You cut an opening from
+// PARAMETRIC (pillProfile, fanBoreProfile, fanBoltProfile) takes every boolean. You cut an opening from
 // fan_size and a bolt circle from fan_bolt_pitch. You do NOT subtract a fan: a mesh
 // is a tessellation, and a bore cut from one is a polygon pretending to be a circle.
 //
@@ -12,8 +12,8 @@
 // deliberately altered; the mounting dimensions and outer envelope are the parts they
 // stand behind, which is exactly what a case needs. See assets/noctua/readme.md.
 //
-// ORIENTATION. Airflow runs along +X: the fan sits on the -X front wall and pushes
-// toward the boards and out through the rear. The cutting profiles are 2D, so the
+// ORIENTATION. Airflow runs along +X: the fans sit on the front face's plate and push
+// into the plenum, into every module, and out through the rear. The cutting profiles are 2D, so the
 // wall decides the orientation; only the mesh carries a rotation.
 // ============================================================================
 
@@ -37,13 +37,19 @@ assert(abs(fan_asset_extent[1] - fan_depth) <= fan_asset_tol,
 // have moved walls once already, and a module with a baked-in rotate() is one that
 // has to be rewritten when they do.
 
-// ONE opening for the whole column, not one per fan. The two frames abut, so two
-// openings would leave a 0-6mm bar across the airstream exactly where the frames
-// meet -- a strip that prints badly and blocks the one place both fans overlap.
-module fanOpeningProfile(clear = 0) {
-  s = fan_opening + [2 * clear, 2 * clear];
-  offset(r = fan_opening_r, $fn = 48)
-    square([s[0] - 2 * fan_opening_r, s[1] - 2 * fan_opening_r], center = true);
+// THE PILL: two half-circles of radius r on the two fans' axes, joined by straight
+// sides. The filter ring, its opening and its recess are all this shape at different
+// radii, so the filter follows both fan circles.
+module pillProfile(r) {
+  hull()
+    for (k = [0 : fan_count - 1])
+      translate([0, (k - (fan_count - 1) / 2) * fan_size]) circle(r = r, $fn = 96);
+}
+
+// One round bore per fan.
+module fanBoreProfile() {
+  for (k = [0 : fan_count - 1])
+    translate([0, (k - (fan_count - 1) / 2) * fan_size]) circle(d = fan_bore_d, $fn = 96);
 }
 
 // Four holes per fan on the standard 32mm pattern, each set centred on its own fan.
@@ -55,7 +61,7 @@ module fanBoltProfile(d) {
           circle(d = d, $fn = 32);
 }
 
-// The column's outer envelope — what the shell must not grow into.
+// The column's outer envelope, axis along +Y here: what nothing printed may grow into.
 module fanEnvelope() {
   translate([-fan_size / 2, 0, -fan_col_h / 2])
     cube([fan_size, fan_depth, fan_col_h]);

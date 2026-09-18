@@ -56,35 +56,26 @@ module ioMaskSwept(which) {
     translate(dir * d) maskBeyond(which);
 }
 
-// The volume of one wall, in the case frame. Grown on the four in-plane edges so an
-// opening that reaches a corner still cuts cleanly.
+// The volume of one wall of a module, in the module frame. Grown on the in-plane
+// edges so an opening that reaches a corner still cuts cleanly.
 module wallSlab(which) {
   g = 2 * EPS;
   if (which == "-Y")
-    translate([-g, -EPS, -g]) cube([outer[0] + 2 * g, wall + 2 * EPS, outer[2] + 2 * g]);
+    translate([-g, -EPS, -g]) cube([module_l + 2 * g, wall + 2 * EPS, module_h + 2 * g]);
+  else if (which == "+Y")
+    translate([-g, module_w - wall - EPS, -g]) cube([module_l + 2 * g, wall + 2 * EPS, module_h + 2 * g]);
   else if (which == "+X")
-    translate([outer[0] - wall - EPS, -g, -g])
-      cube([wall + 2 * EPS, outer[1] + 2 * g, outer[2] + 2 * g]);
+    translate([module_l - wall - EPS, -g, -g]) cube([wall + 2 * EPS, module_w + 2 * g, module_h + 2 * g]);
 }
 
-// The +Y wall, for tests. Nothing is cut into it but the side exhaust field.
-module wallSlabYPos() {
-  g = 2 * EPS;
-  translate([-g, outer[1] - wall - EPS, -g])
-    cube([outer[0] + 2 * g, wall + 2 * EPS, outer[2] + 2 * g]);
-}
-
-// Everything to subtract from one wall, for all three boards.
+// Everything to subtract from one wall for the module's one board.
 module portCuts(which) {
   intersection() {
-    union()
-      for (i = [0 : 2])
-        onBoard(i) ioMaskSwept(which);
+    onBoard() ioMaskSwept(which);
     wallSlab(which);
   }
 }
 
-// Both walls at once — what a part subtracts.
 module allPortCuts() {
   portCuts("-Y");
   portCuts("+X");
@@ -145,5 +136,5 @@ module portProbe(which) {
 }
 
 module allPortProbes() {
-  for (i = [0 : 2]) onBoard(i) { portProbe("-Y"); portProbe("+X"); }
+  onBoard() { portProbe("-Y"); portProbe("+X"); }
 }

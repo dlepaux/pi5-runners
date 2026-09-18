@@ -13,6 +13,13 @@ Usage: stl-stats.py <file.stl>            ->  "<triangles> <components>"
        stl-stats.py <file.stl> --genus    ->  "<genus>"
        stl-stats.py <file.stl> --volume   ->  "<mm3>"
        stl-stats.py <file.stl> --bboxes   ->  one "<dx> <dy> <dz>" line per body
+       stl-stats.py <file.stl> --overhang ->  "<steep mm2> <flat mm2>" then the
+                                              bbox of the steep faces, if any
+
+Overhang reads the part AS IT PRINTS: +Z up, the lowest point on the bed. A face
+pointing down more steeply than 45 degrees needs support; a face pointing straight
+down is a bridge or a ceiling, reported apart because a short one prints clean.
+The bed face itself is neither.
 """
 
 import struct
@@ -112,13 +119,43 @@ def volume(triangles):
     return total
 
 
+STEEP_NZ = -0.72    # 45 degrees is -0.7071; a hair of slack for tessellated slopes
+FLAT_NZ = -0.999    # straight down: a bridge
+
+
+def overhang(triangles):
+    """Downward face area in two classes, and the bbox of the steep class."""
+    bed = min(v[2] for tri in triangles for v in tri)
+    steep = flat = 0.0
+    lo = [float("inf")] * 3
+    hi = [float("-inf")] * 3
+    for a, b, c in triangles:
+        if min(a[2], b[2], c[2]) < bed + 0.05:
+            continue
+        u = [b[i] - a[i] for i in range(3)]
+        w = [c[i] - a[i] for i in range(3)]
+        n = (u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0])
+        length = (n[0] ** 2 + n[1] ** 2 + n[2] ** 2) ** 0.5
+        if length == 0:
+            continue
+        area, nz = length / 2, n[2] / length
+        if nz <= FLAT_NZ:
+            flat += area
+        elif nz < STEEP_NZ:
+            steep += area
+            for v in (a, b, c):
+                for i in range(3):
+                    lo[i], hi[i] = min(lo[i], v[i]), max(hi[i], v[i])
+    return steep, flat, (lo, hi) if steep else None
+
+
 def main():
     args = sys.argv[1:]
     metrics = [a for a in args if a.startswith("--")]
     paths = [a for a in args if not a.startswith("--")]
     if len(paths) != 1 or len(metrics) > 1 or any(
-            m not in ("--genus", "--volume", "--bboxes") for m in metrics):
-        print("usage: stl-stats.py <file.stl> [--genus|--volume|--bboxes]",
+            m not in ("--genus", "--volume", "--bboxes", "--overhang") for m in metrics):
+        print("usage: stl-stats.py <file.stl> [--genus|--volume|--bboxes|--overhang]",
               file=sys.stderr)
         return 2
 
@@ -131,6 +168,12 @@ def main():
         print(f"{volume(triangles):.3f}")
     elif metrics == ["--genus"]:
         print(total_genus(welded(triangles)))
+    elif metrics == ["--overhang"]:
+        steep, flat, box = overhang(triangles)
+        print(f"{steep:.1f} {flat:.1f}")
+        if box:
+            print("steep faces within " + " ".join(
+                f"{a:.1f}..{b:.1f}" for a, b in zip(*box)))
     elif metrics == ["--bboxes"]:
         for size in bboxes(welded(triangles)):
             print(" ".join(f"{d:.3f}" for d in size))

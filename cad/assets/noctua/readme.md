@@ -1,21 +1,26 @@
 # Vendor fan geometry
 
-`NF-A4x10.stl` is derived from Noctua's official public CAD, downloaded from:
+`NF-A4x10.stl` and `NF-A4x20.stl` are derived from Noctua's official public CAD:
 
 - <https://cdn.noctua.at/media/NF-A4x10_Public-CAD.zip>
+- <https://cdn.noctua.at/media/NF-A4x20_Public-CAD.zip>
 
-listed on <https://www.noctua.at/en/support/downloads>. `scripts/generate-fan-asset.sh`
-regenerates it; the STEP archive itself lands in `.vendor-cad/`, which is gitignored.
+listed on <https://www.noctua.at/en/support/downloads>. `scripts/generate-fan-asset.sh
+[model]` regenerates either; the STEP archives land in `.vendor-cad/`, which is
+gitignored. `fan_model` in `cad/config.scad` picks which one the case is built for.
 
-It is every solid in the STEP file — frame, corner pads, impeller, hub, label: 11
-bodies, 29k triangles at 0.2 mm deflection — left in Noctua's **native orientation**,
-axis along **Y**. `cad/lib/noctua-fan.scad` rotates it into this project's +X
-convention at import, which keeps the file byte-identical to what they published. Two
-copies are drawn, one per fan.
+Each is every solid in its STEP file — frame, corner pads, impeller, hub, label — at
+0.2 mm deflection, left in Noctua's **native orientation**, axis along **Y**.
+`cad/lib/noctua-fan.scad` rotates it into this project's +X convention at import,
+which keeps the files byte-identical to what was generated. Two copies are drawn, one
+per fan.
 
-The whole mesh measures **40.0 × 12.0 × 40.0**, against a datasheet 10 mm depth: the
-frame is 11.0 (anti-vibration pads 0.5 proud each side) and the hub label stands 1 mm
-beyond that. `fan_depth` uses 12.0. Measure the UNION — the first line of
+| Mesh | Bodies | Measures | Datasheet depth | Why deeper |
+|------|--------|----------|-----------------|------------|
+| NF-A4x10 | 11 | 40.0 × 12.0 × 40.0 | 10 | frame 11.0 (pads 0.5 proud each side), hub label 1 mm beyond |
+| NF-A4x20 | 12 | 40.0 × 21.1 × 40.0 | 20 | frame 20.1, hub label 1 mm beyond |
+
+`fan_depth` uses the measured depth. Measure the UNION — the first line of
 `stl-stats.py --bboxes` is only the largest body — and never take extents from
 `step-to-stl.py --list`, whose un-tessellated box over-estimates curves.
 
@@ -24,7 +29,7 @@ beyond that. `fan_depth` uses 12.0. Measure the UNION — the first line of
 Showing the real build. The bore, the bolt pattern and every boolean are **parametric**
 in `cad/lib/noctua-fan.scad` — you cut an opening from `fan_size`, you do not subtract
 a fan. `cad/config.scad` declares the mesh's extents in `fan_asset_extent` and
-`scripts/test-assets.sh` holds the file and that declaration together.
+`scripts/test-assets.sh` holds each file and its declaration together.
 
 `fanVisualization()` marks its import with OpenSCAD's **`%` background modifier**:
 drawn in preview, dropped from the final render. That is what keeps Noctua's geometry
@@ -48,7 +53,7 @@ Noctua's own README, shipped inside the archive:
 
 So: mounting dimensions and outer envelope are trustworthy, which is exactly what this
 case needs from it. The impeller is not. **The airflow figures in this project come
-from the NF-A4x10 datasheet, never from this mesh.**
+from Noctua's datasheets, never from these meshes.**
 
 ## Licence
 
@@ -59,6 +64,6 @@ Noctua's terms, from the same README and <https://www.noctua.at/en/3d-cad-models
 > reproduction, or commercialisation of the products they represent or any
 > substantially similar products.
 
-Integrating a case around the fan is integration. This file is **not** covered by this
-project's CC-BY-NC-SA licence, is not a printable part, and is never included in the
-STLs the website publishes. Do not print it; buy the fan.
+Integrating a case around the fans is integration. These files are **not** covered by
+this project's CC-BY-NC-SA licence, are not printable parts, and are never included in
+the STLs this project publishes. Do not print them; buy the fans.

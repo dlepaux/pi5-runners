@@ -17,20 +17,22 @@
 
 include <config.scad>
 use <lib/m2-hat-plus.scad>
-// include, not use: placement.scad carries board_z and the envelope constants, and
-// `use` imports modules and functions but NOT variables -- they would come back undef
-// and only a WARNING would say so.
+// include, not use: these carry constants the views read, and `use` imports modules
+// and functions but NOT variables -- they would come back undef, with only a WARNING.
 include <lib/placement.scad>
+include <lib/stacking.scad>
 use <lib/noctua-fan.scad>
-include <lib/shell.scad>
-include <lib/vents.scad>
 use <lib/ports.scad>
+use <lib/vents.scad>
+use <parts/module.scad>
+use <parts/lid.scad>
+use <parts/front.scad>
 use <parts/filter.scad>
-use <parts/base.scad>
-use <parts/roof.scad>
-use <parts/walls.scad>
 
 test_view = "";
+part   = "";     // set with -D for the per-part views
+kind   = "";     // set with -D for the per-board views: standard | compact | bare
+clip_k = -1;     // set with -D for the per-joint views
 
 // ----------------------------------------------------------------------------
 // ENVELOPES
@@ -61,19 +63,6 @@ if (test_view == "cooler-vs-hat-standard")
 if (test_view == "cooler-vs-hat-compact")
   intersection() { coolerEnvelope(); hatCompactSolid(); }
 
-// -- the stack ---------------------------------------------------------------
-if (test_view == "slot0-solid") slotSlab(0);
-if (test_view == "slot1-solid") slotSlab(1);
-if (test_view == "slot2-solid") slotSlab(2);
-
-// Each slot's contents against the BARE PCB above it. Tested against the PCB and not
-// against the neighbour's slab, because the neighbour's slab claims the air above its
-// own cooler -- which this slot has no business reaching into anyway, but which is
-// not what "do these two boards collide" is asking.
-if (test_view == "slot0-vs-slot1") intersection() { slotSlab(0); boardPcb(1); }
-if (test_view == "slot1-vs-slot2") intersection() { slotSlab(1); boardPcb(2); }
-if (test_view == "slot2-vs-roof")  intersection() { slotSlab(2); roofPlane(); }
-
 // -- fan asset ---------------------------------------------------------------
 if (test_view == "fan-mesh-raw") import(fan_asset, center = true);
 
@@ -99,190 +88,215 @@ if (test_view == "report-fan-asset") {
 }
 
 // -- printed parts -----------------------------------------------------------
+// As they sit in the case, in the stack frame.
 module partByName(n) {
-  if (n == "base")   basePart();
+  if (n == "module") modulePart();
+  if (n == "lid")    lidAt() lidPart();
   if (n == "front")  frontPart();
-  if (n == "rear")   rearPart();
-  if (n == "left")   leftPart();
-  if (n == "right")  rightPart();
-  if (n == "roof")   roofPart();
+  if (n == "filter") filterMounted();
+}
+// As they print: what the bed check and the printability check measure.
+module printByName(n) {
+  if (n == "module") modulePart();
+  if (n == "lid")    lidPrint();
+  if (n == "front")  frontPart();
   if (n == "filter") filterPart();
 }
-
-part = "";      // set with -D for the per-part views below
-clip_k = -1;    // set with -D for the per-joint views below
-
 if (test_view == "part")  partByName(part);
-if (test_view == "panel") shellPanel(part);
-if (test_view == "shell-cut") shellCut();
+if (test_view == "print") printByName(part);
 
-// COMPLETE: nothing of the cut shell may be left unclaimed. A gap between two claims
-// prints a case with a slot missing and passes every other check in the file.
-// (DISJOINT is checked by volume in test-parts.sh: with six panels there are fifteen
-// pairs, but overlapping panels always sum to MORE than the shell, so one comparison
-// catches all fifteen.)
-if (test_view == "shell-minus-parts")
-  difference() {
-    shellCut();
-    for (n = shell_parts) shellPanel(n);
-  }
-
-// NOTHING PRINTED MAY TOUCH THE BOARD TOWER. Rims, flanges, rails and ribs all live
-// inside the case, which is where the boards are. This also catches the frame error
-// that hides from slot-vs-slot checks: the whole stack sitting a wall-thickness into
-// the floor.
-if (test_view == "parts-vs-stack")
-  intersection() {
-    union() for (n = shell_parts) partByName(n);
-    union() { slotSlab(0); slotSlab(1); slotSlab(2); }
-  }
-
-// -- vents -------------------------------------------------------------------
-// MEASURED, not computed: extruded 1mm, volume IS area, and it is the exact profile
-// ventCuts() sweeps through the wall.
-if (test_view == "rear-vent-area")     linear_extrude(1) rearVentProfile();
-if (test_view == "side-vent-area")     linear_extrude(1) sideVentProfile();
-
-// The side fields must actually cut BOTH side walls -- measured as material removed.
-// An onYWall() sweep started at the wrong face runs into open air and removes nothing.
-if (test_view == "side-y-neg-removed")
-  difference() { intersection() { shellSolid(); wallSlab("-Y"); }
-                 intersection() { shellCut();   wallSlab("-Y"); } }
-
-// NO SPURIOUS HOLES. In the rear region both side walls carry the same field and
-// nothing else, so they must lose exactly the same material. Now that the walls also
-// carry clip grooves, the region's comparison still holds: both side walls get the
-// same grooves, mirrored.
-module rearRegion() {
-  x0 = wall_front + board_x + side_port_cluster_x1 + 1;
-  translate([x0, -1, -1]) cube([outer[0] - x0 + 1, outer[1] + 2, outer[2] + 2]);
+// The whole case, as it stands: every module, the lid, the front face.
+module wholeCase() {
+  for (k = [0 : module_count - 1]) moduleAt(k) modulePart();
+  lidAt() lidPart();
+  frontPart();
 }
-if (test_view == "side-y-neg-rear-removed")
-  intersection() {
-    rearRegion();
-    difference() { intersection() { shellSolid(); wallSlab("-Y"); }
-                   intersection() { shellCut();   wallSlab("-Y"); } }
-  }
-if (test_view == "side-y-pos-rear-removed")
-  intersection() {
-    rearRegion();
-    difference() { intersection() { shellSolid(); wallSlabYPos(); }
-                   intersection() { shellCut();   wallSlabYPos(); } }
-  }
-
-// Every exclusion zone must keep the vent pattern off its port cluster.
-if (test_view == "exclusion-holds")
-  intersection() {
-    linear_extrude(1) rearVentProfile();
-    for (i = [0 : 2])
-      linear_extrude(1)
-        translate(exclusionCentre(i))
-          square([exclusion_w - 2 * exclusion_r, exclusion_h - 2 * exclusion_r],
-                 center = true);
-  }
-
-if (test_view == "report-areas") {
-  echo(str("fan_throat_area = ", fan_throat_area));
-  cube(1);
+module allModules() {
+  for (k = [0 : module_count - 1]) moduleAt(k) modulePart();
 }
 
-// -- ports -------------------------------------------------------------------
-// NO PORT MAY BE BLIND: no printed part may stand inside a connector's probe.
-if (test_view == "ports-blind")
-  intersection() {
-    union() for (n = shell_parts) partByName(n);
-    allPortProbes();
-  }
+// -- a board in its module --------------------------------------------------
+// Module frame. Every module is the same part, so each kind of board is checked
+// against the one module -- and against the module, or lid, that stacks on it.
+if (test_view == "slot-solid") slotSlab(kind);
+if (test_view == "slot-vs-module") intersection() { slotSlab(kind); modulePart(); }
+if (test_view == "slot-vs-above")
+  intersection() { slotSlab(kind); union() { moduleAt(1) modulePart(); moduleAt(1) lidPart(); } }
 
-// ...and the walls must still EXIST.
-if (test_view == "wall-y-remains") intersection() { shellCut(); wallSlab("-Y"); }
-if (test_view == "wall-x-remains") intersection() { shellCut(); wallSlab("+X"); }
-
-// -- intake and filter -------------------------------------------------------
-// The filter ring sits in the front wall's recess touching nothing: ring outline
-// clears the recess by filter_clear, and its ribs sit in their grooves.
-if (test_view == "filter-vs-front") intersection() { filterMounted(); frontPart(); }
-
-// The ring must not restrict the air: both round bores behind it must lie inside its
-// opening. Only the fabric is allowed in the airstream.
-if (test_view == "bores-outside-ring")
-  linear_extrude(1) difference() { fanBoreProfile(); fanOpeningProfile(); }
-
-// THE FANS NEED SOMETHING TO SCREW INTO. This is the check that was missing while
-// every screw hole sat inside a square opening over empty air: a ring of wall round
-// each pilot hole, through the 3mm behind the recess floor, must be solid.
-module pilotAnnuli() {
-  onXWall(filter_depth)
-    linear_extrude(wall_front - filter_depth)
-      translate(fanCentreYZ())
-        difference() { fanBoltProfile(fan_pilot_d + 3); fanBoltProfile(fan_pilot_d); }
-}
-if (test_view == "pilot-material") intersection() { frontPart(); pilotAnnuli(); }
-if (test_view == "pilot-annuli")   pilotAnnuli();
-
-// -- base rails and inserts --------------------------------------------------
 if (test_view == "canoes-alone")    canoes();
-if (test_view == "canoes-vs-board") intersection() { canoes(); boardPcb(0); }
+if (test_view == "canoes-vs-board") intersection() { canoes(); boardPcb(); }
 // A pocket must be VOID in the finished part...
-if (test_view == "pockets-vs-base") intersection() { insertPockets(); basePart(); }
-// ...and must sit INSIDE a rail, not in open air beside it. Both directions.
+if (test_view == "pockets-vs-module") intersection() { insertPockets(); modulePart(); }
+// ...must sit in a rail, not in the air beside one...
 if (test_view == "pockets-in-rails") intersection() { insertPockets(); canoes(); }
-// ...and WHOLLY inside. The check above only asks for some overlap, so a pocket lifted
-// 3mm -- too shallow to take the insert, its mouth in the air -- still passes it. Only
-// the mask's 0.01mm mouth sliver may stand proud of the rail top.
+// ...and WHOLLY in it, or in the SOLID floor under it -- the 6.7mm pocket runs 1.1mm
+// into the floor, which is why the floor's vents keep clear of the rails. The check
+// above only asks for some overlap, so a pocket lifted 3mm -- too shallow for the
+// insert -- still passes it. Only the mask's 0.01mm mouth may stand proud.
 if (test_view == "pockets-outside-rails")
   difference() {
     insertPockets();
     canoes();
-    translate([-1, -1, wall + base_standoff]) cube([outer[0] + 2, outer[1] + 2, 0.05]);
+    linear_extrude(floor_t)
+      difference() { insetRect(spigot_inset); floorVentProfile(); }
+    translate([-1, -1, board_z]) cube([module_l + 2, module_w + 2, 0.05]);
   }
 
+// -- stacking -----------------------------------------------------------------
+// Neighbours touch on the land and nowhere else.
+if (test_view == "module-vs-above") intersection() { modulePart(); moduleAt(1) modulePart(); }
+if (test_view == "module-vs-lid")   intersection() { modulePart(); moduleAt(1) lidPart(); }
+// ...and they DO touch. "Nothing overlaps" is also true of a module floating 5mm up;
+// lowered 0.2mm, the module above must bite into this one. moduleBody(), not the part:
+// the dovetail rails run the full height too, and rail on rail would pass this for a
+// module whose walls stop short and whose weight sits on four rail ends.
+if (test_view == "module-seated")
+  intersection() { moduleBody(); translate([0, 0, module_pitch - 0.2]) moduleBody(); }
+if (test_view == "lid-seated")
+  intersection() { moduleBody(); translate([0, 0, module_pitch - 0.2]) lidPart(); }
+
 // -- clips -------------------------------------------------------------------
-// One joint at a time, by index into clipJoints(): -D clip_k=N.
+// One table of every clipped joint: [name, rib (stack frame), owner, mate].
+function allJoints() = concat(
+  [ for (j = spigotJoints()) [str("module-", j[0]), socketJoint(j), "module", "module"] ],
+  [ for (j = spigotJoints())
+      [str("lid-", j[0]),
+       [j[0], j[1] + [0, 0, module_count * module_pitch], j[2], j[3]], "lid", "module"] ],
+  [ for (j = filterJoints()) [j[0], j, "filter", "front"] ]);
+
+// The mate, as it sits relative to the rib: a spigot rib of the module above, or of
+// the lid, lands in the socket of the module below it.
+module mateOf(row) {
+  if (row[3] == "front") frontPart();
+  else if (row[2] == "lid") moduleAt(module_count - 1) modulePart();
+  else modulePart();
+}
+// The mate's own territory -- where a rib must reach to be engaged: the walls of the
+// module below, or the front face's body before any cut.
+module mateTerritory(row) {
+  if (row[3] == "front") frontBody();
+  else moduleAt(row[2] == "lid" ? module_count - 1 : 0)
+    linear_extrude(module_h) difference() { square([module_l, module_w]); insetRect(wall, 1); }
+}
+
 if (test_view == "report-clips") {
-  for (k = [0 : len(clipJoints()) - 1])
-    echo(str("CLIP ", k, " ", clipJoints()[k][0], " ", clipJoints()[k][4],
-             " ", clipJoints()[k][5]));
+  for (k = [0 : len(allJoints()) - 1])
+    echo(str("CLIP ", k, " ", allJoints()[k][0], " ", allJoints()[k][2], " ", allJoints()[k][3]));
   cube(1);
 }
-// At rest the rib touches nothing of the part it clips into: it is in its groove.
+if (test_view == "clip-rib")       clipRib(allJoints()[clip_k][1]);
 if (test_view == "clip-rib-vs-mate")
-  intersection() { clipRib(clipJoints()[clip_k]); partByName(clipJoints()[clip_k][5]); }
-// ...and it actually reaches INTO that part's territory, so it is engaged, not just
-// clear. Emptiness above would pass for a rib that stops short of its groove.
+  intersection() { clipRib(allJoints()[clip_k][1]); mateOf(allJoints()[clip_k]); }
 if (test_view == "clip-rib-reach")
-  intersection() { clipRib(clipJoints()[clip_k]); claimVolume(clipJoints()[clip_k][5]); }
-if (test_view == "clip-rib")
-  clipRib(clipJoints()[clip_k]);
+  intersection() { clipRib(allJoints()[clip_k][1]); mateTerritory(allJoints()[clip_k]); }
 
-// -- fans --------------------------------------------------------------------
-// The fan column's body must clear every slot -- in particular slot 1's Compact tab,
-// which hangs 6.5 off the board TOWARD the fans -- and every printed part.
-module fanColumn() {
-  interiorOrigin()
-    translate([0, interior_y / 2, fan_col_zc])
-      rotate([0, 0, -90])
-        fanEnvelope();
+// -- dovetails ---------------------------------------------------------------
+// The front face touches no module and not the lid...
+if (test_view == "front-vs-stack")
+  intersection() { frontPart(); union() { allModules(); lidAt() lidPart(); } }
+// ...every rail lies inside its channel...
+module stackRails() { for (k = [0 : module_count - 1]) moduleAt(k) dovetailRails(); }
+if (test_view == "rails-alone") stackRails();
+if (test_view == "rails-in-channels") intersection() { stackRails(); dovetailChannels(); }
+// ...and the channels CAPTURE them. A channel's mouth faces the module, so a rail
+// escapes by moving TOWARD the module -- and only the dovetail's flare stops that. Each
+// side is pulled on its own, 1mm out through its mouth, and must run into the face.
+// (Pulled the other way a rail hits the channel floor, which any plain slot does.)
+module sideRails(side) {
+  intersection() {
+    stackRails();
+    translate([-50, side < 0 ? -50 : module_w / 2, -1])
+      cube([200, module_w / 2 + 50, stack_h + 2]);
+  }
 }
-if (test_view == "fans-vs-stack")
-  intersection() { fanColumn(); union() { slotSlab(0); slotSlab(1); slotSlab(2); } }
-if (test_view == "fans-vs-case")
-  intersection() { fanColumn(); union() for (n = shell_parts) partByName(n); }
-if (test_view == "fans-alone") fanColumn();
+if (test_view == "dovetail-holds-left")
+  intersection() { frontPart(); translate([0,  1, 0]) sideRails(-1); }
+if (test_view == "dovetail-holds-right")
+  intersection() { frontPart(); translate([0, -1, 0]) sideRails(1); }
+// And forward: pulled 1mm off the modules, the rails run into the channels' walls.
+if (test_view == "dovetail-holds-x")
+  intersection() { frontPart(); translate([-1, 0, 0]) stackRails(); }
+
+// -- ports -------------------------------------------------------------------
+// NO PORT MAY BE BLIND: nothing printed may stand in a connector's probe.
+if (test_view == "ports-blind")
+  intersection() { union() { modulePart(); frontPart(); } allPortProbes(); }
+// ...and the walls must still EXIST.
+if (test_view == "wall-y-remains") intersection() { modulePart(); wallSlab("-Y"); }
+if (test_view == "wall-x-remains") intersection() { modulePart(); wallSlab("+X"); }
+
+// -- vents -------------------------------------------------------------------
+// MEASURED, not computed: extruded 1mm, volume IS area.
+if (test_view == "rear-vent-area")  linear_extrude(1) rearVentProfile();
+if (test_view == "side-vent-area")  linear_extrude(1) sideVentProfile();
+if (test_view == "floor-vent-area") linear_extrude(1) floorVentProfile();
+
+if (test_view == "exclusion-holds")
+  intersection() {
+    linear_extrude(1) rearVentProfile();
+    linear_extrude(1) translate(exclusionCentre())
+      square([exclusion_w - 2 * exclusion_r, exclusion_h - 2 * exclusion_r], center = true);
+  }
+
+// NO SPURIOUS HOLES. Behind the -Y connectors both side walls carry the same field and
+// the same grooves, mirrored, and nothing else -- so they must lose the same material.
+module rearRegion() {
+  translate([side_field_x[0] - 1, -1, -1]) cube([module_l, module_w + 2, module_h + 2]);
+}
+module removedFrom(which) {
+  intersection() {
+    rearRegion();
+    difference() {
+      intersection() { moduleBody(); wallSlab(which); }
+      intersection() { modulePart(); wallSlab(which); }
+    }
+  }
+}
+if (test_view == "side-y-neg-rear-removed") removedFrom("-Y");
+if (test_view == "side-y-pos-rear-removed") removedFrom("+Y");
+
+if (test_view == "report-areas") {
+  echo(str("fan_throat_area = ", fan_throat_area, " module_count = ", module_count));
+  cube(1);
+}
+
+// -- intake, fans and filter --------------------------------------------------
+if (test_view == "filter-vs-front") intersection() { filterMounted(); frontPart(); }
+
+// Only the fabric may be in the airstream: both bores must lie inside the pill's
+// opening.
+if (test_view == "bores-outside-pill")
+  linear_extrude(1) difference() { fanBoreProfile(); pillProfile(pill_r_in); }
+
+// THE FANS NEED SOMETHING TO SCREW INTO: a ring of plate round every pilot hole,
+// through the 3mm behind the recess floor, must be solid.
+module pilotAnnuli() {
+  onPlate(-front_d + filter_depth)
+    linear_extrude(plate_t - filter_depth)
+      difference() { fanBoltProfile(fan_pilot_d + 3); fanBoltProfile(fan_pilot_d); }
+}
+if (test_view == "pilot-material") intersection() { frontPart(); pilotAnnuli(); }
+if (test_view == "pilot-annuli")   pilotAnnuli();
+
+// The column, on the plate's inner face.
+module fanColumn() {
+  translate([-front_d + plate_t, fan_col_yc, fan_col_zc])
+    rotate([0, 0, -90]) fanEnvelope();
+}
+if (test_view == "fans-alone")    fanColumn();
+if (test_view == "fans-vs-case")  intersection() { fanColumn(); wholeCase(); }
+// ...and it SITS on the plate: moved 0.2mm forward, it must run into it.
+if (test_view == "fans-seated")
+  intersection() { translate([-0.2, 0, 0]) fanColumn(); frontPart(); }
 
 // -- reporting ---------------------------------------------------------------
-// Echoes the derived geometry so a human (or a test) reads the numbers the parts are
-// actually built from, rather than the numbers a document claims. Renders a unit cube
-// on purpose: empty is the PASS everywhere else in this file, so a reporting view
-// that rendered nothing would be indistinguishable from one that died.
+// Renders a unit cube on purpose: empty is the PASS everywhere else in this file, so a
+// reporting view that rendered nothing would be indistinguishable from one that died.
 if (test_view == "report-geometry") {
-  echo(str("interior = ", interior_x, " x ", interior_y, " x ", interior_h));
-  echo(str("outer = ", outer[0], " x ", outer[1], " x ", outer[2]));
-  echo(str("volume_L = ", outer[0] * outer[1] * outer[2] / 1e6));
-  echo(str("board_z = ", board_z, " stack_top = ", stack_top));
-  echo(str("fan_span_z = ", fan_z0, " .. ", fan_z0 + fan_col_h));
-  echo(str("fan_throat_area = ", fan_throat_area));
-  echo(str("board0_underside = ", wall + board_z[0]));
+  echo(str("module = ", module_l, " x ", module_w, " x ", module_h, " pitch ", module_pitch));
+  echo(str("stack = ", stack_h, " front = ", front_d, " x ", front_w));
+  echo(str("fan_model = ", fan_model, " fan_throat_area = ", fan_throat_area));
+  echo(str("board_z = ", board_z));
   echo(str("bed = ", bed));
   cube(1);
 }

@@ -3,7 +3,8 @@
 # Render every printable part
 # ============================================================================
 #   ./scripts/generate-stl.sh            # everything into stl/
-#   ./scripts/generate-stl.sh base       # just one
+#   ./scripts/generate-stl.sh module     # just one
+#   ./scripts/generate-stl.sh front-NF-A4x20
 #
 # Each part is rendered from cad/case.scad with case_part set, which is the SAME
 # entry point the assembly uses -- so a part cannot drift from how it is shown.
@@ -22,19 +23,24 @@ fi
 BACKEND=""
 "$OPENSCAD" --help 2>&1 | grep -q "\-\-backend" && BACKEND="--backend=Manifold"
 
-PARTS=("$@")
-[ ${#PARTS[@]} -eq 0 ] && PARTS=(base front rear left right roof filter)
+# The front face is the only part fan_model changes, so both are always written.
+# Everything else is one part whichever fans are fitted.
+TARGETS=("$@")
+[ ${#TARGETS[@]} -eq 0 ] && TARGETS=(module lid front-NF-A4x10 front-NF-A4x20 filter)
 
 mkdir -p stl
 FAILED=""
-for part in "${PARTS[@]}"; do
-    out="stl/$part.stl"
-    printf "  %-8s " "$part"
+for target in "${TARGETS[@]}"; do
+    part="${target%%-NF-*}"
+    args=(-D "case_part=\"$part\"")
+    [ "$part" != "$target" ] && args+=(-D "fan_model=\"${target#front-}\"")
+    out="stl/$target.stl"
+    printf "  %-16s " "$target"
     # binstl ALWAYS. The ASCII default writes a header that every downstream reader
     # parses as a triangle count in the hundreds of millions.
     # shellcheck disable=SC2086
-    if "$OPENSCAD" $BACKEND --export-format=binstl -o "$out" \
-           -D "case_part=\"$part\"" cad/case.scad >"$out.log" 2>&1 \
+    if "$OPENSCAD" $BACKEND --export-format=binstl -o "$out" "${args[@]}" cad/case.scad \
+           >"$out.log" 2>&1 \
        && ! grep -qE "ERROR:|WARNING:" "$out.log"; then
         printf "%s\n" "$(python3 scripts/lib/stl-stats.py "$out" --bboxes | head -1 \
                           | awk '{printf "%.1f x %.1f x %.1f mm", $1, $2, $3}')"
@@ -42,7 +48,7 @@ for part in "${PARTS[@]}"; do
     else
         echo "FAILED"
         grep -E "ERROR:|WARNING:" "$out.log" | head -3 | sed 's/^/       /'
-        FAILED="$FAILED $part"
+        FAILED="$FAILED $target"
     fi
 done
 

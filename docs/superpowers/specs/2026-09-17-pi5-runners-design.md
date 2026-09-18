@@ -1,7 +1,7 @@
 # pi5-runners — three-Pi CI runner tower
 
 **Date:** 2026-09-17
-**Status:** implemented; revised 2026-09-18 — see *Revisions 2–4* at the end
+**Status:** implemented; revised 2026-09-18 — see *Revisions 2–5* at the end. **Revision 5 replaced the architecture**
 
 ## Goal
 
@@ -377,3 +377,56 @@ the web between the bores, ~52 mm at its longest.
 **Why the sides grew 2 → 3 mm of clearance, and the side vent field shrank 40 → 32.**
 The rear corner flanges would otherwise pass 0.2 mm from the PCB, and the shorter case
 pulled the −Y side field onto the USB-C/HDMI cutouts. The assert caught the second one.
+
+
+---
+
+## Revision 5 — a stack of one-Pi modules (2026-09-18)
+
+Requested after Revision 4, on the grounds that the four-wall shell had been made too
+simple at the cost of printability and modularity. **This revision replaces the case
+architecture; everything above describes superseded layouts.** Board, HAT and fan data
+carry over.
+
+| | Revision 4 | Revision 5 |
+|---|---|---|
+| Structure | one shell cut into base, 4 walls, roof | **3 identical modules + lid + front face** |
+| Boards | one screwed tower on the base | **each Pi screwed into its own module** — never connected |
+| Module joint | — | **spigot into socket on a 45° lap, clipped with hexrack's rib** |
+| Front | a wall of the shell | **a U-channel sliding down over dovetails on every module** |
+| Fans | NF-A4x10 | **NF-A4x10 or NF-A4x20** (`fan_model`), front face only |
+| Filter | rounded rectangle, ribs top and bottom | **vertical pill**, ribs on its straight sides |
+| Printability | stated | **tested** — `test-print.sh` budgets steep and flat overhang per part |
+
+**Why modules.** One module per Pi is one part printed three times: a board can change
+role without a reprint, a failed print costs one module, and the "wall problem" of
+Revision 4 disappears — each module prints floor-down as an open box.
+
+**Why a lap and not a step.** The module prints floor-down, so its wall starts over the
+spigot, 3.2 mm outboard. As a step that is a ledge printed over air all round; as a 45°
+lap matching a bevel inside the module below it prints like any wall. The 1 mm land at
+the top of the lower wall carries the weight and keeps its edge from being a knife.
+
+**Why the dovetails are vertical and on the side faces.** Both parts print standing, so
+a vertical dovetail is a plain prism in each. On the side faces, not the wall ends, so
+the rail is not limited to the wall's 3 mm and cannot collide with the Compact's tab.
+The cheeks are asserted to stop short of the −Y USB-C connector.
+
+**Why the plenum ceiling is 45°.** The front face prints standing, so a flat plenum
+ceiling would be a 68 mm bridge. A 45° ceiling from the plate above the fans to the
+module fronts needs `fan_top + fan_depth + plenum_gap ≤ front_h` — asserted, and it
+holds with 0.4 mm to spare in the 20 mm mode.
+
+**Known compromises, declared:**
+
+- **The module is sized for the tallest board.** The bare Pi's module carries 11 mm of
+  empty air.
+- **The rear wall is mostly the port cluster.** Its lattice is a strip above the
+  exclusion zone; the side fields carry most of the exhaust (249% of throat overall).
+- **The fan bores and the pill recess are arches in a standing plate.** Their crowns
+  print as bridges; the recess crown is the one arch over a mating face, with
+  `filter_clear` to sag into. Watch it on the first print.
+- **The front face is wider than the modules** (78.2 against 68.5): the cheeks wrap
+  the dovetails. It reads as a bezel.
+- **The bottom module's floor lattice faces the desk.** Harmless under positive
+  pressure; a stand-off base is the fix if it ever matters.

@@ -3,60 +3,91 @@
 # Fit — nothing collides, everything reaches
 # ============================================================================
 # OpenSCAD has no notion of a collision. Two parts never render together, so every
-# interference in a project like this is invisible until a boolean is rendered.
+# interference is invisible until a boolean is rendered.
 #
-# Note the mix of expect_empty and expect_geometry. Emptiness checks alone cannot see
-# a part that is missing, misplaced or renamed: every one of them passes on nothing
-# at all. Each clearance check is paired with something that must be THERE.
+# Emptiness checks alone cannot see a part that is missing, misplaced or renamed:
+# every one of them passes on nothing at all. Each clearance check is paired with
+# something that must be THERE.
 # ============================================================================
 . "$(dirname "${BASH_SOURCE[0]}")/lib/openscad-env.sh"
 
 echo "Fit — HAT clearances"
 
-expect_geometry "standard HAT+ outline renders"         hat-standard-outline
-expect_geometry "Compact HAT+ outline renders"          hat-compact-outline
-expect_geometry "standard HAT+ solid renders"           hat-standard-solid
-expect_geometry "Compact HAT+ solid renders"            hat-compact-solid
-
+expect_geometry "standard HAT+ outline renders"          hat-standard-outline
+expect_geometry "Compact HAT+ outline renders"           hat-compact-outline
+expect_geometry "standard HAT+ solid renders"            hat-standard-solid
+expect_geometry "Compact HAT+ solid renders"             hat-compact-solid
 expect_empty    "Active Cooler clears the standard HAT+" cooler-vs-hat-standard
 expect_empty    "Active Cooler clears the Compact HAT+"  cooler-vs-hat-compact
 
 echo ""
-echo "Fit — the stack"
+echo "Fit — each board in the module"
 
-expect_geometry "slot 0 occupies its slab"              slot0-solid
-expect_geometry "slot 1 occupies its slab"              slot1-solid
-expect_geometry "slot 2 occupies its slab"              slot2-solid
-
-expect_empty    "slot 0 clears slot 1's board"          slot0-vs-slot1
-expect_empty    "slot 1 clears slot 2's board"          slot1-vs-slot2
-expect_empty    "slot 2 clears the roof"                slot2-vs-roof
-expect_geometry "fan column renders"                     fans-alone
-expect_empty    "fan column clears every slot"           fans-vs-stack
-expect_empty    "fan column clears every printed part"   fans-vs-case
+# Every module is the same part, so every kind of board must fit it -- and must clear
+# the floor of the module, or the lid, that stacks on top of it.
+for k in standard compact bare; do
+    expect_geometry "$k board's envelope renders"                 slot-solid     -D "kind=\"$k\""
+    expect_empty    "$k board clears its module"                  slot-vs-module -D "kind=\"$k\""
+    expect_empty    "$k board clears the module or lid above it"  slot-vs-above  -D "kind=\"$k\""
+done
 
 echo ""
-echo "Fit — the base rails and their inserts"
+echo "Fit — rails and inserts"
 
-expect_geometry "base rails render"                      canoes-alone
-expect_empty    "rails do not pierce the bottom board"   canoes-vs-board
-# An insert pocket must be void in the finished base AND sit inside a rail: a pocket
-# beside the rail in open air is "void in the base" too.
-expect_empty    "insert pockets are open in the base"    pockets-vs-base
-expect_geometry "insert pockets sit inside the rails"    pockets-in-rails
-expect_empty    "insert pockets lie wholly in the rails" pockets-outside-rails
+expect_geometry "rails render"                              canoes-alone
+expect_empty    "rails do not pierce the board"             canoes-vs-board
+expect_empty    "insert pockets are open in the module"     pockets-vs-module
+expect_geometry "insert pockets sit in the rails"           pockets-in-rails
+expect_empty    "insert pockets lie wholly in rail and floor" pockets-outside-rails
 
-# ...and the rails must actually REACH the board. Both clearance checks above are
-# satisfied by a rail 5mm too short: it renders, and it certainly pierces nothing.
+# ...and the rails must REACH the board. Both clearance checks above pass on a rail
+# 5mm too short.
 render canoes-alone "$WORK/canoes.stl"
 RAIL_TOP=$(bounds "$WORK/canoes.stl" | awk '{print $6}')
 BOARD_UNDER=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
     -D 'test_view="report-geometry"' cad/tests.scad 2>&1 \
-  | sed -n 's/.*board0_underside = \([0-9.]*\).*/\1/p')
+  | sed -n 's/.*board_z = \([0-9.]*\).*/\1/p')
 if awk -v a="$RAIL_TOP" -v b="$BOARD_UNDER" 'BEGIN { exit !(a - b < 0.01 && b - a < 0.01) }'; then
-    pass "rail tops meet board 0's underside at z=$RAIL_TOP"
+    pass "rail tops meet the board's underside at z=$RAIL_TOP"
 else
-    fail "rail tops at z=$RAIL_TOP but board 0 sits at z=$BOARD_UNDER"
+    fail "rail tops at z=$RAIL_TOP but the board sits at z=$BOARD_UNDER"
 fi
+
+echo ""
+echo "Fit — the stack"
+
+expect_empty    "a module clears the module above it"  module-vs-above
+expect_empty    "the top module clears the lid"        module-vs-lid
+# Both pass on a module floating 5mm up. Lowered 0.2mm, it must bite.
+expect_geometry "a module sits on the one below"       module-seated
+expect_geometry "the lid sits on the top module"       lid-seated
+
+echo ""
+echo "Fit — the front face"
+
+expect_empty    "front face clears every module and the lid"  front-vs-stack
+expect_geometry "dovetail rails render"                       rails-alone
+# Every rail must lie inside its channel -- all of it, not merely some.
+render rails-alone       "$WORK/rails.stl"
+render rails-in-channels "$WORK/railsin.stl"
+RAILS=$(vol "$WORK/rails.stl"); RIN=$(vol "$WORK/railsin.stl")
+if awk -v a="$RIN" -v b="$RAILS" 'BEGIN { exit !(b > 0 && a > 0.999 * b) }'; then
+    pass "$(printf 'every rail lies in its channel (%.0f of %.0fmm3)' "$RIN" "$RAILS")"
+else
+    fail "$(printf 'only %.0f of %.0fmm3 of rail is in a channel' "$RIN" "$RAILS")"
+fi
+# ...and the channels HOLD them. A rail escapes a channel through its mouth, toward
+# the module, and only the dovetail's flare stops that -- so each side is pulled that
+# way on its own. Pulled outward, a rail hits the channel floor, which proves nothing.
+expect_geometry "the -Y dovetails hold: the rails cannot leave through the mouth" dovetail-holds-left
+expect_geometry "the +Y dovetails hold: the rails cannot leave through the mouth" dovetail-holds-right
+expect_geometry "the dovetails hold the face against pulling forward"            dovetail-holds-x
+
+echo ""
+echo "Fit — fans"
+
+expect_geometry "fan column renders"                    fans-alone
+expect_empty    "fan column clears every printed part"  fans-vs-case
+expect_geometry "fan column sits on the plate"          fans-seated
 
 report "fit checks"
