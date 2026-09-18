@@ -67,10 +67,11 @@ module canoeFootprint() {
 }
 
 // Clipped to the spigot: with the walls this close to the board, a round-ended rail
-// would otherwise stand out past the spigot band into the module below.
+// would otherwise stand out past the spigot band into the module below. As tall as
+// board_lift makes them: from the floor to the board's underside.
 module canoes() {
   translate([0, 0, floor_t - OVERLAP])
-    linear_extrude(rail_h + OVERLAP)
+    linear_extrude(board_z - floor_t + OVERLAP)
       intersection() { canoeFootprint(); insetRect(spigot_inset); }
 }
 

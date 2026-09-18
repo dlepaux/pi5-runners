@@ -61,13 +61,17 @@ tallest board, so any board goes in any module.
   its clip grooves a 56.6 mm front per module. The tallest board needs 36.45. **Driving
   the screws from inside instead would let the ring only frame the bore — about 15 mm
   off the stack**, at the price of screwing the fans in from inside
+- **THE BOARD IS LIFTED ONTO THE FAN'S AXIS.** The filter leaves ~20 mm spare above
+  the board, so `board_lift` (default: centre the tallest board on the fan) raises it
+  and the rails grow with it — the whole flow crosses the board and the HAT instead of
+  its top half passing over the drive. `-D board_lift=0` puts it back on the floor
 - **SIDES AS TIGHT AS THE BOARD:** 0.5 mm between the Pi (or its HAT's 0.5 overhang)
   and each side wall. The Pi is located by its screws, not the walls; its −Y
   connectors reach into their own wall openings. The rails are clipped to the spigot
   so they cannot stand out past it
 - **AIR PATH: front to back, along each board's full length.** Each fan draws through
   its dust filter and its front wall's bore, pushes over its own SoC and drive, and
-  the module exhausts through its rear wall and the rear of both side walls — **345%
+  the module exhausts through its rear wall and the rear of both side walls — **353%
   of its fan's throat**. **Never the lid**: a lid with holes drops dust on a board.
   Each floor is a lattice too, so a module breathes into the one above
 - **EXCLUSION ZONE, hexrack's back-face idea.** A rounded rectangle carved out of the

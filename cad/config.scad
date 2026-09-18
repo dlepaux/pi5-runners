@@ -260,7 +260,7 @@ assert(board_z - get_insert_spec(insert_m25, "hole_depth") >= 1,
 // slot. A bare Pi wastes height; three different modules would waste a reprint every
 // time a board changes role.
 floor_t       = 2.4;   // the vented floor: 12 layers at 0.2
-rail_h        = 5.5;   // the insert rails ("canoes") the Pi sits on, above the floor
+rail_h        = 5.5;   // the insert rails ("canoes") at their lowest: board_lift adds to it
 plenum_gap    = 3;     // fan's back face to the Compact HAT's tab
 port_overhang = 3;     // RJ45 and USB-A stand proud of the PCB's +X edge
 rear_clear    = 3;     // those connectors to the rear wall
@@ -280,7 +280,7 @@ front_wall_t = filter_depth + fan_web;
 // measured from the tab.
 board_x = front_wall_t + fan_depth + plenum_gap + hat_compact_overhang_x;
 board_y = wall + side_clear;
-board_z = floor_t + rail_h;
+board_z0 = floor_t + rail_h;   // the board at its lowest; board_lift raises it below
 
 module_l = board_x + pi5_pcb[0] + port_overhang + rear_clear + wall;
 module_w = board_y + pi5_pcb[1] + hat_overhang_y + side_clear + wall;
@@ -289,7 +289,7 @@ module_w = board_y + pi5_pcb[1] + hat_overhang_y + side_clear + wall;
 // recess with a clip groove and a millimetre of wall above and below it. It is the
 // filter.
 filter_band_h = 2 * (filter_a_recess + groove_half + 1);
-module_pitch = max(board_z + hat_slot_h + module_air,
+module_pitch = max(board_z0 + hat_slot_h + module_air,
                    floor_t + fan_size + 2 * fan_clear,
                    filter_band_h);
 module_h     = module_pitch + spigot_h;
@@ -298,12 +298,21 @@ module_h     = module_pitch + spigot_h;
 fan_yc = module_w / 2;
 fan_zc = module_pitch / 2;
 
+// BOARD LIFT. The filter sets the module's height, not the board, so there is room to
+// spare -- and a board left on the floor sends the top of the fan's flow over the HAT
+// instead of across the board. By default the tallest board (the Pi, its HAT and the
+// drive's screw) is CENTRED ON THE FAN'S AXIS; the rails grow by the lift, so the Pi
+// still screws straight into its inserts. Override with -D board_lift=0 for the floor.
+board_lift = max(0, fan_zc - hat_slot_h / 2 - board_z0);
+board_z    = board_z0 + board_lift;
+
 module_count = 3;
 lid_t        = 3;     // the lid's plate, above its spigot
 stack_h = module_count * module_pitch + spigot_h + lid_t;   // floor of 0 to lid top
 
+assert(board_lift >= 0, "board_lift cannot sink the board into its floor");
 assert(module_pitch - (board_z + hat_slot_h) >= 3,
-       "less than 3mm between a HAT and the next module's floor");
+       "board_lift leaves less than 3mm between a HAT and the next module's floor");
 assert(fan_zc - fan_size / 2 >= floor_t + fan_clear, "the fan sits on the floor");
 assert(2 * filter_a_recess / cos(30) + 2 < module_w,
        "the filter's recess is wider than the front wall");

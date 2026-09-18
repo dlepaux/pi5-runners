@@ -33,14 +33,16 @@ CI runners hold 100% CPU for 30–50 minutes at a stretch, three boards at once 
 | **3 × NF-A4x10 5V** | **≈ 9.7 K** | **≈ 15 K** |
 | 3 × NF-A4x20 5V | ≈ 8.5 K | ≈ 16.5 K |
 
-One fan per Pi is 50% more air than the two-fan column an earlier version shared. The
+Each board sits on tall rails that centre it and its HAT on the fan's axis, so the
+whole flow crosses the board. One fan per Pi is 50% more air than the two-fan column an
+earlier version shared. The
 20 mm fans move 15% more again and push 27% more static pressure, which is what counts
 behind a filter — about a kelvin, not a different class of cooling.
 
 **Airflow** runs front to back along each board's full length. Each fan draws through
 its module's dust filter and front wall, pushes over its own SoC and drive, and
 the module exhausts through its rear wall and the rear of both side walls — never the
-lid, which would drop dust onto a board. Each module's exhaust is **345% of its fan's
+lid, which would drop dust onto a board. Each module's exhaust is **353% of its fan's
 throat**, and every floor is a lattice too, so each module also breathes into the one
 above.
 
