@@ -1,7 +1,7 @@
 # pi5-runners — three-Pi CI runner tower
 
 **Date:** 2026-09-17
-**Status:** implemented; **airflow and layout revised 2026-09-18** — see *Revision 2* at the end
+**Status:** implemented; revised 2026-09-18 — see *Revision 2* and *Revision 3* at the end
 
 ## Goal
 
@@ -297,3 +297,32 @@ case hid it.
 **Two defects found by rendering, not by the suite**, both now covered by tests:
 spurious notches cut into the −Y wall by port masks dragged sideways, and the severed
 front wall above. See CLAUDE.md traps 18–20.
+
+
+---
+
+## Revision 3 — two stacked NF-A4x20 5V PWM (2026-09-18)
+
+The 80 mm fan set the front wall, and so the case, to 92 mm wide around a 56 mm board.
+Options were compared on datasheet figures (NF-A6x25 5V PWM sheet; NF-A4x20 from its
+12 V PWM sheet, to be confirmed against the 5 V PWM one):
+
+| Setup | Case | Air rise | Margin, 25 °C room | Faces all 3 slots |
+|---|---|---|---|---|
+| NF-A8 | 1.25 L | 4.3 K | 21 K | yes |
+| 1 × NF-A6x25 | ~0.98 L | 8.2 K | 17 K | no |
+| **2 × NF-A4x20 stacked** | **0.875 L** | **12.7 K** | **12 K** | **yes** |
+| 2 × NF-A6x25 stacked | ~1.3 L | 4.1 K | 21 K | yes (taller case) |
+| 2 × NF-A4x10 | ~0.85 L | 25 K | ≈ 0 | yes |
+
+**Chosen: 2 × NF-A4x20, stacked** — the smallest option that keeps every guarantee,
+including the column facing the whole stack. The cost is cooling margin, accepted.
+
+Result: **131.6 × 66.5 × 99.95 mm, 0.875 L**; width now set by the board (60.5 inside)
+rather than the fan. One 40 × 80 opening and one filter for the column. Exhaust
+5051 mm² against a 1885 mm² throat (268%); filter grille 80%. The fan depth is the
+measured 21.1, not the datasheet's 20.
+
+Found on the way: the filter's placement had been rotated 90° all along, hidden by a
+square fan; and the asset tooling measured the largest body rather than the mesh.
+Both fixed and covered — CLAUDE.md traps 21–22.

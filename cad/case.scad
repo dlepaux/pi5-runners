@@ -70,17 +70,14 @@ module assemblyContents() {
 
   // The filter, pressed into the front intake from outside. Explodes along -X.
   if (show_filter)
-    translate([-filter_t - assembly_space, wall + interior_y / 2,
-               wall + fan_z0 + fan_size / 2])
-      rotate([0, 90, 0])
-        color("DimGray") filterPart();
+    color("DimGray") filterMounted(assembly_space);
 
-  // The fan, just inside the -X front wall, facing the stack along +X. Its mesh is
-  // centred on the bore, so it is placed by the bore's centre, not a corner.
+  // The fan column, just inside the -X front wall, facing the stack along +X. Placed
+  // by the column's centre; fanVisualization() offsets each fan from it.
   if (show_fan)
     interiorOrigin()
-      translate([fan_depth / 2, interior_y / 2, fan_z0 + fan_size / 2])
-        fanVisualization80();
+      translate([fan_depth / 2, interior_y / 2, fan_col_zc])
+        fanVisualization();
 }
 
 // ----------------------------------------------------------------------------

@@ -112,55 +112,57 @@ assert(slot_standoff[1] >= slot_h(1) - pi5_pcb[2] + 4,
        "slot 1 standoff leaves no air channel above the drive");
 
 // ----------------------------------------------------------------------------
-// FAN — Noctua NF-A8 5V PWM
+// FANS — two Noctua NF-A4x20 5V PWM, stacked into one 40 x 80 column
 // ----------------------------------------------------------------------------
-// 55.5 m3/h, 17.7 dB(A), 2.37 mmH2O, 0.75W at 5V, with a USB power adaptor cable in
-// the box -- so it feeds from a USB port inside the case, no GPIO wiring and no PSU.
+// Each: 5000 RPM, 9.4 m3/h, 14.9 dB(A), 2.26 mmH2O -- from the NF-A4x20 PWM (12V)
+// datasheet; the 5V PWM variant is rated the same, as the NF-A8 5V PWM was to its
+// 12V twin. CONFIRM against the 5V PWM sheet before ordering.
 //
-// THE FAN IS ON THE -X FRONT WALL, opposite the USB/Ethernet cluster. Air enters the
-// front, runs the board's full 85mm LENGTH over the SoC and the drive, and leaves
-// through the rear wall where the ports are and where the Ethernet PHY runs hottest.
-// Crossing the 56mm width instead was shorter and left the exhaust on a blank wall.
+// WHY TWO 40s AND NOT ONE 80. The front wall carries the fan, so with an 80 it had to
+// be 86 wide inside while the board needs 60.5 -- the fan, not the boards, set the
+// case's width. Two 40s stacked are a column 40 wide and 80 tall: the same height as
+// the 80, so they still face all three slots, but narrow enough that the BOARD sets
+// the width again. 1.25L -> ~0.87L.
 //
-// THE COST IS WIDTH. The front wall spans interior_y, so it has to be at least 80 to
-// carry the fan while the board is only 56. The spare goes on the +Y GPIO side as a
-// side channel and a cable route -- see board_y, which is NOT centred.
+// The cost is airflow, and it was chosen with the numbers in front of it: 2 x 9.4
+// against 55.5 m3/h puts case air ~12.7K over the room instead of ~4.3K -- ~12K under
+// the M.2 HAT's 50C ceiling in a 25C room rather than ~21K. The Active Coolers still do
+// the per-chip work; these fans only replace the air around them.
 //
-// At 80 the fan still spans the whole board stack, so all three slots get a fresh-air
-// front and there is no plenum. The assert below is what keeps that true: a slot that
-// grows fails here instead of quietly leaving the top board out of the airstream.
-fan_size       = 80;
-fan_bolt_pitch = 71.5;   // standard 80mm pattern. NOT the Compact HAT's 71.5 width --
-                         // they are the same number for unrelated reasons.
-fan_hub_d      = 30;
+// THE COLUMN MUST FACE THE WHOLE STACK. That is what lets this case have no plenum,
+// and the asserts below are what keep it true.
+fan_size       = 40;
+fan_count      = 2;
+fan_col_h      = fan_size * fan_count;   // 80: the column, and what faces the stack
+fan_bolt_pitch = 32;                     // standard 40mm pattern
 
-// 25.4, NOT the datasheet's 25. Measured off Noctua's own STEP: the AAO frame's
-// integrated anti-vibration pads stand 0.2 proud of each mounting face. A 25mm pocket
-// makes the fan sit on its pads instead of on the wall, or bows the wall. Model the
-// part, not a box around it.
-fan_depth          = 25.4;
-fan_depth_nominal  = 25;
+// MEASURED off Noctua's STEP, not the datasheet. The frame is 20.1 deep, but one face
+// carries a 20mm, 0.5mm disc -- the hub label -- that stands proud to an overall 21.1.
+// Clearance uses the envelope. The same disc gives the hub diameter.
+fan_depth          = 21.1;
+fan_depth_nominal  = 20;
+fan_hub_d          = 20;
 
-// The committed mesh. It is in its NATIVE orientation -- axis along Z -- and
-// lib/noctua-fan.scad rotates it into this project's -Y convention at import, which
-// is one line rather than a mesh-rewriting step in the generator.
-//
-// THE PATH IS RELATIVE TO cad/, NOT TO THE LIB THAT IMPORTS IT. import() resolves
-// against the MAIN document while include/use resolve against the calling file, so
-// "../assets/..." written from lib/'s point of view looks for <repo>/assets when
-// tests.scad is the document -- which is how this landed the first time. Only
-// cad/case.scad and cad/tests.scad ever import it and both live in cad/.
-fan_asset        = "assets/noctua/NF-A8.stl";
-fan_asset_extent = [80.1, 80.0, 25.4];   // native X, Y, Z as generated
-fan_asset_tol    = 0.6;                  // tessellation slack; the mesh is not nominal
+// The committed mesh, in its NATIVE orientation -- axis along Y for this model, where
+// the NF-A8's was along Z, which is why the rotation lives beside the import rather
+// than being assumed. Path relative to cad/: import() resolves against the MAIN
+// document, and only case.scad and tests.scad import it.
+fan_asset        = "assets/noctua/NF-A4x20.stl";
+fan_asset_extent = [40.0, 21.1, 40.0];   // native X, Y (axis), Z -- whole mesh
+fan_asset_tol    = 0.6;
 
-fan_throat_area = PI * pow(fan_size, 2) / 4 - PI * pow(fan_hub_d, 2) / 4;   // ~4320
+// The fans' combined throat: each bore less its hub.
+fan_throat_area = fan_count * (PI * pow(fan_size, 2) / 4 - PI * pow(fan_hub_d, 2) / 4);
 
-fan_z0 = (interior_h - fan_size) / 2;
+fan_z0     = (interior_h - fan_col_h) / 2;
+fan_col_zc = fan_z0 + fan_col_h / 2;
+// Centre of fan k, 0 at the bottom. Interior frame.
+function fan_zc(k) = fan_z0 + fan_size * (k + 0.5);
+
 assert(fan_z0 <= board_z[0],
-       "fan does not reach the bottom board -- the stack has outgrown an 80mm fan");
-assert(fan_z0 + fan_size >= stack_top,
-       "fan does not reach the top of the stack -- slot 2 is out of the airstream");
+       "the fan column does not reach the bottom board");
+assert(fan_z0 + fan_col_h >= stack_top,
+       "the fan column does not reach the top of the stack -- slot 2 is out of the airstream");
 
 // ----------------------------------------------------------------------------
 // ENVELOPE
@@ -176,19 +178,17 @@ fan_side_clear = 3;     // fan frame to the front wall's own edges
 board_x    = fan_depth + fan_plenum + hat_compact_overhang_x;
 interior_x = board_x + pi5_pcb[0] + port_overhang + side_clear;
 
-// Y: the front wall carries the fan, so interior_y is driven by the FAN, not by the
-// board -- 80 against the board's 56.
+// Y: whichever is wider, the fan column or the board. With the 40s it is THE BOARD --
+// 60.5 against the column's 46 -- which was the point of changing fans.
 //
-// THE BOARD IS NOT CENTRED IN THAT WIDTH. It sits against -Y so the USB-C and micro-
-// HDMI connectors meet their wall instead of sitting at the bottom of a 15mm recess
-// no plug reaches into. All the spare width goes to +Y, the GPIO side, where nothing
-// plugs in: it becomes a side air channel and the route for six cables.
-interior_y = fan_size + 2 * fan_side_clear;
+// The board sits against -Y so the USB-C and micro-HDMI connectors meet their wall
+// instead of the bottom of a recess no plug reaches into.
 board_y    = side_clear;
+interior_y = max(fan_size + 2 * fan_side_clear,
+                 board_y + pi5_pcb[1] + hat_overhang_y + side_clear);
 
-assert(interior_y >= fan_size, "front wall is narrower than the fan it carries");
-assert(board_y + pi5_pcb[1] + hat_overhang_y < interior_y,
-       "the board does not fit the width the fan forces");
+assert(interior_y >= fan_size + 2 * fan_side_clear,
+       "front wall is narrower than the fan column it carries");
 
 outer = [interior_x + 2 * wall, interior_y + 2 * wall, interior_h + 2 * wall];
 
@@ -220,7 +220,7 @@ assembly_space = 0;
 show_boards    = true;    // the three Pi 5s, from the framework (cooler included)
 show_hats      = true;    // both M.2 HAT+ boards and their drives
 show_standoffs = true;    // the M2.5 stacks the boards sit on
-show_fan       = true;    // the NF-A8 mesh
+show_fan       = true;    // the two NF-A4x20 meshes
 show_filter    = true;    // the intake filter, clipped on from outside
 show_case      = true;    // the printed parts themselves
 
@@ -287,7 +287,7 @@ exclusion_r = 3;
 // cut into its face fights that; a square opening on the same corner radius as the
 // shell reads as part of the design. It is also strictly more open area than the bore
 // it replaces, so it cannot be the restriction.
-fan_opening      = fan_size;     // across flats
+fan_opening      = [fan_size, fan_col_h];   // one opening for the whole column
 fan_opening_r    = 6;            // corner rounding
 fan_screw_d      = 4.3;          // M4 clearance for the fan's own screws
 

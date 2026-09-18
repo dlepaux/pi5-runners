@@ -76,7 +76,7 @@ if (test_view == "slot2-vs-roof")  intersection() { slotSlab(2); roofPlane(); }
 // -- fan asset ---------------------------------------------------------------
 if (test_view == "fan-mesh-raw") import(fan_asset, center = true);
 
-// fanVisualization80() marks its import with %, the background modifier, so it must
+// fanVisualization() marks its import with %, the background modifier, so it must
 // contribute NOTHING to a render. If it ever renders geometry, Noctua's mesh is
 // shipping inside every published STL.
 //
@@ -88,7 +88,7 @@ if (test_view == "fan-mesh-raw") import(fan_asset, center = true);
 // file still gives 1000mm3, and a % swapped for # adds the fan on top of it.
 if (test_view == "fan-visualization-export") {
   cube(10);
-  fanVisualization80();
+  fanVisualization();
 }
 
 if (test_view == "report-fan-asset") {
@@ -213,13 +213,7 @@ if (test_view == "filter-vs-shell")
     // the opening. rotate([-90,0,0]) maps it to +Y and stands the lip off into open
     // air with the plate buried in the wall -- which is what this first did, and the
     // check caught as 2577mm3 of plate inside the shell.
-    // The filter sits OUTSIDE the -X front wall with its lip pointing +X, into the
-    // opening. rotate([0,90,0]) maps the part's +Z to world +X; translating by
-    // -filter_t puts the plate at x -filter_t..0, outside the wall, and the lip at
-    // x 0..filter_lip_h, inside it.
-    translate([-filter_t, wall + interior_y / 2, wall + fan_z0 + fan_size / 2])
-      rotate([0, 90, 0])
-        filterPart();
+    filterMounted();
   }
 
 
@@ -240,6 +234,21 @@ if (test_view == "retainer-vs-cooler")
 if (test_view == "bosses-alone")     baseBosses();
 if (test_view == "bosses-vs-board")  intersection() { baseBosses(); boardPcb(0); }
 
+// The fan column's body must clear every slot -- in particular slot 1's Compact tab,
+// which hangs 6.5 off the board TOWARD the fans. fan_plenum is what separates them,
+// and fan_depth changed when the 80 became two 40s, so this is the check that notices
+// if the plenum is ever eaten.
+if (test_view == "fans-vs-stack")
+  intersection() {
+    interiorOrigin()
+      translate([0, interior_y / 2, fan_col_zc])
+        rotate([0, 0, -90])
+          fanEnvelope();
+    union() { slotSlab(0); slotSlab(1); slotSlab(2); }
+  }
+if (test_view == "fans-alone")
+  interiorOrigin() translate([0, interior_y / 2, fan_col_zc]) rotate([0, 0, -90]) fanEnvelope();
+
 // -- reporting ---------------------------------------------------------------
 // Echoes the derived geometry so a human (or a test) reads the numbers the parts are
 // actually built from, rather than the numbers a document claims. Renders a unit cube
@@ -250,7 +259,7 @@ if (test_view == "report-geometry") {
   echo(str("outer = ", outer[0], " x ", outer[1], " x ", outer[2]));
   echo(str("volume_L = ", outer[0] * outer[1] * outer[2] / 1e6));
   echo(str("board_z = ", board_z, " stack_top = ", stack_top));
-  echo(str("fan_span_z = ", fan_z0, " .. ", fan_z0 + fan_size));
+  echo(str("fan_span_z = ", fan_z0, " .. ", fan_z0 + fan_col_h));
   echo(str("fan_throat_area = ", fan_throat_area));
   echo(str("board0_underside = ", wall + board_z[0]));
   echo(str("bed = ", bed));

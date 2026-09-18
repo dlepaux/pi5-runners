@@ -35,7 +35,7 @@ roof_h = wall + 2;
 // band of wall left above and below the opening, in the part as printed.
 intake_min_strip = 4;
 intake_z0 = wall + fan_z0;
-intake_z1 = wall + fan_z0 + fan_opening;
+intake_z1 = wall + fan_z0 + fan_col_h;
 assert(intake_z0 - base_h >= intake_min_strip,
        str("intake leaves ", intake_z0 - base_h, "mm of shell wall below it"));
 assert((outer[2] - roof_h) - intake_z1 >= intake_min_strip,
@@ -134,9 +134,10 @@ module onXWall(x0) {
 // ----------------------------------------------------------------------------
 // INTAKE — the -X front wall
 // ----------------------------------------------------------------------------
-// One rounded-square opening plus the fan's own four screws, centred on the wall.
+// One rounded-rectangle opening for the whole column plus each fan's own four
+// screws, centred on the wall.
 // Positioned from fan_z0, which config.scad has asserted spans the whole board stack.
-function fanCentreYZ() = [wall + interior_y / 2, wall + fan_z0 + fan_size / 2];
+function fanCentreYZ() = [wall + interior_y / 2, wall + fan_col_zc];
 
 module fanCut() {
   c = fanCentreYZ();

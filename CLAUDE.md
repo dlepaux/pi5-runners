@@ -1,7 +1,7 @@
 # pi5-runners — 3D-Printable Tower for Three Pi 5 CI Runners
 
 Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Actions
-runners. **135.9 × 92 × 99.95 mm, 1.25 L**, four printed parts, one 80 mm Noctua.
+runners. **131.6 × 66.5 × 99.95 mm, 0.87 L**, four printed parts, two stacked 40 mm Noctuas.
 
 ## Project intent
 
@@ -28,24 +28,27 @@ decision below follows from sustained load rather than from idle.
   fit the Active Cooler beneath it". Slot 2 raises it to the same 16 mm on custom
   standoffs. **This is not re-openable as a preference** — it is the height that
   clears the cooler, and `config.scad` asserts it
-- **Case fan: one Noctua NF-A8 5V PWM.** 55.5 m³/h, 17.7 dB(A), 0.75 W at 5 V, USB
-  power adaptor cable included, so it feeds from a USB port inside the case
+- **Case fans: two Noctua NF-A4x20 5V PWM, stacked into one 40 × 80 column.** Each
+  9.4 m³/h, 14.9 dB(A), 2.26 mmH₂O (12 V PWM datasheet; confirm the 5 V PWM sheet
+  before ordering). **Measured off Noctua's STEP at 21.1 deep, not 20** — the hub
+  label stands 1 mm proud of the frame
 - **THE FAN IS ON THE FRONT: the −X wall, opposite the USB/Ethernet cluster.** Air
   enters the front, runs the board's full 85 mm LENGTH over the SoC and the drive, and
   leaves at the rear where the ports are and the Ethernet PHY runs hottest. At 80 mm it
   spans the whole stack, so all three slots get a fresh-air front and there is no
   plenum. `config.scad` asserts the fan's swept height covers the stack
-- **THE FRONT WALL IS 80 WIDE BECAUSE THE FAN IS.** The board is 56 but the wall
-  carrying the fan must be ≥ 80, which is most of why the case is 1.25 L rather than
-  the 1.085 L it was with the fan on the long side. **The board is NOT centred in that
-  width**: it sits against −Y so USB-C and micro-HDMI meet their wall instead of the
-  bottom of a 15 mm recess, and the spare width goes to +Y as a side air channel and
-  cable route
+- **WHY TWO 40s AND NOT ONE 80.** The front wall carries the fans, so with an 80 it
+  had to be 86 wide inside while the board needs 60.5 — the fan set the case's width.
+  A 40 × 80 column is the same HEIGHT, so it still faces all three slots, but narrow
+  enough that the board sets the width again: 1.25 L → 0.87 L. **The cost is airflow,
+  chosen knowingly**: ~12.7 K case-air rise instead of ~4.3 K, ~12 K under the HAT's
+  50 °C limit in a 25 °C room instead of ~21 K. The user's two NF-A4x10s were ruled out
+  (≈ 0 K margin). The board sits against −Y so USB-C and micro-HDMI meet their wall
 - **EXHAUST: THE REAR WALL, WRAPPING ONTO THE REAR OF BOTH SIDES. Never the roof.**
   Rear-only was built and MEASURED: the port clusters' exclusion zones take ~43% of the
   rear, leaving 57% of the fan's throat; even venting the whole rear with no zones only
   reaches 99.7%. The rear wall alone cannot carry this fan. Side fields restore a
-  matched exit — **147% of the throat** — and keep the top and front clean. The −Y side
+  matched exit — **268% of the fans' throat** — and keep the top and front clean. The −Y side
   field is asserted to stay behind the USB-C/HDMI cutouts
 - **EXCLUSION ZONES, hexrack's back-face idea.** A rounded rectangle per board is carved
   out of the vent CUTTER around its RJ45/USB cluster, so the ports sit in clean solid
@@ -56,10 +59,14 @@ decision below follows from sustained load rather than from idle.
   family. A triangle cannot rack, so a thin wall stays stiff
 - **Positive pressure.** One filtered intake; dust can only enter where the filter is,
   which is the only reason there is exactly one filter. The printed grille is a
-  RETAINER for bought media (76% of throat), not the filtration itself
+  RETAINER for bought media (80% of throat), not the filtration itself. **One 40 × 80
+  opening and one filter for the whole column** — two openings would leave a bar across
+  the airstream exactly where the frames meet
 - **The M.2 HAT+ is rated 0–50 °C ambient**, and that is the number this case holds.
-  Two 40 mm fans put a 28 °C room at exactly 50 °C — the ceiling, no margin. The
-  NF-A8 puts a 25 °C room at ~29 °C. The HAT PCBs are 56.5 against the Pi's 56 and
+  The two NF-A4x20s put a 25 °C room at ~38 °C of case air — ~12 K of margin. Two
+  NF-A4x10s would put it at ~50 °C, the ceiling itself, which is why they are not used.
+  **If a real print runs hot, the NF-A8 layout (Revision 2 in the spec) is the known
+  fallback**: +21 K of margin for 0.38 L of case. The HAT PCBs are 56.5 against the Pi's 56 and
   **overhang its +Y edge by 0.5**, which the envelope carries
 - **Six cables leave the box** — 3× Ethernet on +X, 3× USB-C on −Y — on two adjacent
   walls, because that is where the Pi puts them. **There is deliberately no cable
@@ -100,9 +107,9 @@ modifier and is still included in the export — it does not do this job.
 ## Build and test
 
 ```bash
-./scripts/test.sh                 # all five suites, 57 checks — what CI runs
+./scripts/test.sh                 # all five suites, 61 checks — what CI runs
 ./scripts/generate-stl.sh         # base, shell, roof, filter into stl/
-./scripts/generate-fan-asset.sh   # regenerate the NF-A8 mesh (networked, needs uv)
+./scripts/generate-fan-asset.sh   # regenerate the NF-A4x20 mesh (networked, needs uv)
 ```
 
 Open `cad/case.scad` to look at it: `case_part` selects a part, `assembly_space`
@@ -187,6 +194,15 @@ without error and exports a clean single body.
     the first rendered image. A suite proves the geometry satisfies the assertions
     someone thought to write; it says nothing about the ones nobody did. Render the
     parts and the assembly before calling a layout change done.
+21. **Symmetry hides orientation errors.** The filter's placement used a single
+    rotate() that turned it 90° to the opening. With a square fan every rotation fits,
+    so it was wrong from the start and invisible; the 40 × 80 column made the part
+    oblong and the lip landed on solid wall. The placement was also written out twice.
+    It is one module now (`filterMounted()`), used by the test and the showcase alike.
+22. **"The first line of --bboxes" is the largest BODY, not the mesh.** For the NF-A8 the
+    frame happened to be the whole envelope. For the NF-A4x20 the frame is 20.1 deep and
+    the mesh 21.1. Both the generator and `test-assets.sh` measure the union now.
+
 
 
 ## Companion

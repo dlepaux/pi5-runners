@@ -33,6 +33,8 @@ expect_empty    "slot 1 clears slot 2's board"          slot1-vs-slot2
 expect_empty    "slot 2 clears the roof"                slot2-vs-roof
 expect_empty    "the whole stack sits inside the shell"  stack-vs-shell
 expect_empty    "roof retainer clears the top cooler"    retainer-vs-cooler
+expect_geometry "fan column renders"                     fans-alone
+expect_empty    "fan column clears every slot"           fans-vs-stack
 expect_geometry "base bosses render"                     bosses-alone
 expect_empty    "bosses do not pierce the bottom board"  bosses-vs-board
 

@@ -11,29 +11,36 @@
 
 echo "Mesh assets"
 
-MESH="cad/assets/noctua/NF-A8.stl"
+MESH="cad/assets/noctua/NF-A4x20.stl"
 
 if [ ! -f "$MESH" ]; then
-    fail "NF-A8 mesh missing — run ./scripts/generate-fan-asset.sh"
+    fail "NF-A4x20 mesh missing — run ./scripts/generate-fan-asset.sh"
     report "asset checks"
 fi
-pass "NF-A8 mesh present"
+pass "NF-A4x20 mesh present"
 
 # NOT a one-body check. A fan is legitimately many solids — frame, eight corner pads,
 # impeller, hub — and demanding one body here would be asserting a wrong belief about
 # the part rather than a property worth holding.
 N=$(comps "$MESH")
 if [ "$N" -ge 1 ] 2>/dev/null; then
-    pass "NF-A8 mesh has geometry ($N bodies)"
+    pass "NF-A4x20 mesh has geometry ($N bodies)"
 else
-    fail "NF-A8 mesh has no bodies"
+    fail "NF-A4x20 mesh has no bodies"
 fi
 
 # Extents, measured off the MESH. step-to-stl.py --list cannot answer this: OpenCASCADE's
 # bounding box over an un-tessellated shape over-estimates curved faces badly enough to
 # call this 80mm fan 88.38mm across. A measurement tool that cannot see something must
 # not be trusted to answer.
-read -r EX EY EZ _ <<<"$(python3 scripts/lib/stl-stats.py "$MESH" --bboxes | head -1)"
+# The WHOLE mesh, not its largest body. --bboxes lists bodies, and for this fan the
+# largest (the frame) is 20.1 deep while the mesh is 21.1 -- the hub label stands
+# proud. Reading the first body instead of the union under-sizes the fan by a
+# millimetre, silently. It happened to be harmless on the NF-A8, which is luck.
+read -r X0 Y0 Z0 X1 Y1 Z1 <<<"$(bounds "$MESH")"
+EX=$(awk -v a="$X0" -v b="$X1" 'BEGIN{printf "%.3f", b-a}')
+EY=$(awk -v a="$Y0" -v b="$Y1" 'BEGIN{printf "%.3f", b-a}')
+EZ=$(awk -v a="$Z0" -v b="$Z1" 'BEGIN{printf "%.3f", b-a}')
 
 DECL=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
         -D 'test_view="report-fan-asset"' cad/tests.scad 2>&1 \
@@ -76,7 +83,7 @@ if awk -v v="$VIZ" 'BEGIN { exit !(v > 999 && v < 1001) }'; then
     pass "$(printf 'render is the %.0fmm3 marker alone — %% excludes the mesh' "$VIZ")"
 else
     fail "$(printf 'render is %.0fmm3, expected the 1000mm3 marker alone' "$VIZ")"
-    note "below 1000: the view is broken. above: fanVisualization80() uses # not %"
+    note "below 1000: the view is broken. above: fanVisualization() uses # not %"
 fi
 
 report "asset checks"
