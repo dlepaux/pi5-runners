@@ -3,17 +3,18 @@
 // ============================================================================
 // Floor and four walls. The Pi screws into heat-set inserts in two rails on the floor;
 // its fan sits on the inside of the front wall, screwed from outside, and hexrack's
-// hexagonal dust filter clips into the front wall over it. The module's spigot drops
+// round dust filter clips into the front wall over it. The module's spigot drops
 // into the module below and clips there; the module above drops into this one's
 // socket. Print it three times.
 //
 // PRINTED FLOOR-DOWN, AS IT STANDS, WITH NO SUPPORT:
 //   - the vented floor is the first layers, on the bed
-//   - the spigot's outer band steps out to the wall on a 45-degree lap
+//   - the spigot's outer band steps out to the wall on a 45-degree chamfer that
+//     reaches the outer face: no ledge, no roof
 //   - the walls rise straight; port and vent openings are short bridges; the fan
 //     bore is an arch in the front wall, its crown a bridge that shortens to nothing
-//   - the filter's hexagonal recess has its flats top and bottom: the slanted sides
-//     are 30 degrees off vertical, the top flat a short bridge
+//   - the filter's round recess has its flats top and bottom: the top flat is a short
+//     bridge, the arc beside it a short overhang off the web behind it
 //   - the socket's bevel and clip grooves face inward and upward
 // ============================================================================
 
@@ -31,14 +32,14 @@ module moduleBody() {
   difference() {
     union() {
       spigotSolid();
-      translate([0, 0, spigot_h])
-        linear_extrude(module_h - spigot_h) square([module_l, module_w]);
+      translate([0, 0, lap_top])
+        linear_extrude(module_h - lap_top) outline();
       // The front wall: full width, from the bed to the module above, which sits on it.
-      cube([front_wall_t, module_w, module_pitch]);
+      linear_extrude(module_pitch) frontWallOutline();
     }
     spigotCavity(floor_t);
-    translate([front_wall_t, wall, spigot_h - EPS])
-      cube([module_l - front_wall_t - wall, module_w - 2 * wall, module_pitch - spigot_h + 2 * EPS]);
+    translate([0, 0, spigot_h - EPS])
+      linear_extrude(module_pitch - spigot_h + 2 * EPS) insetRect(wall, front_wall_t);
     socketCut();
   }
 }
@@ -95,9 +96,9 @@ module onYWall(y_high) {
   translate([0, y_high, 0]) rotate([90, 0, 0]) children();
 }
 
-// hexrack's back face: the lattice with an exclusion zone carved out of the CUTTER
-// round the port cluster, so every connector sits in clean solid wall. Centred on the
-// MEASURED cluster, which is not symmetric about the board.
+// hexrack's back face: the vents with an exclusion zone round the port cluster, so
+// every connector sits in clean solid wall. Centred on the MEASURED cluster, which is
+// not symmetric about the board.
 function exclusionCentre() =
   [board_y + (exclusion_cluster_y[0] + exclusion_cluster_y[1]) / 2,
    board_z + (exclusion_cluster_z[0] + exclusion_cluster_z[1]) / 2];
@@ -112,14 +113,14 @@ module exclusionZone() {
 module rearVentProfile() {
   difference() {
     translate([wall + vent_margin, vent_z0])
-      ventField(module_w - 2 * (wall + vent_margin), vent_z1 - vent_z0);
+      diamondField(module_w - 2 * (wall + vent_margin), vent_z1 - vent_z0);
     exclusionZone();
   }
 }
 
 module sideVentProfile() {
   translate([side_field_x[0], vent_z0])
-    ventField(side_field_x[1] - side_field_x[0], vent_z1 - vent_z0);
+    slotField(side_field_x[1] - side_field_x[0], vent_z1 - vent_z0);
 }
 
 // The floor: inside the spigot ring on all four sides, clear of the rails. It is what

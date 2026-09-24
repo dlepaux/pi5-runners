@@ -2,7 +2,7 @@
 // LID — closes the top module
 // ============================================================================
 // A module's spigot with a plate on it instead of a module: it drops into the top
-// module's socket, clips there on the same three ribs, and sits on the same land. Solid: a
+// module's socket, clips there on the same three ribs, and bears on the same bevel. Solid: a
 // lid with holes in it drops dust straight onto the top board.
 //
 // PRINTED UPSIDE DOWN, plate on the bed: the spigot's lap then narrows as it rises and
@@ -17,9 +17,10 @@ module lidPart() {
     union() {
       spigotSolid();
       // The front: a module's front wall stops at module_pitch, so the lid carries
-      // the last spigot_h of it, sitting on the top module's front wall.
-      cube([front_wall_t, module_w, spigot_h]);
-      translate([0, 0, spigot_h]) linear_extrude(lid_t) square([module_l, module_w]);
+      // the last spigot_h of it, sitting on the top module's front wall -- up to the
+      // plate, which starts above the chamfer.
+      linear_extrude(lap_top + OVERLAP) frontWallOutline();
+      translate([0, 0, lap_top]) linear_extrude(spigot_h + lid_t - lap_top) outline();
       spigotRibs();
     }
     spigotCavity(-EPS);

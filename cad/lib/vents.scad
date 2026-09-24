@@ -1,5 +1,6 @@
 // ============================================================================
-// VENTS — hexrack's triangle lattice
+// VENTS — hexrack's triangle lattice on the floor, 45-degree slots and diamonds
+// on the walls (at the end of this file)
 // ============================================================================
 // roundedTriangle() and trianglePattern() are COPIED VERBATIM from
 // hexrack-sbc/cad/lib/vent-patterns.scad, with the same constants -- cell 14, web
@@ -94,5 +95,47 @@ module ventField(w, h, cell = vent_tri_cell, wall = vent_wall,
     square([w, h]);
     translate([w / 2, h / 2])
       trianglePattern(w, h, cell, wall, radius, stagger);
+  }
+}
+
+// ============================================================================
+// SIDES AND REAR — 45-degree bars and diamonds
+// ============================================================================
+// The triangle lattice stays on the floor only. The walls take simpler shapes with
+// every edge at 45 degrees, so nothing in them overhangs past 45.
+
+// SIDES: a grille of parallel 45-degree slots across a w x h field, the middle one
+// through the field's centre. `pitch` is slot plus bar, square to the slots; along x
+// that is pitch * sqrt(2). Slots are CLIPPED by the field: where one meets the top
+// edge it gets a flat ceiling sw*sqrt(2) long -- a short bridge, like the floor's
+// down-triangles'. A slot left with less than `min_run` of the field is dropped: the
+// sliver it would cut into a corner reads as an accident.
+module slotField(w, h, sw = vent_slot_w, pitch = vent_slot_w + vent_slot_bar,
+                 min_run = 3 * vent_slot_w) {
+  dx = pitch * sqrt(2);
+  n  = ceil((w + h) / dx);
+  intersection() {
+    square([w, h]);
+    for (i = [-n : n])
+      // A 45-degree line through the centre, moved d along x, still crosses the field
+      // over (w + h) / 2 - |d| of x -- capped by the narrower side.
+      if ((w + h) / 2 - abs(i * dx) >= min_run)
+        translate([w / 2 + i * dx, h / 2]) rotate(45) square([2 * (w + h), sw], center = true);
+  }
+}
+
+// REAR: a lattice of 45-degree diamonds (squares on a point), `web` between them,
+// over the whole w x h field and CLIPPED by it, as the triangle lattice is -- the
+// caller carves the port exclusion out of it the same way. A diamond cut by the top
+// of the field or of the exclusion gets a short flat ceiling, a bridge no wider than
+// the diamond. Centred on the field, so the two sides mirror.
+module diamondField(w, h, side = vent_diamond, web = vent_diamond_web) {
+  p = (side + web) * sqrt(2);            // centre to centre along a row
+  n = ceil(max(w, h) / p) + 1;
+  intersection() {
+    square([w, h]);
+    for (j = [-2 * n : 2 * n], k = [-2 * n : 2 * n])
+      if ((j + k) % 2 == 0)
+        translate([w / 2 + k * p / 2, h / 2 + j * p / 2]) rotate(45) square(side, center = true);
   }
 }

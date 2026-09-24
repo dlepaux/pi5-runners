@@ -1,7 +1,7 @@
 // ============================================================================
-// DUST FILTER — hexrack's, one per module
+// DUST FILTER — hexrack's, made round, one per module
 // ============================================================================
-// A hexagonal ring that sits FLUSH in the recess in a module's front wall, over its
+// A round ring with two flats that sits FLUSH in the recess in a module's front wall, over its
 // fan. Filter fabric is glued into a 0.32mm pocket on its BACK, reaching 4mm out from
 // the window, and spans the window; the ring only frames it. Two 45-degree ribs on its
 // top and bottom flats, at its back, click into grooves in the recess -- hexrack's
@@ -21,10 +21,10 @@ include <../lib/dust-filter.scad>
 // The ring in its own frame: front face at z = 0, thickness up, fabric pocket on top.
 module filterRingLocal() {
   difference() {
-    linear_extrude(filter_depth) hexProfile(filter_a_out);
-    translate([0, 0, -EPS]) linear_extrude(filter_depth + 2 * EPS) hexProfile(filter_a_in);
+    linear_extrude(filter_depth) filterProfile(filter_r_out, filter_a_out);
+    translate([0, 0, -EPS]) linear_extrude(filter_depth + 2 * EPS) circle(r = filter_r_in, $fn = 128);
     translate([0, 0, filter_depth - filter_glue_d])
-      linear_extrude(filter_glue_d + EPS) hexProfile(filter_a_in + filter_glue_band);
+      linear_extrude(filter_glue_d + EPS) circle(r = filter_r_in + filter_glue_band, $fn = 128);
   }
 }
 

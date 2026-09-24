@@ -46,15 +46,25 @@ budget lid-10 lid    0 0 -D 'fan_model="NF-A4x10"'
 budget lid-20 lid    0 0 -D 'fan_model="NF-A4x20"'
 budget filter filter 0 0
 
-# MODULE, measured by where it is (NF-A4x10):
-#   steep ~474 -- the 1.2mm corner radii at the tops of the side and rear lattice
-#                 triangles and the port openings' rounded ends (~360); the fan bore's
-#                 crown in the 3mm web and the countersinks' upper halves (~114)
-#   flat ~1457 -- the land's 1.3mm underside on the three lapped sides (~375), the tops
-#                 of the port openings and the down-pointing triangles (~1008), and the
-#                 hexagonal recess's top flat, a 4mm-deep bridge (~74). The 20mm-fan
-#                 module is longer, so its side fields are too: ~1480.
-budget module-10 module 500 1520 -D 'fan_model="NF-A4x10"'
-budget module-20 module 500 1520 -D 'fan_model="NF-A4x20"'
+# BASE: nothing at all. Rim on the bed, the skirt vertical, the socket's bevel and
+# grooves facing inward and up as on a module's top.
+budget base-10 base 0 0 -D 'fan_model="NF-A4x10"'
+budget base-20 base 0 0 -D 'fan_model="NF-A4x20"'
+
+# MODULE, measured by where it is (both fans measure the same):
+#   steep ~209 -- the fan bore's crown in the 3mm web and the countersinks' upper
+#                 halves (~114); the round filter recess's arc either side of its top
+#                 flat, 4mm deep off the web behind it (~78); the side port openings'
+#                 rounded ends (~9), the exclusion zone's rounded corners (~7). The
+#                 wall vents add nothing: every edge is 45.
+#   flat ~469  -- the tops of the port openings, rear (~137) and side (~59); the
+#                 rear diamonds cut by the field's top edge (~79) and by the underside
+#                 of the port exclusion (~99), bridges no wider than a diamond (7mm);
+#                 the side grille's slots where the field's top edge clips them, 4.2mm
+#                 bridges (~25); the filter recess's top flat and the socket's clip grooves
+#                 (~69). NOTHING ON THE LAP: its chamfer runs to the outer face -- the
+#                 first print's stopped 1.3mm short and left a roof (~371) that sagged.
+budget module-10 module 230 490 -D 'fan_model="NF-A4x10"'
+budget module-20 module 230 490 -D 'fan_model="NF-A4x20"'
 
 report "printability checks"

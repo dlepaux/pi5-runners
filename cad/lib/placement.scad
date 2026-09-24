@@ -16,6 +16,11 @@ module moduleAt(k) {
   translate([0, 0, k * module_pitch]) children();
 }
 
+// The base is the top of a module -1: the bottom module's socket.
+module baseAt() {
+  moduleAt(-1) children();
+}
+
 // The lid sits where a module_count-th module would.
 module lidAt() {
   moduleAt(module_count) children();

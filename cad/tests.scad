@@ -26,6 +26,7 @@ use <lib/ports.scad>
 use <lib/vents.scad>
 use <parts/module.scad>
 use <parts/lid.scad>
+use <parts/base.scad>
 use <parts/filter.scad>
 
 test_view = "";
@@ -92,20 +93,23 @@ module partByName(n) {
   if (n == "module") modulePart();
   if (n == "lid")    lidAt() lidPart();
   if (n == "filter") filterMounted();
+  if (n == "base")   baseAt() basePart();
 }
 // As they print: what the bed check and the printability check measure.
 module printByName(n) {
   if (n == "module") modulePart();
   if (n == "lid")    lidPrint();
   if (n == "filter") filterPart();
+  if (n == "base")   basePrint();
 }
 if (test_view == "part")  partByName(part);
 if (test_view == "print") printByName(part);
 
-// The whole case, as it stands: every module with its filter, and the lid.
+// The whole case, as it stands: every module with its filter, the lid and the base.
 module wholeCase() {
   for (k = [0 : module_count - 1]) moduleAt(k) { modulePart(); filterMounted(); }
   lidAt() lidPart();
+  baseAt() basePart();
 }
 module allModules() {
   for (k = [0 : module_count - 1]) moduleAt(k) modulePart();
@@ -139,9 +143,12 @@ if (test_view == "pockets-outside-rails")
   }
 
 // -- stacking -----------------------------------------------------------------
-// Neighbours touch on the land and nowhere else.
+// Neighbours touch on the lap and the front butt joint, and nowhere else.
 if (test_view == "module-vs-above") intersection() { modulePart(); moduleAt(1) modulePart(); }
 if (test_view == "module-vs-lid")   intersection() { modulePart(); moduleAt(1) lidPart(); }
+// The bottom module, and its filter -- which must still come out past the skirt.
+if (test_view == "module-vs-base")
+  intersection() { union() { modulePart(); filterMounted(); } baseAt() basePart(); }
 // ...and they DO touch. "Nothing overlaps" is also true of a module floating 5mm up;
 // lowered 0.2mm, the module above must bite into this one. moduleBody(), not the part:
 // anything else running the full height -- rails, once -- would pass this for a
@@ -150,6 +157,24 @@ if (test_view == "module-seated")
   intersection() { moduleBody(); translate([0, 0, module_pitch - 0.2]) moduleBody(); }
 if (test_view == "lid-seated")
   intersection() { moduleBody(); translate([0, 0, module_pitch - 0.2]) lidPart(); }
+// ...and the LAP bears, not only the front butt joint: behind the front wall, lowered
+// 0.2mm, the chamfer must bite into the bevel below. A chamfer standing off the bevel
+// would let the rear of the stack hang on the clips.
+module behindFrontWall() {
+  translate([front_wall_t + 1, -1, 0]) cube([module_l, module_w + 2, 2 * module_h]);
+}
+if (test_view == "module-seated-on-lap")
+  intersection() {
+    moduleBody(); translate([0, 0, module_pitch - 0.2]) moduleBody(); behindFrontWall();
+  }
+if (test_view == "base-seated")
+  intersection() { translate([0, 0, -0.2]) moduleBody(); baseAt() basePart(); }
+if (test_view == "base-seated-on-lap")
+  intersection() { translate([0, 0, -0.2]) moduleBody(); baseAt() basePart(); behindFrontWall(); }
+if (test_view == "lid-seated-on-lap")
+  intersection() {
+    moduleBody(); translate([0, 0, module_pitch - 0.2]) lidPart(); behindFrontWall();
+  }
 
 // -- clips -------------------------------------------------------------------
 // One table of every clipped joint: [name, rib (stack frame), owner, mate].
@@ -158,19 +183,22 @@ function allJoints() = concat(
   [ for (j = spigotJoints())
       [str("lid-", j[0]),
        [j[0], j[1] + [0, 0, module_count * module_pitch], j[2], j[3]], "lid", "module"] ],
-  [ for (j = filterJoints()) [j[0], j, "filter", "module"] ]);
+  [ for (j = filterJoints()) [j[0], j, "filter", "module"] ],
+  // The bottom module's own spigot ribs, into the base's socket.
+  [ for (j = spigotJoints()) [str("base-", j[0]), j, "module", "base"] ]);
 
 // The mate, as it sits relative to the rib: a spigot rib of the module above, or of
 // the lid, lands in the socket of the module below it.
 module mateOf(row) {
-  moduleAt(row[2] == "lid" ? module_count - 1 : 0) modulePart();
+  if (row[3] == "base") baseAt() basePart();
+  else moduleAt(row[2] == "lid" ? module_count - 1 : 0) modulePart();
 }
 // The mate's own territory -- where a rib must reach to be engaged: the walls of the
 // module below, or for a filter, the front wall it clips into.
 module mateTerritory(row) {
   if (row[2] == "filter")
     cube([front_wall_t, module_w, module_pitch]);
-  else moduleAt(row[2] == "lid" ? module_count - 1 : 0)
+  else moduleAt(row[3] == "base" ? -1 : row[2] == "lid" ? module_count - 1 : 0)
     linear_extrude(module_h) difference() { square([module_l, module_w]); insetRect(wall); }
 }
 
@@ -280,7 +308,7 @@ if (test_view == "screw-heads-outside-ring")
   difference() {
     screwAxes() translate([filter_depth - 0.2, 0, 0]) rotate([0, 90, 0])
       cylinder(d = fan_csink_d, h = 0.2, $fn = 32);
-    onFrontWall(-1) linear_extrude(filter_depth + 2) hexProfile(filter_a_out);
+    onFrontWall(-1) linear_extrude(filter_depth + 2) filterProfile(filter_r_out, filter_a_out);
   }
 // Every shank has a clear path from the recess floor, through the wall, to the fan.
 if (test_view == "screw-paths")
@@ -301,7 +329,7 @@ if (test_view == "screw-seats") intersection() { modulePart(); seatRings(); }
 // reporting view that rendered nothing would be indistinguishable from one that died.
 if (test_view == "report-geometry") {
   echo(str("module = ", module_l, " x ", module_w, " x ", module_h, " pitch ", module_pitch));
-  echo(str("stack = ", stack_h, " filter apothem = ", filter_a_out));
+  echo(str("stack = ", stack_h, " filter r = ", filter_r_out, " flats = ", filter_a_out));
   echo(str("fan_model = ", fan_model, " fan_throat_area = ", fan_throat_area));
   echo(str("board_z = ", board_z));
   echo(str("bed = ", bed));

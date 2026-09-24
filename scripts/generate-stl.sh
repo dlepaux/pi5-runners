@@ -23,10 +23,10 @@ fi
 BACKEND=""
 "$OPENSCAD" --help 2>&1 | grep -q "\-\-backend" && BACKEND="--backend=Manifold"
 
-# fan_model sets the module's and the lid's length, so both are always written in
+# fan_model sets the module's, the lid's and the base's length, so they are written in
 # both. The filter panel is one part whichever fans are fitted.
 TARGETS=("$@")
-[ ${#TARGETS[@]} -eq 0 ] && TARGETS=(module-NF-A4x10 lid-NF-A4x10 module-NF-A4x20 lid-NF-A4x20 filter)
+[ ${#TARGETS[@]} -eq 0 ] && TARGETS=(module-NF-A4x10 lid-NF-A4x10 base-NF-A4x10 module-NF-A4x20 lid-NF-A4x20 base-NF-A4x20 filter)
 
 mkdir -p stl
 FAILED=""

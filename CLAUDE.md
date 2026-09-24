@@ -2,8 +2,8 @@
 
 Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Actions
 runners. **A stack of three identical modules, one Pi 5 and one 40 mm Noctua each**,
-hexrack's hexagonal dust filter clipped into each module's front, and a lid.
-122.5 × 63.5 × 178 mm with the 10 mm fans (131.6 deep with the 20 mm ones). No screws
+a round dust filter (hexrack's, reshaped) clipped into each module's front, and a lid,
+all with rounded vertical corners. 122.5 × 63.5 × 165 mm with the 10 mm fans (131.6 deep with the 20 mm ones). No screws
 hold the case together; only the fans are screwed.
 
 ## Project intent
@@ -54,13 +54,12 @@ tallest board, so any board goes in any module.
 - **WHAT THE 20 mm FANS BUY.** +15% free airflow (9.4 against 8.2 m³/h) and +27%
   static pressure (2.26 against 1.78 mmH₂O) — the figure that counts behind a filter.
   About 1 K more margin with three of them, not a different class of cooling
-- **THE FILTER SETS THE MODULE'S HEIGHT — AND THE SCREWS SET THE FILTER.** The screw
-  heads sit in the recess floor, so the hexagonal ring must lie over all four. A 40 mm
-  fan's corner holes are 21.9 out in the hexagon's own metric, and their countersinks
-  reach 3.15 further: a ring of apothem 25.5, a recess 51.4 across its flats, and with
-  its clip grooves a 56.6 mm front per module. The tallest board needs 36.45. **Driving
-  the screws from inside instead would let the ring only frame the bore — about 15 mm
-  off the stack**, at the price of screwing the fans in from inside
+- **THE FILTER SETS THE MODULE'S HEIGHT; THE SCREWS SET ITS WIDTH.** The screw heads
+  sit in the recess floor, so the ring must lie over all four. They are on the
+  diagonals, 22.6 out, and their countersinks reach 3.15 further: a ring of radius
+  26.3, 52.6 wide. Its flats sit just outside the glue pocket, 24 from the centre, and
+  with the clip grooves make a 53.6 mm front per module. The tallest board needs
+  36.45. Screwing the fans from inside would now only narrow the ring, not shorten it
 - **THE BOARD IS LIFTED ONTO THE FAN'S AXIS.** The filter leaves ~20 mm spare above
   the board, so `board_lift` (default: centre the tallest board on the fan) raises it
   and the rails grow with it — the whole flow crosses the board and the HAT instead of
@@ -71,14 +70,21 @@ tallest board, so any board goes in any module.
   so they cannot stand out past it
 - **AIR PATH: front to back, along each board's full length.** Each fan draws through
   its dust filter and its front wall's bore, pushes over its own SoC and drive, and
-  the module exhausts through its rear wall and the rear of both side walls — **353%
-  of its fan's throat**. **Never the lid**: a lid with holes drops dust on a board.
+  the module exhausts through its rear wall and the rear of both side walls — **158%
+  of its fan's throat** with the NF-A4x10 (180% with the NF-A4x20). **Never the lid**: a lid with holes drops dust on a board.
   Each floor is a lattice too, so a module breathes into the one above
 - **EXCLUSION ZONE, hexrack's back-face idea.** A rounded rectangle carved out of the
   vent CUTTER around the RJ45/USB cluster, so the ports sit in clean solid wall. Sized
   from the MEASURED cluster (52.2 × 16.3), not guessed
-- **hexrack's triangle lattice, copied verbatim** — cell 14, web 1.6, corner 1.2,
-  stagger 0.5 — on every vent, so the projects read as one family
+- **VENTS: every wall edge at 45°.** The floor keeps hexrack's triangle lattice
+  (copied verbatim: cell 14, web 1.6, corner 1.2, stagger 0.5). The sides are a
+  grille of 45° slots, 3 wide on a 5.5 pitch, clipped by the field (their tops are
+  4.2 mm bridges, budgeted), over only the rear half (`vent_side_share`) of the room
+  behind the −Y ports; the rear is a 45° diamond lattice (side 5, web 1.6) over the
+  whole field, CLIPPED by it and by the port exclusion as the triangles were — whole
+  diamonds only fitted one thin row above the ports and read as a strip, not a
+  pattern. The triangles on the walls read busy; the simpler, smaller openings cost
+  exhaust, 353% → 158% of the throat
 - **Positive pressure.** One filtered intake; dust can only enter where the filter is,
   which is the only reason there is exactly one filter
 - **Six cables leave the box** — 3× Ethernet at the rear, 3× USB-C on −Y — because
@@ -90,18 +96,26 @@ tallest board, so any board goes in any module.
 
 | Part | Prints | Is |
 |------|--------|----|
-| `module` ×3 | floor-down | vented floor with two insert rails, four walls; the front one carries the fan, its bore, its screw holes and the filter's hexagonal recess; spigot below, socket above |
+| `module` ×3 | floor-down | vented floor with two insert rails, four walls; the front one carries the fan, its bore, its screw holes and the filter's round recess; spigot below, socket above |
 | `lid` | plate-down | a spigot with a solid plate on it, and the last few mm of front wall |
-| `filter` ×3 | face-down | hexrack's hexagonal ring, fabric glued into a pocket on its back, two ribs |
+| `base` | rim-down | the bottom module's feet: a module's socket (module −1's top slice, cut from `moduleBody()` itself) on an open rim, a 2 mm skirt round the sides and rear, front flush so the filter still comes out |
+| `filter` ×3 | face-down | a round ring with two flats, fabric glued into a pocket on its back, two ribs |
 
 - **THE BOARDS ARE NEVER CONNECTED.** Each Pi screws into M2.5 heat-set inserts in
   two rails on its own module's floor — hexrack's "canoes", running along X with the
   airflow. The HAT's M2.5 male-female standoffs thread through the Pi into them
 - **STACKING: SPIGOT, SOCKET, 45° LAP ON THE SIDES AND REAR.** A module's bottom band
   is a spigot inset `wall + stack_gap` that drops inside the walls of the module below.
-  The walls meet on a lap: the lower wall's top is bevelled inside down to a 1 mm land
-  that carries the weight, and the upper wall's underside follows the bevel. **A step
-  would be a 3 mm ledge printed over air all round; the lap prints like any wall**
+  The walls meet on a lap: the lower wall's top is bevelled inside, and the upper
+  wall's underside is a 45° chamfer lying on that bevel (`lap_gap`, 0.05,
+  keeps the CAD faces from coinciding) and **running on out to the outer face**. The
+  bevel and the front butt joint carry the weight. The lower wall rises into the V as
+  a **lip, `lip_t` = 0.4 wide at its top** — one extrusion line, not a knife edge the
+  slicer would drop — so the outer faces meet flush but for a hairline. `socket_z` is
+  the bevel's reference height; `module_h`, the part's top, is the lip's
+  **A step would be a 3 mm ledge printed over air; a chamfer stopping short of the
+  outer face leaves a roof — the first print's 1.3 mm one sagged. Nothing on the lap
+  prints over air now**, and `test-print.sh`'s flat budget has no room for a roof
 - **THE SPIGOT IS NO TALLER THAN ITS CLIP.** Three ribs — one per side, one on the rear
   — and each rib's lowest vertex is the spigot's bottom edge. `spigot_h` is derived:
   the groove below has to sit under the lower module's bevel, and that is all
@@ -109,13 +123,21 @@ tallest board, so any board goes in any module.
   width, and stands on the one below, so each filter lies wholly in its own module and
   the stack's front is one face. The lower module's side walls stop behind that front
   wall above their socket; the lid carries the top module's last few millimetres
-- **THE DUST FILTER IS hexrack's `sectionDust()`, sized for a 40 mm fan**: a hexagonal
-  ring, flats top and bottom, flush in a 4 mm recess; a 0.32 mm glue pocket reaching
+- **THE DUST FILTER IS hexrack's `sectionDust()`, MADE ROUND, sized for a 40 mm fan**:
+  a circular ring cut by flats top and bottom, flush in a 4 mm recess; a 0.32 mm glue pocket reaching
   4 mm out from the window; two 45° ribs on the top and bottom flats at the ring's
   back. **One table** — `filterJoints()` in `lib/dust-filter.scad` — cuts the grooves,
   builds the ribs and feeds `test-clips.sh`. Flats top and bottom is also how the
-  recess prints standing: sides 30° off vertical, the top flat a short bridge
-- **CLIPS: hexrack's 45° rib into a groove**, everywhere. hexrack's `snap-fit.scad` is
+  recess prints standing: the top flat a short bridge, the arc beside it a 4 mm-deep
+  overhang that `test-print.sh` budgets. **Round, not hexrack's hexagon, for the
+  rounded corners**: the hexagon's side points left 2 mm of front face, the circle 5.3
+- **ROUNDED VERTICAL CORNERS, `corner_r`**, from one footprint, `outline()` in
+  `lib/stacking.scad`. `insetRect()` offsets it at the rear (the lap stays concentric)
+  and only clips it at the front (the front wall is solid full width there). An assert
+  keeps 1 mm of wall between a front corner and the filter recess, which caps it near 4
+- **CLIPS: hexrack's 45° rib into a groove**, everywhere, **40% under hexrack's size**
+  (rib 1.0 square, 11 long on the modules; 1.7 × 18 printed big). The clearance is
+  unchanged, so a rib stands 0.7 proud and `spigot_h` shrank with it. hexrack's `snap-fit.scad` is
   **dead code**; do not port it
 - **Assembly**: screw each Pi into its module and each fan in from the front; stack the
   modules and click them together; click the lid on; glue fabric into each filter and
@@ -293,6 +315,10 @@ without error and exports a clean single body.
     by 3.5 mm to prove the "heads under the ring" check fired the glue-pocket assert
     first, and every suite errored — which looks like success. Break a check with the
     smallest change that still reaches it: 1 mm did, and the check failed on its own.
+31. **A joint with two bearing faces can hide one.** Once the lap bore on its bevel
+    instead of the land, `module-seated` still passed on the front butt joint alone. A
+    lap standing 0.2 mm off would have let the rear hang on the clips. `*-seated-on-lap`
+    looks behind the front wall only, and fails with `lap_gap = 0.2`.
 
 
 

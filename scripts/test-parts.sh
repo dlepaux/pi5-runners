@@ -48,6 +48,8 @@ check_part module-20 module -D 'fan_model="NF-A4x20"'
 check_part lid-10    lid    -D 'fan_model="NF-A4x10"'
 check_part lid-20    lid    -D 'fan_model="NF-A4x20"'
 check_part filter    filter
+check_part base-10   base   -D 'fan_model="NF-A4x10"'
+check_part base-20   base   -D 'fan_model="NF-A4x20"'
 
 # THE SHOWCASE MUST RENDER CLEAN. It is the only file that touches the framework's
 # board model and the vendor fan meshes, so it is the only place their path

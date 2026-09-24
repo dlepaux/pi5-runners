@@ -1,9 +1,9 @@
 # pi5-runners
 
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
-runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a hexagonal
-dust filter clipped into each module's front, and a lid. **122.5 × 63.5 × 178 mm** with
-the 10 mm fans, 131.6 mm deep with the 20 mm ones. Nothing in the case is screwed
+runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a round
+dust filter clipped into each module's front, and a lid, all with rounded corners.
+**122.5 × 63.5 × 165 mm** (168 on its base) with the 10 mm fans, 131.6 mm deep with the 20 mm ones. Nothing in the case is screwed
 together; only the fans are.
 
 ## What it holds
@@ -42,29 +42,32 @@ behind a filter — about a kelvin, not a different class of cooling.
 **Airflow** runs front to back along each board's full length. Each fan draws through
 its module's dust filter and front wall, pushes over its own SoC and drive, and
 the module exhausts through its rear wall and the rear of both side walls — never the
-lid, which would drop dust onto a board. Each module's exhaust is **353% of its fan's
-throat**, and every floor is a lattice too, so each module also breathes into the one
+lid, which would drop dust onto a board. Each module's exhaust is **158% of its fan's
+throat** (180% with the 20 mm fans) — a short grille of 45° bars at the rear of each
+side, a diamond lattice round the rear ports — and every
+floor is a triangle lattice, so each module also breathes into the one
 above.
 
-Around the rear port cluster the vent pattern stops at an **exclusion zone**, hexrack's
+Around the rear port cluster the diamond lattice stops at an **exclusion zone**, hexrack's
 back-face idea, so every connector sits in clean solid wall.
 
 ## Printing
 
-Five STLs, **none needing support**, in the orientation they come out of
+Seven STLs, **none needing support**, in the orientation they come out of
 `generate-stl.sh`. PETG. Print the module and lid for the fans you fit.
 
 | Part | Print | Size |
 |------|-------|------|
-| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 122.5 / 131.6 × 63.5 × 61.8 mm |
-| `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 122.5 / 131.6 × 63.5 × 8.2 mm |
-| `filter` | ×3, face down, pocket up | 58.9 × 53.8 × 4.0 mm |
+| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 122.5 / 131.6 × 63.5 × 57.4 mm |
+| `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 122.5 / 131.6 × 63.5 × 7.2 mm |
+| `base-NF-A4x10` or `base-NF-A4x20` | rim down | 124.5 / 133.6 × 67.5 × 8.5 mm |
+| `filter` | ×3, face down, pocket up | 52.6 × 49.8 × 4.0 mm |
 
 **Download them** from the project's GitHub Pages site, rebuilt on every push to main
 once the whole test suite passes. Or render them yourself:
 
 ```bash
-./scripts/generate-stl.sh          # all five into stl/
+./scripts/generate-stl.sh          # all seven into stl/
 ./scripts/generate-stl.sh filter   # just one
 ./scripts/build-site.sh            # the download page, into _site/
 ```
@@ -72,20 +75,27 @@ once the whole test suite passes. Or render them yourself:
 How each part avoids support:
 
 - **Module.** The bottom is a spigot inset from the side and rear walls, no taller than
-  its clip ribs; the wall steps out to full width on a **45° lap** that matches a bevel
-  inside the top of the module below. The floor lattice is the first layers. The
-  filter's hexagonal recess has its flats top and bottom, so its slanted sides are 30°
-  off vertical and its top flat is a short bridge.
+  its clip ribs; the wall steps out to full width on a **45° chamfer that reaches the
+  outer face**, lying on a bevel inside the top of the module below. Nothing on it is
+  printed over air: the first print's chamfer stopped 1.3 mm short and the roof it left
+  sagged. The wall below rises into the chamfer as a lip one extrusion line wide at its
+  top, so the joint is flush but for a 0.4 mm hairline. The floor lattice is the first layers. The
+  filter's round recess has flats top and bottom: the top flat is a short bridge, and
+  the arc beside it a 4 mm-deep overhang off the wall behind it. The rounded corners
+  are vertical, so they cost nothing.
 - **Lid.** Upside down, its lap narrows as it rises.
 - **Filter.** A flat ring; the glue pocket faces up.
 
 ## Why the case is this tall
 
+The filter sets each module's height, not the board. Its flats sit just outside the
+fabric's glue pocket, 48 mm apart, and with the clip grooves and a millimetre of wall
+round them that makes a 53.6 mm front per module.
+
 The fan screws go in from the front, so their heads sit in the filter's recess and the
-hexagon has to cover them. A 40 mm fan's corner holes sit only 2.6 mm outside its bore,
-so a hexagon that hides the heads is 51 mm across its flats — and that, with its clip
-grooves, is what sets each module's height, not the board. Screwing the fans in from
-inside would let the hexagon only frame the bore and take about 15 mm off the stack.
+ring has to cover them. They sit on the diagonals, which is why the filter is round: a
+circle through the heads is 52.6 mm wide, where hexrack's hexagon was 59.4 and left no
+room to round the front corners.
 
 ## Assembly
 
@@ -95,9 +105,11 @@ inside would let the hexagon only frame the bore and take about 15 mm off the st
    the front with four **M3 countersunk self-tappers** through the recess floor into
    the fan's corner holes — **M3 × 12** for the NF-A4x10, **M3 × 20** for the NF-A4x20.
    Plug it into that Pi's GPIO: 5 V on pin 2 or 4, ground on pin 6.
-3. Stack the modules. Each one's spigot drops into the one below and clicks in on
-   hexrack's 45° rib-and-groove clip. Click the lid onto the top one.
-4. Glue filter fabric into the pocket on the back of each hexagonal filter and click
+3. Click the bottom module into the base: a module's socket on an open rim, with a
+   skirt round its sides and rear. Stack the others: each one's spigot drops into the
+   one below and clicks in on hexrack's 45° rib-and-groove clip. Click the lid onto
+   the top one.
+4. Glue filter fabric into the pocket on the back of each filter and click
    it into its recess, over the screw heads.
 
 ## Development

@@ -61,6 +61,12 @@ expect_empty    "the top module clears the lid"        module-vs-lid
 # Both pass on a module floating 5mm up. Lowered 0.2mm, it must bite.
 expect_geometry "a module sits on the one below"       module-seated
 expect_geometry "the lid sits on the top module"       lid-seated
+# Both pass on the front butt joint alone. Behind it, the lap must bear too.
+expect_geometry "a module's lap bears on the one below" module-seated-on-lap
+expect_geometry "the lid's lap bears on the top module" lid-seated-on-lap
+expect_empty    "the bottom module and its filter clear the base" module-vs-base
+expect_geometry "the bottom module sits on the base"     base-seated
+expect_geometry "its lap bears on the base's socket"     base-seated-on-lap
 
 echo ""
 echo "Fit — the dust filters"

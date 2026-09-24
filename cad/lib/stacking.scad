@@ -19,10 +19,33 @@ include <clips.scad>
 // OUTLINES
 // ----------------------------------------------------------------------------
 
-// The module's footprint inset by d on its sides and rear -- the three walls that
-// stack on a lap. The front butt-joins, so the front edge stays at x0.
+// The module's footprint: every vertical corner rounded to corner_r.
+module outline() {
+  offset(r = corner_r) offset(delta = -corner_r) square([module_l, module_w]);
+}
+
+// The footprint inset by d on its sides and rear -- the three walls that stack on a
+// lap. The front butt-joins, so the front edge stays at x0.
+//
+// The rear corners are OFFSET from the footprint's, radius corner_r - d, so a lap or a
+// wall stays the same width round them. The front corners are only CLIPPED by the
+// footprint: in front of front_wall_t the front wall is solid full width anyway, and
+// an inset front corner would leave a notch at the bottom of it.
 module insetRect(d, x0 = 0) {
-  translate([x0, d]) square([module_l - d - x0, module_w - 2 * d]);
+  intersection() {
+    translate([x0, d]) square([module_l - d - x0, module_w - 2 * d]);
+    outline();
+    // The footprint stretched a module length forward, so offsetting it moves only
+    // its sides and rear.
+    offset(r = -d)
+      offset(r = corner_r) offset(delta = -corner_r)
+        translate([-module_l, 0]) square([2 * module_l, module_w]);
+  }
+}
+
+// The front wall's footprint: full width, rounded where the footprint is.
+module frontWallOutline() {
+  intersection() { square([front_wall_t, module_w]); outline(); }
 }
 
 // A wafer of a 2D outline at height z: hull() between two of these is a frustum,
@@ -34,15 +57,15 @@ module waferAt(z) {
 // ----------------------------------------------------------------------------
 // SPIGOT — the bottom band, solid; the owner cuts its own cavity
 // ----------------------------------------------------------------------------
-// A straight band inset spigot_inset from the outer faces, then the 45-degree lap out
-// to lap_inset0 at spigot_h. Above spigot_h the owner's full outline takes over, so
-// the land's underside -- lap_inset0 wide -- is the only thing printed over air.
+// A straight band inset spigot_inset from the outer faces, then the 45-degree chamfer
+// all the way out to the outer faces at lap_top. Above lap_top the owner's full
+// outline takes over. Nothing here is printed over air.
 module spigotSolid() {
-  z_lap = spigot_h - lap_h;
+  z_lap = lap_top - lap_h;
   linear_extrude(z_lap + EPS) insetRect(spigot_inset);
   hull() {
     waferAt(z_lap) insetRect(spigot_inset);
-    waferAt(spigot_h - EPS) insetRect(lap_inset0);
+    waferAt(lap_top - EPS) insetRect(0);
   }
 }
 
@@ -58,17 +81,17 @@ module spigotCavity(z0) {
 // ----------------------------------------------------------------------------
 // Above module_pitch the walls are the socket: `wall` thick on the sides and rear,
 // and NOTHING in front of the front wall's line -- the module above stands its own
-// front wall there, full width, on this one's. The inside opens at 45 degrees up to a
-// stack_land-wide flat at module_h, carried past module_h at the same slope so the
-// cut runs out through the top rather than meeting it face to face.
+// front wall there, full width, on this one's. The inside opens at 45 degrees up to
+// the lip, lip_t wide at module_h, and is carried past module_h at the same slope so
+// the cut runs out through the top rather than meeting it face to face.
 module socketCut() {
   translate([0, 0, module_pitch])
     linear_extrude(module_h - module_pitch + 1) insetRect(wall, -1);
   translate([-1, -1, module_pitch])
     cube([front_wall_t + 1, module_w + 2, module_h - module_pitch + 1]);
   hull() {
-    waferAt(module_h - (wall - stack_land)) insetRect(wall, -1);
-    waferAt(module_h + 1) insetRect(stack_land - 1, -1);
+    waferAt(socket_z - (wall - stack_land)) insetRect(wall, -1);
+    waferAt(socket_z + stack_land) insetRect(0, -1);
   }
 }
 
