@@ -2,7 +2,7 @@
 // DUST FILTER — the ring's profile and its clip joints, shared by module and filter
 // ============================================================================
 // hexrack's dust filter made round, one per module: a circular ring with two flats,
-// flush in a recess in the front wall, fabric glued on its back, two 45-degree ribs on its top and bottom flats
+// flush in a recess in the front wall, fabric glued on its back, two 45-degree ribs on its left and right flats
 // at the ring's back. The module cuts the recess and the grooves from here; the filter
 // part builds the ring and the ribs from here; test-clips.sh checks every joint here.
 //
@@ -13,12 +13,12 @@
 include <../config.scad>
 include <clips.scad>
 
-// A circle of radius r cut by flats a from its centre, top and bottom. a >= r is a
-// plain circle: the window and the glue pocket never reach the flats.
+// A circle of radius r cut by flats a from its centre, left and right (profile x is
+// the module's Y). a >= r is a plain circle.
 module filterProfile(r, a) {
   intersection() {
     circle(r = r, $fn = 128);
-    square([2 * r, 2 * a], center = true);
+    square([2 * a, 2 * r], center = true);
   }
 }
 
@@ -26,12 +26,13 @@ module onFrontWall(x0) {
   translate([x0, fan_yc, fan_zc]) rotate([90, 0, 90]) children();
 }
 
-// Ribs on the top and bottom flats, centred on the recess's face, their back vertex
+// Ribs on the left and right flats, running vertically, centred on the recess's face,
+// their back vertex
 // on the ring's back face -- where hexrack puts them (dust_clip_y).
 function filterJoints() =
   let (x = filter_depth - rib_half)
-  [ ["filter-top",    [x, fan_yc, fan_zc + filter_a_recess], "y", filter_rib_len],
-    ["filter-bottom", [x, fan_yc, fan_zc - filter_a_recess], "y", filter_rib_len] ];
+  [ ["filter-left",  [x, fan_yc - filter_a_recess, fan_zc], "z", filter_rib_len],
+    ["filter-right", [x, fan_yc + filter_a_recess, fan_zc], "z", filter_rib_len] ];
 
 // The recess the ring sits in, from the front face.
 module filterRecess() {

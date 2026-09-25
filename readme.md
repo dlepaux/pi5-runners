@@ -3,7 +3,7 @@
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
 runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a round
 dust filter clipped into each module's front, and a lid, all with rounded corners.
-**122.5 × 63.5 × 165 mm** (168 on its base) with the 10 mm fans, 131.6 mm deep with the 20 mm ones. Nothing in the case is screwed
+**122.5 × 68 × 172 mm** (175 on its base) with the 10 mm fans, 131.6 mm deep with the 20 mm ones. Nothing in the case is screwed
 together; only the fans are.
 
 ## What it holds
@@ -42,8 +42,8 @@ behind a filter — about a kelvin, not a different class of cooling.
 **Airflow** runs front to back along each board's full length. Each fan draws through
 its module's dust filter and front wall, pushes over its own SoC and drive, and
 the module exhausts through its rear wall and the rear of both side walls — never the
-lid, which would drop dust onto a board. Each module's exhaust is **158% of its fan's
-throat** (180% with the 20 mm fans) — a short grille of 45° bars at the rear of each
+lid, which would drop dust onto a board. Each module's exhaust is **195% of its fan's
+throat** (222% with the 20 mm fans) — a short grille of 45° bars at the rear of each
 side, a diamond lattice round the rear ports — and every
 floor is a triangle lattice, so each module also breathes into the one
 above.
@@ -58,10 +58,10 @@ Seven STLs, **none needing support**, in the orientation they come out of
 
 | Part | Print | Size |
 |------|-------|------|
-| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 122.5 / 131.6 × 63.5 × 57.4 mm |
-| `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 122.5 / 131.6 × 63.5 × 7.2 mm |
-| `base-NF-A4x10` or `base-NF-A4x20` | rim down | 124.5 / 133.6 × 67.5 × 8.5 mm |
-| `filter` | ×3, face down, pocket up | 52.6 × 49.8 × 4.0 mm |
+| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 122.5 / 131.6 × 68 × 59.8 mm |
+| `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 122.5 / 131.6 × 68 × 7.2 mm |
+| `base-NF-A4x10` or `base-NF-A4x20` | rim down | 124.5 / 133.6 × 72 × 8.5 mm |
+| `filter` | ×3, face down, pocket up | 49.8 × 52.6 × 4.0 mm |
 
 **Download them** from the project's GitHub Pages site, rebuilt on every push to main
 once the whole test suite passes. Or render them yourself:
@@ -80,8 +80,8 @@ How each part avoids support:
   printed over air: the first print's chamfer stopped 1.3 mm short and the roof it left
   sagged. The wall below rises into the chamfer as a lip one extrusion line wide at its
   top, so the joint is flush but for a 0.4 mm hairline. The floor lattice is the first layers. The
-  filter's round recess has flats top and bottom: the top flat is a short bridge, and
-  the arc beside it a 4 mm-deep overhang off the wall behind it. The rounded corners
+  filter's round recess has its flats and clips at the sides; its crown is a 4 mm-deep
+  arc off the wall behind it. The rounded corners
   are vertical, so they cost nothing.
 - **Lid.** Upside down, its lap narrows as it rises.
 - **Filter.** A flat ring; the glue pocket faces up.

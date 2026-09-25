@@ -4,7 +4,7 @@
 // A round ring with two flats that sits FLUSH in the recess in a module's front wall, over its
 // fan. Filter fabric is glued into a 0.32mm pocket on its BACK, reaching 4mm out from
 // the window, and spans the window; the ring only frames it. Two 45-degree ribs on its
-// top and bottom flats, at its back, click into grooves in the recess -- hexrack's
+// left and right flats, at its back, click into grooves in the recess -- hexrack's
 // sectionDust(), sized for a 40mm fan. The ring also covers the fan's four screw heads.
 //
 // ONE DEFINITION OF THE FITTED PART. The ribs come from filterJoints() in the MODULE

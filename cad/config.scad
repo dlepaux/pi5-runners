@@ -216,21 +216,22 @@ assert(lip_t > 0 && lip_t < stack_land, "the lip must end between a knife edge a
 // ----------------------------------------------------------------------------
 // DUST FILTER — a round ring with two flats, one per module
 // ----------------------------------------------------------------------------
-// hexrack's filter, reshaped: a CIRCULAR ring cut by two flats, top and bottom, that
+// hexrack's filter, reshaped: a CIRCULAR ring cut by two flats, left and right, that
 // sits FLUSH in a recess in the module's front wall. Fabric is glued into a 0.32mm
-// pocket on its back reaching 4mm out from the window; two 45-degree ribs on the top
-// and bottom flats, at the ring's back, click into grooves in the recess.
+// pocket on its back reaching 4mm out from the window; two 45-degree ribs on the
+// flats, running vertically at the ring's back, click into grooves in the recess.
 //
 // WHY A CIRCLE, NOT hexrack's HEXAGON. The ring must cover the fan's corner screws,
 // which sit on the DIAGONALS. A hexagon with flats top and bottom has its points on
 // the horizontal, so it came 59.4mm wide and left 2mm of front face each side -- no
 // room for rounded corners (corner_r). A circle through the same heads is 52.5 wide.
 //
-// THE FLATS ARE THE CLIP SEATS AND THE PRINT'S BRIDGE. Standing in the module, the
-// recess's top flat is a 4mm-deep bridge off the web behind it, as the hexagon's was;
-// the arc either side of it, steeper than 45 degrees, is the price of the round look
-// (test-print.sh budgets it). They sit just past the glue pocket, not at the circle,
-// which also takes 3mm off every module.
+// THE FLATS ARE THE CLIP SEATS, AT THE SIDES. They sit just past the glue pocket, and
+// on the sides the clips read as part of the ring's outline rather than as caps on
+// it. The cost is height: the module is set by the full circle, 2.4mm more than by
+// the flats. The recess's crown, standing in the module, is a 4mm-deep arc off the web
+// behind it -- steeper than 45 near the top, the price of the round look
+// (test-print.sh budgets it).
 //
 // THE RING COVERS THE FAN SCREWS. They go in from outside, countersunk into the
 // recess floor, so the ring is sized to lie over every head: a corner hole at (16, 16)
@@ -287,10 +288,13 @@ port_overhang = 3;     // RJ45 and USB-A stand proud of the PCB's +X edge
 rear_clear    = 3;     // those connectors to the rear wall
 module_air    = 5;     // top of the tallest board to the next module's floor, at least
 
-// SIDES: AS TIGHT AS THE BOARD. The Pi is located by its four screws, not by the
-// walls, so the walls only need to clear it: 0.5 either side of the board and of the
-// HAT's 0.5 overhang on +Y. The -Y connectors reach into their own wall openings.
-side_clear    = 0.5;
+// SIDES: TIGHT ON -Y, ROOM ON +Y. The Pi is located by its four screws, not by the
+// walls. On -Y its USB-C and micro-HDMI sockets must sit against their wall openings:
+// a plug's shell is ~6.5mm long, so a wider gap there and power no longer seats. On +Y
+// -- the GPIO header, where each fan's lead plugs in -- 5mm past the HAT's 0.5
+// overhang, room for fingers, the fan lead, and a board that grows.
+side_clear     = 0.5;   // -Y: board to wall
+side_clear_pos = 5;     // +Y: HAT overhang to wall
 
 // The front wall: the recess the filter sits in, and the web behind it the fan's
 // screws pass through.
@@ -304,7 +308,7 @@ board_y = wall + side_clear;
 board_z0 = floor_t + rail_h;   // the board at its lowest; board_lift raises it below
 
 module_l = board_x + pi5_pcb[0] + port_overhang + rear_clear + wall;
-module_w = board_y + pi5_pcb[1] + hat_overhang_y + side_clear + wall;
+module_w = board_y + pi5_pcb[1] + hat_overhang_y + side_clear_pos + wall;
 
 // THE FOUR VERTICAL CORNERS ARE ROUNDED, for the look. Vertical, so it costs nothing to
 // print. Every outline -- walls, spigot, lap, socket, lid -- is inset from the same
@@ -316,7 +320,7 @@ corner_r = 4;
 // FLOOR TO FLOOR: whichever needs most -- the tallest board, the fan, or the filter's
 // recess with a clip groove and a millimetre of wall above and below it. It is the
 // filter.
-filter_band_h = 2 * (filter_a_recess + groove_half + 1);
+filter_band_h = 2 * (filter_r_recess + 1);
 module_pitch = max(board_z0 + hat_slot_h + module_air,
                    floor_t + fan_size + 2 * fan_clear,
                    filter_band_h);
@@ -354,7 +358,7 @@ assert(board_lift >= 0, "board_lift cannot sink the board into its floor");
 assert(module_pitch - (board_z + hat_slot_h) >= 3,
        "board_lift leaves less than 3mm between a HAT and the next module's floor");
 assert(fan_zc - fan_size / 2 >= floor_t + fan_clear, "the fan sits on the floor");
-assert(module_w / 2 - filter_r_recess - corner_r >= 1,
+assert(module_w / 2 - filter_a_recess - corner_r >= 1,
        "corner_r cuts into the filter's recess: under 1mm of wall at the front corners");
 assert(fan_size + 2 <= module_w - 2 * wall, "the fan is wider than the module's inside");
 assert(board_y + pi5_hole_inset - boss_d / 2 >= spigot_inset,

@@ -13,8 +13,8 @@
 //     reaches the outer face: no ledge, no roof
 //   - the walls rise straight; port and vent openings are short bridges; the fan
 //     bore is an arch in the front wall, its crown a bridge that shortens to nothing
-//   - the filter's round recess has its flats top and bottom: the top flat is a short
-//     bridge, the arc beside it a short overhang off the web behind it
+//   - the filter's round recess has its flats at the sides; its crown is a 4mm-deep
+//     arc off the web behind it
 //   - the socket's bevel and clip grooves face inward and upward
 // ============================================================================
 
