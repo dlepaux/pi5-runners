@@ -106,7 +106,11 @@ tallest board, so any board goes in any module.
 
 - **THE BOARDS ARE NEVER CONNECTED.** Each Pi screws into M2.5 heat-set inserts in
   two rails on its own module's floor — hexrack's "canoes", running along X with the
-  airflow. The HAT's M2.5 male-female standoffs thread through the Pi into them
+  airflow. **The board stands on M2.5 × 5 male-female standoffs** (`board_standoff_h`)
+  screwed into the inserts, not on the print: the rails stop at `rail_top`, the board
+  keeps its height on the fan's axis, and air runs under it. The HAT's M2.5
+  male-female standoffs thread through the Pi into those. `standoffs-seated` fails if
+  the rails fall short of them
 - **STACKING: SPIGOT, SOCKET, 45° LAP ON THE SIDES AND REAR.** A module's bottom band
   is a spigot inset `wall + stack_gap` that drops inside the walls of the module below.
   The walls meet on a lap: the lower wall's top is bevelled inside, and the upper

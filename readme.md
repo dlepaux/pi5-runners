@@ -33,7 +33,7 @@ CI runners hold 100% CPU for 30–50 minutes at a stretch, three boards at once 
 | **3 × NF-A4x10 5V** | **≈ 9.7 K** | **≈ 15 K** |
 | 3 × NF-A4x20 5V | ≈ 8.5 K | ≈ 16.5 K |
 
-Each board sits on tall rails that centre it and its HAT on the fan's axis, so the
+Each board stands on 5 mm standoffs on rails that centre it and its HAT on the fan's axis, so the
 whole flow crosses the board. One fan per Pi is 50% more air than the two-fan column an
 earlier version shared. The
 20 mm fans move 15% more again and push 27% more static pressure, which is what counts
@@ -99,8 +99,10 @@ room to round the front corners.
 
 ## Assembly
 
-1. Press M2.5 heat-set inserts into each module's rails. Screw each Pi in; the HAT's
-   M2.5 male-female standoffs thread through the Pi into the inserts.
+1. Press M2.5 heat-set inserts into each module's rails and screw an **M2.5 × 5 mm
+   male-female standoff** into each, female end up: the board stands on those, with
+   air under it, not on the print. Set the Pi on them; the HAT's M2.5 male-female
+   standoffs thread through the Pi into them (a bare Pi takes M2.5 screws).
 2. Hold each fan against the inside of its module's front wall and screw it in from
    the front with four **M3 countersunk self-tappers** through the recess floor into
    the fan's corner holes — **M3 × 12** for the NF-A4x10, **M3 × 20** for the NF-A4x20.

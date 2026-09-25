@@ -264,16 +264,23 @@ assert(fan_csink_d / 2 < fan_web + filter_depth, "the countersink is deeper than
 // ----------------------------------------------------------------------------
 // M2.5 heat-set inserts in two rails on the floor, one under each mounting hole.
 // READ FROM lib/theaded-inserts.scad: a Ruthex RX-M2.5x5.7 wants 6.7 of hole, not 5.7.
-// The HAT's M2.5 male-female standoffs thread through the Pi into those inserts.
+// THE BOARD STANDS ON STANDOFFS, not on the rails: an M2.5 x board_standoff_h male-
+// female standoff screws into each insert, female end up, and the HAT's own male-
+// female standoffs thread through the Pi into those (a bare Pi takes an M2.5 screw).
+// The board keeps its height on the fan's axis; the rails stop short of it by the
+// standoff, which leaves air under the whole board instead of a printed bed.
 //
 // The rails run ALONG X, with the airflow, as hexrack's canoes do.
 insert_m25    = "M2.5";
 boss_d        = get_insert_min_boss(insert_m25);   // 7.2
 canoe_w       = boss_d + 2;
 canoe_overrun = 4;
+board_standoff_h  = 5;     // M2.5 male-female, rail top to board underside
+board_standoff_af = 5;     // M2.5 standoff hex, across flats
 
-assert(board_z - get_insert_spec(insert_m25, "hole_depth") >= 1,
+assert(rail_top - get_insert_spec(insert_m25, "hole_depth") >= 1,
        "the insert pocket would break through the floor");
+assert(board_standoff_af / cos(30) <= boss_d, "the standoff's hex overhangs its insert boss");
 
 // ----------------------------------------------------------------------------
 // MODULE — one Pi 5 and its fan, printed floor-down as one piece
@@ -305,7 +312,7 @@ front_wall_t = filter_depth + fan_web;
 // measured from the tab.
 board_x = front_wall_t + fan_depth + plenum_gap + hat_compact_overhang_x;
 board_y = wall + side_clear;
-board_z0 = floor_t + rail_h;   // the board at its lowest; board_lift raises it below
+board_z0 = floor_t + rail_h + board_standoff_h;   // the board at its lowest; board_lift raises it below
 
 module_l = board_x + pi5_pcb[0] + port_overhang + rear_clear + wall;
 module_w = board_y + pi5_pcb[1] + hat_overhang_y + side_clear_pos + wall;
@@ -340,6 +347,7 @@ fan_zc = module_pitch / 2;
 // still screws straight into its inserts. Override with -D board_lift=0 for the floor.
 board_lift = max(0, fan_zc - hat_slot_h / 2 - board_z0);
 board_z    = board_z0 + board_lift;
+rail_top   = board_z - board_standoff_h;   // where the inserts go in
 
 module_count = 3;
 lid_t        = 3;     // the lid's plate, above its spigot
@@ -432,11 +440,11 @@ case_part = "assembly";
 //
 // THE EXPLODE LIVES ONLY IN case.scad. placement.scad never reads it, so no fit test
 // can measure an exploded position even by accident.
-assembly_space = 30;
+assembly_space = 0;
 
 show_boards    = false;    // the Pi 5s, from the framework (cooler included)
 show_hats      = false;    // both M.2 HAT+ boards and their drives
-show_standoffs = false;    // the HATs' M2.5 standoffs
+show_standoffs = false;    // the M2.5 standoffs: under each board, and each HAT's
 show_fan       = true;    // one fan mesh per module, of fan_model
 show_filter    = true;    // the dust filters
 show_case      = true;    // modules and lid

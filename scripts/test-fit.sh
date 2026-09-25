@@ -40,18 +40,20 @@ expect_empty    "insert pockets are open in the module"     pockets-vs-module
 expect_geometry "insert pockets sit in the rails"           pockets-in-rails
 expect_empty    "insert pockets lie wholly in rail and floor" pockets-outside-rails
 
-# ...and the rails must REACH the board. Both clearance checks above pass on a rail
-# 5mm too short.
+# ...and the rails must REACH the standoffs, which reach the board. Both clearance
+# checks above pass on a rail 5mm too short.
 render canoes-alone "$WORK/canoes.stl"
 RAIL_TOP=$(bounds "$WORK/canoes.stl" | awk '{print $6}')
-BOARD_UNDER=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
+WANT_TOP=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
     -D 'test_view="report-geometry"' cad/tests.scad 2>&1 \
-  | sed -n 's/.*board_z = \([0-9.]*\).*/\1/p')
-if awk -v a="$RAIL_TOP" -v b="$BOARD_UNDER" 'BEGIN { exit !(a - b < 0.01 && b - a < 0.01) }'; then
-    pass "rail tops meet the board's underside at z=$RAIL_TOP"
+  | sed -n 's/.*rail_top = \([0-9.]*\).*/\1/p')
+if awk -v a="$RAIL_TOP" -v b="$WANT_TOP" 'BEGIN { exit !(a - b < 0.01 && b - a < 0.01) }'; then
+    pass "rail tops meet the standoffs at z=$RAIL_TOP"
 else
-    fail "rail tops at z=$RAIL_TOP but the board sits at z=$BOARD_UNDER"
+    fail "rail tops at z=$RAIL_TOP but the standoffs start at z=$WANT_TOP"
 fi
+expect_empty    "board standoffs clear the module"          standoffs-vs-module
+expect_geometry "board standoffs stand on the rails"        standoffs-seated
 
 echo ""
 echo "Fit — the stack"

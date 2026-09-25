@@ -69,18 +69,28 @@ module canoeFootprint() {
 
 // Clipped to the spigot: with the walls this close to the board, a round-ended rail
 // would otherwise stand out past the spigot band into the module below. As tall as
-// board_lift makes them: from the floor to the board's underside.
+// board_lift makes them, less the standoffs: from the floor to rail_top.
 module canoes() {
   translate([0, 0, floor_t - OVERLAP])
-    linear_extrude(board_z - floor_t + OVERLAP)
+    linear_extrude(rail_top - floor_t + OVERLAP)
       intersection() { canoeFootprint(); insetRect(spigot_inset); }
 }
 
-// Z = 0 of insert_hole_mask() is the entry surface: the rail top, the board's underside.
+// Z = 0 of insert_hole_mask() is the entry surface: the rail top, a standoff below
+// the board's underside.
 module insertPockets() {
   onBoard()
     for (h = pi5MountingHoles())
-      translate([h[0], h[1], 0]) insert_hole_mask(insert_m25);
+      translate([h[0], h[1], -board_standoff_h]) insert_hole_mask(insert_m25);
+}
+
+// The board's standoffs as bought parts: a hex envelope (across corners) from each
+// insert up to the board. Not printed -- for the preview and the fit tests.
+module boardStandoffs() {
+  onBoard()
+    for (h = pi5MountingHoles())
+      translate([h[0], h[1], -board_standoff_h])
+        cylinder(d = board_standoff_af / cos(30), h = board_standoff_h, $fn = 6);
 }
 
 // ----------------------------------------------------------------------------

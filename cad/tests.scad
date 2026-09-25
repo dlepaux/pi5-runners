@@ -125,6 +125,12 @@ if (test_view == "slot-vs-above")
 
 if (test_view == "canoes-alone")    canoes();
 if (test_view == "canoes-vs-board") intersection() { canoes(); boardPcb(); }
+// The standoffs clear the module but for the rails they stand on -- and do stand on
+// them: lowered 0.2mm, they bite.
+if (test_view == "standoffs-vs-module")
+  intersection() { boardStandoffs(); difference() { modulePart(); canoes(); } }
+if (test_view == "standoffs-seated")
+  intersection() { translate([0, 0, -0.2]) boardStandoffs(); canoes(); }
 // A pocket must be VOID in the finished part...
 if (test_view == "pockets-vs-module") intersection() { insertPockets(); modulePart(); }
 // ...must sit in a rail, not in the air beside one...
@@ -139,7 +145,7 @@ if (test_view == "pockets-outside-rails")
     canoes();
     linear_extrude(floor_t)
       difference() { insetRect(spigot_inset); floorVentProfile(); }
-    translate([-1, -1, board_z]) cube([module_l + 2, module_w + 2, 0.05]);
+    translate([-1, -1, rail_top]) cube([module_l + 2, module_w + 2, 0.05]);
   }
 
 // -- stacking -----------------------------------------------------------------
@@ -332,6 +338,7 @@ if (test_view == "report-geometry") {
   echo(str("stack = ", stack_h, " filter r = ", filter_r_out, " flats = ", filter_a_out));
   echo(str("fan_model = ", fan_model, " fan_throat_area = ", fan_throat_area));
   echo(str("board_z = ", board_z));
+  echo(str("rail_top = ", rail_top));
   echo(str("bed = ", bed));
   cube(1);
 }
