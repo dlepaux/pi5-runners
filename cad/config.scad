@@ -440,7 +440,7 @@ case_part = "assembly";
 //
 // THE EXPLODE LIVES ONLY IN case.scad. placement.scad never reads it, so no fit test
 // can measure an exploded position even by accident.
-assembly_space = 0;
+assembly_space = 30;
 
 show_boards    = false;    // the Pi 5s, from the framework (cooler included)
 show_hats      = false;    // both M.2 HAT+ boards and their drives
