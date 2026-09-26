@@ -151,11 +151,11 @@ fan_throat_area = PI * pow(fan_bore_d, 2) / 4 - PI * pow(fan_hub_d, 2) / 4;   //
 // half of it standing proud of one part, dropping into a matching groove in the
 // other. Three ribs on every SPIGOT -- one per side wall, one on the rear -- into
 // grooves in the SOCKET of the module below; and two on every dust filter.
-// 40% UNDER hexrack's (1.7 x 18): at full size the ribs read big on the print. The
-// clearance stays, so each rib now stands 0.7 proud and the wall flexes ~0.5 to pass.
-clip_rib     = 1.0;          // the rib's square section
+// HEXRACK'S FULL SIZE (1.7 x 18). A 40% smaller rib (1.0 x 11) was tried to look
+// lighter and printed too small; back to the size hexrack proved.
+clip_rib     = 1.7;          // hexrack's dust_clip_length: the rib's square section
 clip_clear   = tolerance;    // groove stands this far off the rib all round
-clip_rib_len = 11;
+clip_rib_len = 18;
 
 rib_half    = clip_rib * sqrt(2) / 2;                        // proud of the joint plane
 groove_half = (clip_rib + sqrt(2) * clip_clear) * sqrt(2) / 2;
@@ -295,13 +295,14 @@ port_overhang = 3;     // RJ45 and USB-A stand proud of the PCB's +X edge
 rear_clear    = 3;     // those connectors to the rear wall
 module_air    = 5;     // top of the tallest board to the next module's floor, at least
 
-// SIDES: TIGHT ON -Y, ROOM ON +Y. The Pi is located by its four screws, not by the
-// walls. On -Y its USB-C and micro-HDMI sockets must sit against their wall openings:
-// a plug's shell is ~6.5mm long, so a wider gap there and power no longer seats. On +Y
-// -- the GPIO header, where each fan's lead plugs in -- 5mm past the HAT's 0.5
-// overhang, room for fingers, the fan lead, and a board that grows.
-side_clear     = 0.5;   // -Y: board to wall
-side_clear_pos = 5;     // +Y: HAT overhang to wall
+// SIDES: THE PI IS CENTRED ACROSS THE MODULE, so its two rails sit symmetrically on
+// the floor -- the first print had them 2.5mm toward -Y and it read as a mistake. The
+// Pi is located by its four screws, not by the walls. The cost is on -Y: its USB-C and
+// micro-HDMI sockets now sit 3mm behind the wall instead of 0.5, and a USB-C plug's
+// shell is ~6.5mm long -- check a plug seats on the next print. The HAT's 0.5 overhang
+// on +Y is why that side is 0.5 tighter.
+side_clear     = 3;     // -Y: board to wall
+side_clear_pos = 2.5;   // +Y: HAT overhang to wall
 
 // The front wall: the recess the filter sits in, and the web behind it the fan's
 // screws pass through.
@@ -316,6 +317,7 @@ board_z0 = floor_t + rail_h + board_standoff_h;   // the board at its lowest; bo
 
 module_l = board_x + pi5_pcb[0] + port_overhang + rear_clear + wall;
 module_w = board_y + pi5_pcb[1] + hat_overhang_y + side_clear_pos + wall;
+assert(abs(board_y + pi5_pcb[1] / 2 - module_w / 2) < EPS, "the Pi (and its rails) is not centred across the module");
 
 // THE FOUR VERTICAL CORNERS ARE ROUNDED, for the look. Vertical, so it costs nothing to
 // print. Every outline -- walls, spigot, lap, socket, lid -- is inset from the same
@@ -356,7 +358,10 @@ stack_h = module_count * module_pitch + spigot_h + lid_t;   // floor of 0 to lid
 // THE BASE: a module's socket on an open rim, with a skirt round it (parts/base.scad).
 base_floor_t     = 3;           // the rim under the bottom module
 base_skirt       = 2;           // skirt beyond the module's sides and rear
-base_skirt_h     = 5.5;         // skirt top, above the bottom module's underside
+// Skirt top, above the bottom module's underside: DERIVED, because the clip sets
+// spigot_h. Midway between the joint it hides (module_h, spigot_h + 0.6 up) and the
+// lowest vents (vent_z0 - 1, spigot_h + 2 up).
+base_skirt_h     = spigot_h + 1.3;
 base_skirt_clear = stack_gap;   // skirt to the module's outer face, above the lip
 
 assert(base_skirt_h < vent_z0 - 1, "the base's skirt covers the lowest vents");

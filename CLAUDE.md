@@ -3,7 +3,7 @@
 Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Actions
 runners. **A stack of three identical modules, one Pi 5 and one 40 mm Noctua each**,
 a round dust filter (hexrack's, reshaped) clipped into each module's front, and a lid,
-all with rounded vertical corners. 122.5 × 68 × 172 mm with the 10 mm fans (131.6 deep with the 20 mm ones). No screws
+all with rounded vertical corners. 122.5 × 68 × 173 mm with the 10 mm fans (131.6 deep with the 20 mm ones). No screws
 hold the case together; only the fans are screwed.
 
 ## Project intent
@@ -65,11 +65,12 @@ tallest board, so any board goes in any module.
   the board, so `board_lift` (default: centre the tallest board on the fan) raises it
   and the rails grow with it — the whole flow crosses the board and the HAT instead of
   its top half passing over the drive. `-D board_lift=0` puts it back on the floor
-- **SIDES: TIGHT ON −Y, 5 mm ON +Y.** 0.5 mm between the Pi and the −Y wall, where
-  its USB-C and micro-HDMI sockets must sit against their openings — a plug's shell is
-  ~6.5 mm long, so a wider gap there and power no longer seats. `side_clear_pos` = 5
-  past the HAT's 0.5 overhang on +Y, the GPIO side where the fan leads plug in: room
-  for fingers, cables and a board that grows. The Pi is located by its screws. The rails are clipped to the spigot
+- **SIDES: THE PI IS CENTRED ACROSS THE MODULE** — 3 mm to the −Y wall, 2.5 to +Y
+  past the HAT's 0.5 overhang — so the two rails sit symmetrically; the first print
+  had them 2.5 mm toward −Y and it read as a mistake. The cost: the −Y USB-C and
+  micro-HDMI sockets sit 3 mm behind the wall, not 0.5, and a USB-C plug's shell is
+  ~6.5 mm, so **check a plug seats on the next print**. The Pi is located by its
+  screws; `config.scad` asserts it stays centred. The rails are clipped to the spigot
   so they cannot stand out past it
 - **AIR PATH: front to back, along each board's full length.** Each fan draws through
   its dust filter and its front wall's bore, pushes over its own SoC and drive, and
@@ -91,8 +92,8 @@ tallest board, so any board goes in any module.
 - **Positive pressure.** One filtered intake; dust can only enter where the filter is,
   which is the only reason there is exactly one filter
 - **Six cables leave the box** — 3× Ethernet at the rear, 3× USB-C on −Y — because
-  that is where the Pi puts them. The board sits against −Y so those connectors meet
-  their wall. The HAT PCBs are 56.5 against the Pi's 56 and **overhang its +Y edge by
+  that is where the Pi puts them. The board is centred, 3 mm off the −Y wall those
+  connectors meet. The HAT PCBs are 56.5 against the Pi's 56 and **overhang its +Y edge by
   0.5**, which the module carries
 
 ## The parts
@@ -143,9 +144,9 @@ tallest board, so any board goes in any module.
   and only clips it at the front (the front wall is solid full width there). An assert
   keeps 1 mm of wall between a front corner and the filter recess's flats: 4 now, up
   to 6.5 possible
-- **CLIPS: hexrack's 45° rib into a groove**, everywhere, **40% under hexrack's size**
-  (rib 1.0 square, 11 long on the modules; 1.7 × 18 printed big). The clearance is
-  unchanged, so a rib stands 0.7 proud and `spigot_h` shrank with it. hexrack's `snap-fit.scad` is
+- **CLIPS: hexrack's 45° rib into a groove**, everywhere, **at hexrack's size** (rib 1.7
+  square, 18 long on the modules). A 40% smaller rib (1.0 × 11) was printed and came out too
+  small; `spigot_h` is derived from the rib and grew back with it. hexrack's `snap-fit.scad` is
   **dead code**; do not port it
 - **Assembly**: screw each Pi into its module and each fan in from the front; stack the
   modules and click them together; click the lid on; glue fabric into each filter and

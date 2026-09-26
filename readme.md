@@ -3,7 +3,7 @@
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
 runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a round
 dust filter clipped into each module's front, and a lid, all with rounded corners.
-**122.5 × 68 × 172 mm** (175 on its base) with the 10 mm fans, 131.6 mm deep with the 20 mm ones. Nothing in the case is screwed
+**122.5 × 68 × 173 mm** (176 on its base) with the 10 mm fans, 131.6 mm deep with the 20 mm ones. Nothing in the case is screwed
 together; only the fans are.
 
 ## What it holds
