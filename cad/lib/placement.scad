@@ -42,7 +42,18 @@ module onBoard() {
 // A deliberate over-estimate -- the air over a bare Pi's cooler is mostly empty, and
 // the Compact's L-shape leaves the SoC open -- so it answers "does this board touch its
 // module" and nothing finer.
+//
+// IT STOPS AT THE REAR WALL'S INNER FACE. Past it the board's edge sits IN the wall,
+// the PCB in a slot and the jacks in their holes, and a slab says nothing true there:
+// ports.scad's rearEdge() is the real geometry, and test-fit.sh checks that instead.
 module slotSlab(kind) {
+  intersection() {
+    slotSlabWhole(kind);
+    translate([-1, -1, -1]) cube([module_l - wall + 1 - EPS, module_w + 2, 400]);
+  }
+}
+
+module slotSlabWhole(kind) {
   onBoard() {
     // The Pi itself, to the top of its tallest connector or its cooler.
     linear_extrude(max(bare_slot_h, exclusion_cluster_z[1]))

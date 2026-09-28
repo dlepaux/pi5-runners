@@ -123,7 +123,7 @@ fan_models = [
   ["NF-A4x10", 12.0, 16, "assets/noctua/NF-A4x10.stl", [40.0, 12.0, 40.0], 8.2, 1.78, 17.9],
   ["NF-A4x20", 21.1, 20, "assets/noctua/NF-A4x20.stl", [40.0, 21.1, 40.0], 9.4, 2.26, 14.9],
 ];
-fan_model = "NF-A4x10";
+fan_model = "NF-A4x20";
 
 fan_row = [for (r = fan_models) if (r[0] == fan_model) r][0];
 assert(!is_undef(fan_row), str("unknown fan_model: ", fan_model));
@@ -291,9 +291,25 @@ assert(board_standoff_af / cos(30) <= boss_d, "the standoff's hex overhangs its 
 floor_t       = 2.4;   // the vented floor: 12 layers at 0.2
 rail_h        = 5.5;   // the insert rails ("canoes") at their lowest: board_lift adds to it
 plenum_gap    = 3;     // fan's back face to the Compact HAT's tab
-port_overhang = 3;     // RJ45 and USB-A stand proud of the PCB's +X edge
-rear_clear    = 3;     // those connectors to the rear wall
 module_air    = 5;     // top of the tallest board to the next module's floor, at least
+
+// REAR: THE PORTS COME THROUGH THE WALL, FLUSH WITH ITS OUTER FACE, like the official
+// case's. They used to stop 3mm short of the wall on a guessed 3mm overhang, which put
+// the RJ45 6.6mm and the USB-A stacks 7.9mm inside the case -- more than half a USB-A
+// plug's 12mm shell, so a plug could not seat. The reach is MEASURED off the
+// framework's rpi5, and test-fit.sh holds it there: the RJ45 stands 2.40 past the
+// PCB's +X edge, the USB-A stacks 1.11, so flushing the RJ45 leaves the USB-A 1.3 in.
+//
+// THE PI SLIDES IN. With its jacks in the wall it cannot drop in from above: it goes
+// down short of the wall and slides back into its holes, BEFORE its HAT, while the
+// Compact's tab and the plenum leave room ahead of it. config.scad asserts that room.
+rear_port_reach = 2.40;  // RJ45 face past the PCB's +X edge
+rear_port_proud = 0;     // RJ45 face past the rear wall's outer face; negative recesses it
+slide_clear     = 0.5;   // jacks to the wall's inner face while the Pi goes down
+// THE PCB GOES INTO THE WALL TOO. 2.40 of RJ45 against a 3mm wall puts the PCB's last
+// 0.6 in it, so the wall's inner face carries a slot for the edge, its roof at 45
+// degrees so it prints. The slot is what the Pi slides back into.
+pcb_slot_clear  = 0.3;   // round the PCB's +X edge, in the slot
 
 // SIDES: THE PI IS CENTRED ACROSS THE MODULE, so its two rails sit symmetrically on
 // the floor -- the first print had them 2.5mm toward -Y and it read as a mistake. The
@@ -315,7 +331,12 @@ board_x = front_wall_t + fan_depth + plenum_gap + hat_compact_overhang_x;
 board_y = wall + side_clear;
 board_z0 = floor_t + rail_h + board_standoff_h;   // the board at its lowest; board_lift raises it below
 
-module_l = board_x + pi5_pcb[0] + port_overhang + rear_clear + wall;
+module_l = board_x + pi5_pcb[0] + rear_port_reach - rear_port_proud;
+// The jacks sit wall + rear_port_proud deep in the rear wall. Slid that far forward
+// (and slide_clear more) to go down past it, the bare Pi's -X edge must clear the fan.
+slide_travel = max(0, wall + rear_port_proud) + slide_clear;
+assert(plenum_gap + hat_compact_overhang_x >= slide_travel,
+       "no room ahead of the Pi to slide its jacks into the rear wall");
 module_w = board_y + pi5_pcb[1] + hat_overhang_y + side_clear_pos + wall;
 assert(abs(board_y + pi5_pcb[1] / 2 - module_w / 2) < EPS, "the Pi (and its rails) is not centred across the module");
 
@@ -432,6 +453,14 @@ exclusion_w = exclusion_cluster_y[1] - exclusion_cluster_y[0] + 2 * exclusion_pa
 exclusion_h = exclusion_cluster_z[1] - exclusion_cluster_z[0] + 2 * exclusion_pad;
 exclusion_r = 3;
 
+// The PCB-edge slot, board frame: from the rear wall's inner face to past the PCB's
+// edge, and its full height with the 45-degree roof. The exclusion zone takes it in
+// too, or the slot's floor clips the tops of the diamonds under it.
+pcb_slot_x0    = module_l - wall - board_x;
+pcb_slot_depth = pi5_pcb[0] + pcb_slot_clear - pcb_slot_x0;
+pcb_slot_h     = pi5_pcb[2] + 2 * pcb_slot_clear + pcb_slot_depth;
+assert(pcb_slot_depth < wall - 1, "the PCB slot leaves under 1mm of rear wall");
+
 // ----------------------------------------------------------------------------
 // ASSEMBLY / PREVIEW
 // ----------------------------------------------------------------------------
@@ -445,10 +474,10 @@ case_part = "assembly";
 //
 // THE EXPLODE LIVES ONLY IN case.scad. placement.scad never reads it, so no fit test
 // can measure an exploded position even by accident.
-assembly_space = 30;
+assembly_space = 50;
 
-show_boards    = false;    // the Pi 5s, from the framework (cooler included)
-show_hats      = false;    // both M.2 HAT+ boards and their drives
+show_boards    = true;    // the Pi 5s, from the framework (cooler included)
+show_hats      = true;    // both M.2 HAT+ boards and their drives
 show_standoffs = false;    // the M2.5 standoffs: under each board, and each HAT's
 show_fan       = true;    // one fan mesh per module, of fan_model
 show_filter    = true;    // the dust filters

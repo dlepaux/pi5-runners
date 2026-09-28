@@ -3,7 +3,7 @@
 Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Actions
 runners. **A stack of three identical modules, one Pi 5 and one 40 mm Noctua each**,
 a round dust filter (hexrack's, reshaped) clipped into each module's front, and a lid,
-all with rounded vertical corners. 122.5 × 68 × 173 mm with the 10 mm fans (131.6 deep with the 20 mm ones). No screws
+all with rounded vertical corners. 115.9 × 68 × 173 mm with the 10 mm fans (125.0 deep with the 20 mm ones). No screws
 hold the case together; only the fans are screwed.
 
 ## Project intent
@@ -74,12 +74,20 @@ tallest board, so any board goes in any module.
   so they cannot stand out past it
 - **AIR PATH: front to back, along each board's full length.** Each fan draws through
   its dust filter and its front wall's bore, pushes over its own SoC and drive, and
-  the module exhausts through its rear wall and the rear of both side walls — **195%
-  of its fan's throat** with the NF-A4x10 (222% with the NF-A4x20). **Never the lid**: a lid with holes drops dust on a board.
+  the module exhausts through its rear wall and the rear of both side walls — **153%
+  of its fan's throat** with the NF-A4x10 (174% with the NF-A4x20). **Never the lid**: a lid with holes drops dust on a board.
   Each floor is a lattice too, so a module breathes into the one above
 - **EXCLUSION ZONE, hexrack's back-face idea.** A rounded rectangle carved out of the
   vent CUTTER around the RJ45/USB cluster, so the ports sit in clean solid wall. Sized
-  from the MEASURED cluster (52.2 × 16.3), not guessed
+  from the MEASURED cluster (52.2 × 16.3), not guessed, plus the PCB-edge slot under it
+- **REAR: THE PORTS COME THROUGH THE WALL, FLUSH.** The RJ45's face is on the rear
+  wall's outer face (`rear_port_proud`), the USB-A stacks 1.3 mm in. The reach, 2.40 past
+  the PCB edge, is MEASURED off the framework; it used to be a guessed 3 plus a 3 mm gap,
+  which left the ports 6.6–7.9 mm inside the case and too deep for a USB-A plug to seat.
+  The PCB's last 0.6 mm sits in a slot in the wall's inner face, its roof at 45°.
+  **So the Pi slides in**: lowered short of the wall, then back into its holes, before
+  its HAT; `config.scad` asserts the room ahead of it. `test-fit.sh` holds the jacks on
+  the face and the PCB and jacks clear of the wall, with the framework's own model
 - **VENTS: every wall edge at 45°.** The floor keeps hexrack's triangle lattice
   (copied verbatim: cell 14, web 1.6, corner 1.2, stagger 0.5). The sides are a
   grille of 45° slots, 3 wide on a 5.5 pitch, clipped by the field (their tops are
@@ -148,7 +156,7 @@ tallest board, so any board goes in any module.
   square, 18 long on the modules). A 40% smaller rib (1.0 × 11) was printed and came out too
   small; `spigot_h` is derived from the rib and grew back with it. hexrack's `snap-fit.scad` is
   **dead code**; do not port it
-- **Assembly**: screw each Pi into its module and each fan in from the front; stack the
+- **Assembly**: slide each Pi back into its rear wall's holes, fit its HAT and screw it into its module and each fan in from the front; stack the
   modules and click them together; click the lid on; glue fabric into each filter and
   click it into its recess
 

@@ -223,6 +223,11 @@ if (test_view == "clip-rib-reach")
 // NO PORT MAY BE BLIND: nothing printed may stand in a connector's probe.
 if (test_view == "ports-blind")
   intersection() { modulePart(); allPortProbes(); }
+// THE REAR EDGE SITS IN THE WALL: the PCB in its slot, the jacks in their holes. It
+// must clear them, and the jacks must reach the outer face -- test-fit.sh reads this
+// view's bounds for that. The edge rendering at all is the witness for the clearance.
+if (test_view == "rear-edge") onBoard() rearEdge();
+if (test_view == "rear-edge-vs-module") intersection() { modulePart(); onBoard() rearEdge(); }
 // ...and the walls must still EXIST.
 if (test_view == "wall-y-remains") intersection() { modulePart(); wallSlab("-Y"); }
 if (test_view == "wall-x-remains") intersection() { modulePart(); wallSlab("+X"); }
@@ -339,6 +344,7 @@ if (test_view == "report-geometry") {
   echo(str("fan_model = ", fan_model, " fan_throat_area = ", fan_throat_area));
   echo(str("board_z = ", board_z));
   echo(str("rail_top = ", rail_top));
+  echo(str("rear_port_face = ", module_l + rear_port_proud));
   echo(str("bed = ", bed));
   cube(1);
 }

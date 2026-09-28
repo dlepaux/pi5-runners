@@ -113,10 +113,16 @@ function exclusionCentre() =
   [board_y + (exclusion_cluster_y[0] + exclusion_cluster_y[1]) / 2,
    board_z + (exclusion_cluster_z[0] + exclusion_cluster_z[1]) / 2];
 
+// The port cluster, and the PCB-edge slot under it.
 module exclusionZone() {
   translate(exclusionCentre())
     offset(r = exclusion_r, $fn = 30)
       square([exclusion_w - 2 * exclusion_r, exclusion_h - 2 * exclusion_r], center = true);
+  if (pcb_slot_depth > 0)
+    translate([board_y - pcb_slot_clear - exclusion_pad,
+               board_z - pcb_slot_clear - exclusion_pad])
+      square([pi5_pcb[1] + 2 * (pcb_slot_clear + exclusion_pad),
+              pcb_slot_h + 2 * exclusion_pad]);
 }
 
 // Each profile is its own module so test-airflow.sh measures EXACTLY what is cut.

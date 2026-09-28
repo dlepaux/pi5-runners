@@ -3,7 +3,7 @@
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
 runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a round
 dust filter clipped into each module's front, and a lid, all with rounded corners.
-**122.5 × 68 × 173 mm** (176 on its base) with the 10 mm fans, 131.6 mm deep with the 20 mm ones. Nothing in the case is screwed
+**115.9 × 68 × 173 mm** (176 on its base) with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
 together; only the fans are.
 
 ## What it holds
@@ -42,14 +42,15 @@ behind a filter — about a kelvin, not a different class of cooling.
 **Airflow** runs front to back along each board's full length. Each fan draws through
 its module's dust filter and front wall, pushes over its own SoC and drive, and
 the module exhausts through its rear wall and the rear of both side walls — never the
-lid, which would drop dust onto a board. Each module's exhaust is **195% of its fan's
-throat** (222% with the 20 mm fans) — a short grille of 45° bars at the rear of each
+lid, which would drop dust onto a board. Each module's exhaust is **153% of its fan's
+throat** (174% with the 20 mm fans) — a short grille of 45° bars at the rear of each
 side, a diamond lattice round the rear ports — and every
 floor is a triangle lattice, so each module also breathes into the one
 above.
 
 Around the rear port cluster the diamond lattice stops at an **exclusion zone**, hexrack's
-back-face idea, so every connector sits in clean solid wall.
+back-face idea, so every connector sits in clean solid wall. The Ethernet port is
+flush with the outside of the case and the USB ports 1.3 mm in, so every plug seats.
 
 ## Printing
 
@@ -58,10 +59,10 @@ Seven STLs, **none needing support**, in the orientation they come out of
 
 | Part | Print | Size |
 |------|-------|------|
-| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 122.5 / 131.6 × 68 × 59.8 mm |
-| `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 122.5 / 131.6 × 68 × 7.2 mm |
-| `base-NF-A4x10` or `base-NF-A4x20` | rim down | 124.5 / 133.6 × 72 × 8.5 mm |
-| `filter` | ×3, face down, pocket up | 49.8 × 52.6 × 4.0 mm |
+| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 60.8 mm |
+| `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 115.9 / 125.0 × 68 × 8.2 mm |
+| `base-NF-A4x10` or `base-NF-A4x20` | rim down | 117.9 / 127.0 × 72 × 9.5 mm |
+| `filter` | ×3, face down, pocket up | 50.8 × 52.6 × 4.0 mm |
 
 **Download them** from the project's GitHub Pages site, rebuilt on every push to main
 once the whole test suite passes. Or render them yourself:
@@ -101,8 +102,11 @@ room to round the front corners.
 
 1. Press M2.5 heat-set inserts into each module's rails and screw an **M2.5 × 5 mm
    male-female standoff** into each, female end up: the board stands on those, with
-   air under it, not on the print. Set the Pi on them; the HAT's M2.5 male-female
-   standoffs thread through the Pi into them (a bare Pi takes M2.5 screws).
+   air under it, not on the print. **The Pi's rear ports come through the rear wall**,
+   so it cannot drop straight in: lower it onto the standoffs about 4 mm short of the
+   rear wall, then slide it back until its RJ45 and USB ports sit in their holes and
+   its edge in the slot under them. Do this before its HAT. Then the HAT's M2.5
+   male-female standoffs thread through the Pi into them (a bare Pi takes M2.5 screws).
 2. Hold each fan against the inside of its module's front wall and screw it in from
    the front with four **M3 countersunk self-tappers** through the recess floor into
    the fan's corner holes — **M3 × 12** for the NF-A4x10, **M3 × 20** for the NF-A4x20.

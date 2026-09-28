@@ -50,9 +50,13 @@ module ioMaskSides() {
 // One wall's connectors, smeared along that wall's normal so they certainly pass
 // through it. maskBeyond() is defined below with the probes; OpenSCAD resolves module
 // names across the file, so the order does not matter here.
+//
+// It starts a wall's thickness INWARD too. The rear jacks sit in the wall, and the
+// mask only begins 0.1-0.3mm past the PCB edge, 0.9mm behind the wall's inner face --
+// swept outward only, it left a lip there that the RJ45 ran into.
 module ioMaskSwept(which) {
   dir = which == "-Y" ? [0, -1, 0] : [1, 0, 0];
-  for (d = [0 : port_sweep_step : port_sweep_dist])
+  for (d = [-wall : port_sweep_step : port_sweep_dist])
     translate(dir * d) maskBeyond(which);
 }
 
@@ -76,9 +80,25 @@ module portCuts(which) {
   }
 }
 
+// The slot the PCB's +X edge runs into, board frame. Its roof rises at 45 degrees
+// toward the room, so printed floor-down it is a slope, not a ceiling over air.
+// Only when the edge actually reaches the wall -- a recessed rear_port_proud may not.
+module pcbEdgeSlot() {
+  c = pcb_slot_clear;
+  if (pcb_slot_depth > 0)
+    translate([0, pi5_pcb[1] + c, 0])
+      rotate([90, 0, 0])
+        linear_extrude(pi5_pcb[1] + 2 * c)
+          polygon([[pcb_slot_x0 - EPS, -c],
+                   [pi5_pcb[0] + c,   -c],
+                   [pi5_pcb[0] + c,   pi5_pcb[2] + c],
+                   [pcb_slot_x0 - EPS, pi5_pcb[2] + c + pcb_slot_depth + EPS]]);
+}
+
 module allPortCuts() {
   portCuts("-Y");
   portCuts("+X");
+  onBoard() pcbEdgeSlot();
 }
 
 // ----------------------------------------------------------------------------
@@ -107,6 +127,20 @@ module maskBeyond(which) {
     ioMaskSides();
     if (which == "-Y") translate([-big/2, -big, -big/2]) cube([big, big, big]);
     else               translate([pi5_pcb[0], -big/2, -big/2]) cube([big, big, big]);
+  }
+}
+
+// The Pi's REAR EDGE ITSELF, not its mask, board frame: everything from 1mm short of
+// the rear wall's inner face outward -- the PCB's end in its slot, the RJ45 and both
+// USB-A stacks in their holes. slotSlab() stops at that face; this is the finer
+// question it cannot answer. Framework CSG, no import, so a clearance test against it
+// cannot collapse to a false empty.
+module rearEdge() {
+  big = 400;
+  intersection() {
+    sbc(model = "rpi5", enableheatsink = "disable", enablegpio = "disable",
+        enablemask = false);
+    translate([pcb_slot_x0 - 1, -big/2, -big/2]) cube([big, big, big]);
   }
 }
 

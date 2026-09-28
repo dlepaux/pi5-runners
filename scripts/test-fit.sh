@@ -56,6 +56,26 @@ expect_empty    "board standoffs clear the module"          standoffs-vs-module
 expect_geometry "board standoffs stand on the rails"        standoffs-seated
 
 echo ""
+echo "Fit — rear ports"
+
+# The Pi's rear edge sits in the rear wall now -- PCB in a slot, jacks in their holes --
+# so the wall must clear it, and the jacks must reach its outer face, which is the
+# point. The last check also ties rear_port_reach to the framework: a wrong reach
+# moves the jacks off the face.
+expect_geometry "the Pi's rear edge renders"            rear-edge
+expect_empty    "its PCB and jacks clear the rear wall" rear-edge-vs-module
+render rear-edge "$WORK/rear-edge.stl"
+JACK_FACE=$(bounds "$WORK/rear-edge.stl" | awk '{print $4}')
+WANT_FACE=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
+    -D 'test_view="report-geometry"' ${MODE[@]+"${MODE[@]}"} cad/tests.scad 2>&1 \
+  | sed -n 's/.*rear_port_face = \([0-9.]*\).*/\1/p')
+if awk -v a="$JACK_FACE" -v b="$WANT_FACE" 'BEGIN { exit !(a - b < 0.01 && b - a < 0.01) }'; then
+    pass "rear ports reach the rear face at x=$JACK_FACE"
+else
+    fail "rear ports end at x=$JACK_FACE but the rear face is at x=$WANT_FACE"
+fi
+
+echo ""
 echo "Fit — the stack"
 
 expect_empty    "a module clears the module above it"  module-vs-above
