@@ -319,7 +319,7 @@ if (test_view == "screw-heads-outside-ring")
   difference() {
     screwAxes() translate([filter_depth - 0.2, 0, 0]) rotate([0, 90, 0])
       cylinder(d = fan_csink_d, h = 0.2, $fn = 32);
-    onFrontWall(-1) linear_extrude(filter_depth + 2) filterProfile(filter_r_out, filter_a_out);
+    onFrontWall(-1) linear_extrude(filter_depth + 2) filterProfile(filter_r_out, filter_a_out, filter_v_out);
   }
 // Every shank has a clear path from the recess floor, through the wall, to the fan.
 if (test_view == "screw-paths")
@@ -340,7 +340,7 @@ if (test_view == "screw-seats") intersection() { modulePart(); seatRings(); }
 // reporting view that rendered nothing would be indistinguishable from one that died.
 if (test_view == "report-geometry") {
   echo(str("module = ", module_l, " x ", module_w, " x ", module_h, " pitch ", module_pitch));
-  echo(str("stack = ", stack_h, " filter r = ", filter_r_out, " flats = ", filter_a_out));
+  echo(str("stack = ", stack_h, " filter r = ", filter_r_out, " flats = ", filter_a_out, " / ", filter_v_out));
   echo(str("fan_model = ", fan_model, " fan_throat_area = ", fan_throat_area));
   echo(str("board_z = ", board_z));
   echo(str("rail_top = ", rail_top));

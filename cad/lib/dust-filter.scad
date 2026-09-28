@@ -1,7 +1,7 @@
 // ============================================================================
 // DUST FILTER — the ring's profile and its clip joints, shared by module and filter
 // ============================================================================
-// hexrack's dust filter made round, one per module: a circular ring with two flats,
+// hexrack's dust filter made round, one per module: a circular ring with four flats,
 // flush in a recess in the front wall, fabric glued on its back, two 45-degree ribs on its left and right flats
 // at the ring's back. The module cuts the recess and the grooves from here; the filter
 // part builds the ring and the ribs from here; test-clips.sh checks every joint here.
@@ -13,12 +13,12 @@
 include <../config.scad>
 include <clips.scad>
 
-// A circle of radius r cut by flats a from its centre, left and right (profile x is
-// the module's Y). a >= r is a plain circle.
-module filterProfile(r, a) {
+// A circle of radius r cut by flats a from its centre left and right (profile x is
+// the module's Y) and v from it top and bottom. a or v >= r leaves that side round.
+module filterProfile(r, a, v) {
   intersection() {
     circle(r = r, $fn = 128);
-    square([2 * a, 2 * r], center = true);
+    square([2 * a, 2 * v], center = true);
   }
 }
 
@@ -36,7 +36,7 @@ function filterJoints() =
 
 // The recess the ring sits in, from the front face.
 module filterRecess() {
-  onFrontWall(-EPS) linear_extrude(filter_depth + EPS) filterProfile(filter_r_recess, filter_a_recess);
+  onFrontWall(-EPS) linear_extrude(filter_depth + EPS) filterProfile(filter_r_recess, filter_a_recess, filter_v_recess);
 }
 
 module filterGrooves() { for (j = filterJoints()) clipGroove(j); }

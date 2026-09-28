@@ -52,20 +52,22 @@ budget base-10 base 0 0 -D 'fan_model="NF-A4x10"'
 budget base-20 base 0 0 -D 'fan_model="NF-A4x20"'
 
 # MODULE, measured by where it is (both fans measure the same):
-#   steep ~287 -- the fan bore's crown in the 3mm web and the countersinks' upper
-#                 halves (~114); the round filter recess's crown, the arc past 45
-#                 degrees either side of its top, 4mm deep off the web behind it
-#                 (~163; its flats are at the sides, so there is no top flat); the side port openings'
-#                 rounded ends (~9), the exclusion zone's rounded corners (~7). The
-#                 wall vents add nothing: every edge is 45.
-#   flat ~453  -- the tops of the port openings, rear (~137) and side (~59); the
-#                 rear diamonds cut by the field's top edge (~79) and by the underside
-#                 of the port exclusion (~99), bridges no wider than a diamond (7mm);
-#                 the side grille's slots where the field's top edge clips them, 4.2mm
-#                 bridges (~25); the recess crown's topmost facets and the socket's clip grooves
-#                 (~69). NOTHING ON THE LAP: its chamfer runs to the outer face -- the
-#                 first print's stopped 1.3mm short and left a roof (~371) that sagged.
-budget module-10 module 300 470 -D 'fan_model="NF-A4x10"'
-budget module-20 module 300 470 -D 'fan_model="NF-A4x20"'
+#   steep ~152 -- the fan bore's crown in the 3mm web and the countersinks' upper
+#                 halves (~114); what is left of the filter recess's arcs between its
+#                 top flat and its sides (~22); the side port openings' rounded ends
+#                 (~9), the exclusion zone's rounded corners (~7). The wall vents add
+#                 nothing: every edge is 45.
+#   flat ~568  -- the filter recess's TOP FLAT, a 32mm bridge 4mm deep off the web
+#                 behind it (~130): the price of the fan, not the filter, setting the
+#                 module's height, and the round crown it replaced was ~160 of steep.
+#                 The tops of the port openings, rear (~130) and side (~59); the
+#                 rear diamonds cut by the field's top edge and by the underside of
+#                 the port exclusion, bridges no wider than a diamond (7mm); the side
+#                 grille's slots where the field's top edge clips them, 4.2mm bridges;
+#                 the socket's clip grooves. NOTHING ON THE LAP: its chamfer runs to
+#                 the outer face -- the first print's stopped 1.3mm short and left a
+#                 roof (~371) that sagged.
+budget module-10 module 170 590 -D 'fan_model="NF-A4x10"'
+budget module-20 module 170 590 -D 'fan_model="NF-A4x20"'
 
 report "printability checks"

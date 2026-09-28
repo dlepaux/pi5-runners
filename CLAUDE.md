@@ -3,7 +3,7 @@
 Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Actions
 runners. **A stack of three identical modules, one Pi 5 and one 40 mm Noctua each**,
 a round dust filter (hexrack's, reshaped) clipped into each module's front, and a lid,
-all with rounded vertical corners. 115.9 × 68 × 173 mm with the 10 mm fans (125.0 deep with the 20 mm ones). No screws
+all with rounded vertical corners. 115.9 × 68 × 147.4 mm with the 10 mm fans (125.0 deep with the 20 mm ones). No screws
 hold the case together; only the fans are screwed.
 
 ## Project intent
@@ -54,17 +54,19 @@ tallest board, so any board goes in any module.
 - **WHAT THE 20 mm FANS BUY.** +15% free airflow (9.4 against 8.2 m³/h) and +27%
   static pressure (2.26 against 1.78 mmH₂O) — the figure that counts behind a filter.
   About 1 K more margin with three of them, not a different class of cooling
-- **THE FILTER SETS THE MODULE'S HEIGHT; THE SCREWS SET ITS WIDTH.** The screw heads
-  sit in the recess floor, so the ring must lie over all four. They are on the
-  diagonals, 22.6 out, and their countersinks reach 3.15 further: a ring of radius
-  26.3. Its flats sit just outside the glue pocket, 24 from the centre, at the SIDES
-  (the clips read as part of the ring there); so the full circle, 2 × (26.5 + 1), sets
-  a 55 mm front per module — 2.4 more than flats top and bottom did. The tallest board needs
-  36.45. Screwing the fans from inside would now only narrow the ring, not shorten it
-- **THE BOARD IS LIFTED ONTO THE FAN'S AXIS.** The filter leaves ~20 mm spare above
-  the board, so `board_lift` (default: centre the tallest board on the fan) raises it
-  and the rails grow with it — the whole flow crosses the board and the HAT instead of
-  its top half passing over the drive. `-D board_lift=0` puts it back on the floor
+- **THE FAN SETS THE MODULE'S HEIGHT, NOT THE FILTER.** 46.4 floor to floor: the
+  2.4 floor, 40 of fan and `fan_clear` 2 above and below, for its silicone corner pads. **This is the owner's
+  call: no height the fan does not need.** The filter used to set it — a full circle
+  over the diagonal screw heads (r 26.3) made a 55 mm front. It is now **cut flat top
+  and bottom at `filter_v_out` (20.8)**: all the front face the module has, less 1 mm
+  of wall, and still over the screw heads (19.65). The cost, chosen over a smaller window (it would block the blade tips) and
+  over flats at the glue pocket (a taller module): the ring is 1.8 wide above and below
+  the 38 mm window, the glue pocket runs out through those flats, and the recess's
+  top is a 32 mm bridge 1 mm under the joint. The side flats stay at 24, set by the
+  glue pocket, and carry the clips. The tallest board needs 41.45 with its air gap
+- **`board_lift`** centres the tallest board on the fan's axis when the module is
+  taller than the board needs. With the fan setting the height it comes out 0: the
+  board already sits 0.3 below the axis. `-D board_lift=0` forces the floor
 - **SIDES: THE PI IS CENTRED ACROSS THE MODULE** — 3 mm to the −Y wall, 2.5 to +Y
   past the HAT's 0.5 overhang — so the two rails sit symmetrically; the first print
   had them 2.5 mm toward −Y and it read as a mistake. The cost: the −Y USB-C and
@@ -111,13 +113,13 @@ tallest board, so any board goes in any module.
 | `module` ×3 | floor-down | vented floor with two insert rails, four walls; the front one carries the fan, its bore, its screw holes and the filter's round recess; spigot below, socket above |
 | `lid` | plate-down | a spigot with a solid plate on it, and the last few mm of front wall |
 | `base` | rim-down | the bottom module's feet: a module's socket (module −1's top slice, cut from `moduleBody()` itself) on an open rim, a 2 mm skirt round the sides and rear, front flush so the filter still comes out |
-| `filter` ×3 | face-down | a round ring with two flats, fabric glued into a pocket on its back, two ribs |
+| `filter` ×3 | face-down | a round ring with four flats, fabric glued into a pocket on its back, two ribs |
 
 - **THE BOARDS ARE NEVER CONNECTED.** Each Pi screws into M2.5 heat-set inserts in
   two rails on its own module's floor — hexrack's "canoes", running along X with the
   airflow. **The board stands on M2.5 × 5 male-female standoffs** (`board_standoff_h`)
   screwed into the inserts, not on the print: the rails stop at `rail_top`, the board
-  keeps its height on the fan's axis, and air runs under it. The HAT's M2.5
+  keeps its height, and air runs under it. The HAT's M2.5
   male-female standoffs thread through the Pi into those. `standoffs-seated` fails if
   the rails fall short of them
 - **STACKING: SPIGOT, SOCKET, 45° LAP ON THE SIDES AND REAR.** A module's bottom band
@@ -140,12 +142,13 @@ tallest board, so any board goes in any module.
   the stack's front is one face. The lower module's side walls stop behind that front
   wall above their socket; the lid carries the top module's last few millimetres
 - **THE DUST FILTER IS hexrack's `sectionDust()`, MADE ROUND, sized for a 40 mm fan**:
-  a circular ring cut by flats LEFT AND RIGHT, flush in a 4 mm recess; a 0.32 mm glue
+  a circular ring cut by flats left and right (the clips) and top and bottom (the
+  height), flush in a 4 mm recess; a 0.32 mm glue
   pocket reaching 4 mm out from the window; two 45° ribs running vertically on the
   flats at the ring's back. **One table** — `filterJoints()` in `lib/dust-filter.scad`
   — cuts the grooves, builds the ribs and feeds `test-clips.sh`. Standing, the
-  recess's crown is a 4 mm-deep arc off the web behind it, steeper than 45° near the
-  top, which `test-print.sh` budgets. **Round, not hexrack's hexagon, for the rounded
+  recess's top flat is a 32 × 4 mm bridge off the web behind it, which `test-print.sh`
+  budgets. **Round, not hexrack's hexagon, for the rounded
   corners**: the hexagon's side points left 2 mm of front face, the flats 7.5
 - **ROUNDED VERTICAL CORNERS, `corner_r`**, from one footprint, `outline()` in
   `lib/stacking.scad`. `insetRect()` offsets it at the rear (the lap stays concentric)
@@ -199,6 +202,11 @@ modifier and is still included in the export — it does not do this job.
 ./scripts/generate-fan-asset.sh [m] # regenerate a fan mesh (networked, needs uv)
 ./scripts/build-site.sh             # STLs + a static download page into _site/
 ```
+
+**Pre-push hook** (`.githooks/pre-push`) runs `test.sh`; enable it once per clone with
+`git config core.hooksPath .githooks`. It runs the local OpenSCAD, so it cannot catch
+what only CI's newer snap sees — the red build it was added for was one of those
+(`show_boards = true` pulled in the framework's cooler DXF by a relative path).
 
 **CI** (`.github/workflows/deploy.yml`): on every push to main it runs `test.sh`, then
 `build-site.sh`, and publishes `_site/` to GitHub Pages. The page is plain HTML written

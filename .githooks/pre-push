@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Every push to main deploys: run the same suite CI runs, so a red build never leaves
+# this machine. It cannot catch what only CI's newer OpenSCAD sees (CLAUDE.md trap 12).
+# Enable once per clone: git config core.hooksPath .githooks
+# Skip in an emergency: git push --no-verify
+exec "$(git rev-parse --show-toplevel)/scripts/test.sh"
