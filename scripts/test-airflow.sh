@@ -25,11 +25,14 @@ echo "Airflow"
 
 render rear-vent-area  "$WORK/rear.stl"
 render side-vent-area  "$WORK/side.stl"
+render side-vent-throat "$WORK/side-throat.stl"
 render floor-vent-area "$WORK/floor.stl"
 REAR=$(vol "$WORK/rear.stl"); SIDE=$(vol "$WORK/side.stl"); FLOOR=$(vol "$WORK/floor.stl")
+# The louvres' throat, not their face: that is what the air passes.
+SIDE_THROAT=$(vol "$WORK/side-throat.stl")
 
-PER=$(awk -v r="$REAR" -v s="$SIDE" 'BEGIN { print r + 2 * s }')
-note "$(printf 'per module: rear %.0f + 2 x side %.0f; floor %.0f between modules' "$REAR" "$SIDE" "$FLOOR")"
+PER=$(awk -v r="$REAR" -v s="$SIDE_THROAT" 'BEGIN { print r + 2 * s }')
+note "$(printf 'per module: rear %.0f + 2 x side louvres %.0f (face %.0f); floor %.0f between modules' "$REAR" "$SIDE_THROAT" "$SIDE" "$FLOOR")"
 if awk -v a="$PER" -v t="$THROAT" 'BEGIN { exit !(a >= t) }'; then
     pass "$(printf 'each module exhausts %.0fmm2 >= its fan throat %.0fmm2 (%s%%)' "$PER" "$THROAT" "$(pct "$PER")")"
 else

@@ -236,6 +236,9 @@ if (test_view == "wall-x-remains") intersection() { modulePart(); wallSlab("+X")
 // MEASURED, not computed: extruded 1mm, volume IS area.
 if (test_view == "rear-vent-area")  linear_extrude(1) rearVentProfile();
 if (test_view == "side-vent-area")  linear_extrude(1) sideVentProfile();
+// A louvre leans, so what the air passes is its slot square to the channel.
+if (test_view == "side-vent-throat")
+  linear_extrude(1) scale([cos(vent_side_angle), 1]) sideVentProfile();
 if (test_view == "floor-vent-area") linear_extrude(1) floorVentProfile();
 
 if (test_view == "exclusion-holds")

@@ -57,17 +57,17 @@ budget base-20 base 0 0 -D 'fan_model="NF-A4x20"'
 #                 top flat and its sides (~22); the side port openings' rounded ends
 #                 (~9), the exclusion zone's rounded corners (~7). The wall vents add
 #                 nothing: every edge is 45.
-#   flat ~568  -- the filter recess's TOP FLAT, a 32mm bridge 4mm deep off the web
+#   flat ~642  -- the filter recess's TOP FLAT, a 32mm bridge 4mm deep off the web
 #                 behind it (~130): the price of the fan, not the filter, setting the
 #                 module's height, and the round crown it replaced was ~160 of steep.
 #                 The tops of the port openings, rear (~130) and side (~59); the
 #                 rear diamonds cut by the field's top edge and by the underside of
 #                 the port exclusion, bridges no wider than a diamond (7mm); the side
-#                 grille's slots where the field's top edge clips them, 4.2mm bridges;
+#                 louvres' flat tops, 3mm bridges through the 3mm wall (~108, 12 of them);
 #                 the socket's clip grooves. NOTHING ON THE LAP: its chamfer runs to
 #                 the outer face -- the first print's stopped 1.3mm short and left a
 #                 roof (~371) that sagged.
-budget module-10 module 170 590 -D 'fan_model="NF-A4x10"'
-budget module-20 module 170 590 -D 'fan_model="NF-A4x20"'
+budget module-10 module 170 660 -D 'fan_model="NF-A4x10"'
+budget module-20 module 170 660 -D 'fan_model="NF-A4x20"'
 
 report "printability checks"

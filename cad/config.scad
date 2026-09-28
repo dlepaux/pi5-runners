@@ -425,19 +425,27 @@ assert(board_z + 1.5 > lap_top,
 // FLOOR: hexrack's triangle lattice -- cell 14, web 1.6, corner 1.2, stagger 0.5. A
 // triangle cannot rack, so the floor stays stiff at a high open fraction.
 //
-// WALLS: simpler shapes, every edge at 45 degrees (lib/vents.scad): a grille of
-// slanted bars on the sides, a diamond lattice on the rear round its port cluster.
+// WALLS: louvres on the sides, a diamond lattice on the rear round its port cluster
+// (lib/vents.scad).
+//
+// SIDE LOUVRES: vertical slots, each running through the wall at vent_side_angle
+// toward the rear -- \\\ on +Y, /// on -Y seen from above. The air inside is already
+// heading rearward, so it turns less to leave, and at 45 through a 3mm wall a 3mm slot
+// has no line of sight to the board. NOT a Venturi effect: nothing outside moves air
+// past the wall. The cost is their throat, sw * cos(angle) across the flow, which is
+// what test-airflow.sh counts. Their flat tops are 3mm bridges.
 vent_tri_cell    = 14;
 vent_wall        = 1.6;
 vent_tri_radius  = 1.2;
 vent_tri_stagger = 0.5;
 vent_margin      = 3;    // solid border round every field
 
-vent_slot_w       = 3;     // side slot, across
-vent_slot_bar     = 2.5;   // the bar between two slots, square to them
+vent_slot_w       = 3;     // side louvre's slot, along the wall
+vent_slot_bar     = 2.5;   // the slat between two slots, along the wall
+vent_side_angle   = 45;    // louvre's lean toward the rear, from the wall's normal
 vent_diamond      = 5;     // rear diamond's side
 vent_diamond_web  = 1.6;   // rear bar between two diamonds, square to them
-vent_side_share   = 0.5;   // how much of the room behind the -Y ports the side grille takes
+vent_side_share   = 1;     // how much of the room behind the -Y ports the louvres take
 
 // EXHAUST: the rear wall and the rear of both side walls. Never the lid: a lid with
 // holes drops dust straight onto the top board. Fields stay above the spigot band and
@@ -452,8 +460,11 @@ side_port_cluster_x = [6.25, 42.60];
 // The side fields sit behind the -Y connectors -- both sides, so the two walls match
 // -- and against the rear wall, where the air leaves the board. They take only
 // vent_side_share of that room: the full length read as too much opening.
+// The louvres lean rearward by wall * tan(angle) from the inner face to the outer one:
+// the room ends that much short, so the outer mouths keep vent_margin too.
+vent_side_lean = wall * tan(vent_side_angle);
 side_room_x  = [board_x + side_port_cluster_x[1] + vent_margin,
-                module_l - wall - vent_margin];
+                module_l - wall - vent_margin - vent_side_lean];
 side_field_x = [side_room_x[1] - vent_side_share * (side_room_x[1] - side_room_x[0]),
                 side_room_x[1]];
 assert(side_field_x[1] - side_field_x[0] > 3 * (vent_slot_w + vent_slot_bar),

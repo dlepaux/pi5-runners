@@ -104,24 +104,13 @@ module ventField(w, h, cell = vent_tri_cell, wall = vent_wall,
 // The triangle lattice stays on the floor only. The walls take simpler shapes with
 // every edge at 45 degrees, so nothing in them overhangs past 45.
 
-// SIDES: a grille of parallel 45-degree slots across a w x h field, the middle one
-// through the field's centre. `pitch` is slot plus bar, square to the slots; along x
-// that is pitch * sqrt(2). Slots are CLIPPED by the field: where one meets the top
-// edge it gets a flat ceiling sw*sqrt(2) long -- a short bridge, like the floor's
-// down-triangles'. A slot left with less than `min_run` of the field is dropped: the
-// sliver it would cut into a corner reads as an accident.
-module slotField(w, h, sw = vent_slot_w, pitch = vent_slot_w + vent_slot_bar,
-                 min_run = 3 * vent_slot_w) {
-  dx = pitch * sqrt(2);
-  n  = ceil((w + h) / dx);
-  intersection() {
-    square([w, h]);
-    for (i = [-n : n])
-      // A 45-degree line through the centre, moved d along x, still crosses the field
-      // over (w + h) / 2 - |d| of x -- capped by the narrower side.
-      if ((w + h) / 2 - abs(i * dx) >= min_run)
-        translate([w / 2 + i * dx, h / 2]) rotate(45) square([2 * (w + h), sw], center = true);
-  }
+// SIDES: LOUVRES. Vertical slots `sw` wide on `pitch` along x, as many as fit, centred
+// on the w x h field. This is only their face; the module shears each one through the
+// wall so it leans toward the rear (sideVentCut()).
+module louvreField(w, h, sw = vent_slot_w, pitch = vent_slot_w + vent_slot_bar) {
+  n = floor((w - sw) / pitch) + 1;
+  x0 = (w - (n - 1) * pitch - sw) / 2;
+  for (i = [0 : n - 1]) translate([x0 + i * pitch, 0]) square([sw, h]);
 }
 
 // REAR: a lattice of 45-degree diamonds (squares on a point), `web` between them,

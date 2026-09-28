@@ -76,8 +76,8 @@ tallest board, so any board goes in any module.
   so they cannot stand out past it
 - **AIR PATH: front to back, along each board's full length.** Each fan draws through
   its dust filter and its front wall's bore, pushes over its own SoC and drive, and
-  the module exhausts through its rear wall and the rear of both side walls — **153%
-  of its fan's throat** with the NF-A4x10 (174% with the NF-A4x20). **Never the lid**: a lid with holes drops dust on a board.
+  the module exhausts through its rear wall and the rear of both side walls — **141%
+  of its fan's throat** with the NF-A4x10 (161% with the NF-A4x20). **Never the lid**: a lid with holes drops dust on a board.
   Each floor is a lattice too, so a module breathes into the one above
 - **EXCLUSION ZONE, hexrack's back-face idea.** A rounded rectangle carved out of the
   vent CUTTER around the RJ45/USB cluster, so the ports sit in clean solid wall. Sized
@@ -90,15 +90,16 @@ tallest board, so any board goes in any module.
   **So the Pi slides in**: lowered short of the wall, then back into its holes, before
   its HAT; `config.scad` asserts the room ahead of it. `test-fit.sh` holds the jacks on
   the face and the PCB and jacks clear of the wall, with the framework's own model
-- **VENTS: every wall edge at 45°.** The floor keeps hexrack's triangle lattice
-  (copied verbatim: cell 14, web 1.6, corner 1.2, stagger 0.5). The sides are a
-  grille of 45° slots, 3 wide on a 5.5 pitch, clipped by the field (their tops are
-  4.2 mm bridges, budgeted), over only the rear half (`vent_side_share`) of the room
-  behind the −Y ports; the rear is a 45° diamond lattice (side 5, web 1.6) over the
-  whole field, CLIPPED by it and by the port exclusion as the triangles were — whole
-  diamonds only fitted one thin row above the ports and read as a strip, not a
-  pattern. The triangles on the walls read busy; the simpler, smaller openings cost
-  exhaust, 353% → 195% of the throat
+- **VENTS.** The floor keeps hexrack's triangle lattice (copied verbatim: cell 14, web
+  1.6, corner 1.2, stagger 0.5). The rear is a 45° diamond lattice (side 5, web 1.6)
+  over the whole field, CLIPPED by it and by the port exclusion. **The sides are
+  LOUVRES**: vertical 3 mm slots on a 5.5 pitch, each sheared through the wall at 45°
+  toward the rear (`vent_side_angle`) — `\\\` on +Y, `///` on −Y from above — over the
+  whole room behind the −Y ports (`vent_side_share` = 1), six a side. The air turns
+  less to leave and there is no line of sight to the board. **Not a Venturi effect**,
+  nothing outside moves air past the wall. `test-airflow.sh` counts their THROAT
+  (slot × cos 45°), not their face; their flat tops are 3 mm bridges, budgeted.
+  Exhaust: 141% of the throat with the NF-A4x10 (161% with the NF-A4x20)
 - **Positive pressure.** One filtered intake; dust can only enter where the filter is,
   which is the only reason there is exactly one filter
 - **Six cables leave the box** — 3× Ethernet at the rear, 3× USB-C on −Y — because

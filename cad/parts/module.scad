@@ -122,9 +122,20 @@ module rearVentProfile() {
   }
 }
 
+// The louvres' face on the wall's INNER side; sideVentCut() leans them rearward.
 module sideVentProfile() {
   translate([side_field_x[0], vent_z0])
-    slotField(side_field_x[1] - side_field_x[0], vent_z1 - vent_z0);
+    louvreField(side_field_x[1] - side_field_x[0], vent_z1 - vent_z0);
+}
+
+// A straight cut through a Y wall, sheared about its inner face so x grows by
+// vent_side_lean toward the outer face: \\\ on +Y, /// on -Y from above.
+module sideVentCut(y_inner, outward) {
+  translate([0, y_inner, 0])
+    multmatrix([[1, outward * tan(vent_side_angle), 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]])
+      translate([0, -y_inner, 0])
+        onYWall(y_inner + (outward > 0 ? wall + 2 * EPS : EPS))
+          linear_extrude(wall + 4 * EPS) sideVentProfile();
 }
 
 // The floor: inside the spigot ring on all four sides, clear of the posts. It is what
@@ -143,10 +154,8 @@ module floorVentProfile() {
 module ventCuts() {
   onXWall(module_l - wall - EPS)
     linear_extrude(wall + 4 * EPS) rearVentProfile();
-  onYWall(wall + EPS)
-    linear_extrude(wall + 4 * EPS) sideVentProfile();
-  onYWall(module_w + EPS)
-    linear_extrude(wall + 4 * EPS) sideVentProfile();
+  sideVentCut(wall, -1);
+  sideVentCut(module_w - wall, 1);
   translate([0, 0, -EPS])
     linear_extrude(floor_t + 2 * EPS) floorVentProfile();
 }
