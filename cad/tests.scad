@@ -144,12 +144,12 @@ if (test_view == "pockets-outside-rails")
     insertPockets();
     posts();
     linear_extrude(floor_t)
-      difference() { insetRect(spigot_inset); floorVentProfile(); }
+      difference() { inset(wall); floorVentProfile(); }
     translate([-1, -1, rail_top]) cube([module_l + 2, module_w + 2, 0.05]);
   }
 
 // -- stacking -----------------------------------------------------------------
-// Neighbours touch on the lap and the front butt joint, and nowhere else.
+// Neighbours touch on the lap, and the floor on the front wall below, and nowhere else.
 if (test_view == "module-vs-above") intersection() { modulePart(); moduleAt(1) modulePart(); }
 if (test_view == "module-vs-lid")   intersection() { modulePart(); moduleAt(1) lidPart(); }
 // The bottom module, and its filter -- which must still come out past the skirt.
@@ -162,7 +162,7 @@ if (test_view == "module-vs-base")
 if (test_view == "module-seated")
   intersection() { moduleBody(); translate([0, 0, module_pitch - 0.2]) moduleBody(); }
 if (test_view == "lid-seated")
-  intersection() { moduleBody(); translate([0, 0, module_pitch - 0.2]) lidPart(); }
+  intersection() { moduleBody(); translate([0, 0, module_pitch - 0.2]) lidBody(); }
 // ...and the LAP bears, not only the front butt joint: behind the front wall, lowered
 // 0.2mm, the chamfer must bite into the bevel below. A chamfer standing off the bevel
 // would let the rear of the stack hang on the clips.
@@ -179,21 +179,21 @@ if (test_view == "base-seated-on-lap")
   intersection() { translate([0, 0, -0.2]) moduleBody(); baseAt() basePart(); behindFrontWall(); }
 if (test_view == "lid-seated-on-lap")
   intersection() {
-    moduleBody(); translate([0, 0, module_pitch - 0.2]) lidPart(); behindFrontWall();
+    moduleBody(); translate([0, 0, module_pitch - 0.2]) lidBody(); behindFrontWall();
   }
 
 // -- clips -------------------------------------------------------------------
 // One table of every clipped joint: [name, rib (stack frame), owner, mate].
 function allJoints() = concat(
-  [ for (j = spigotJoints()) [str("module-", j[0]), socketJoint(j), "module", "module"] ],
-  [ for (j = spigotJoints())
+  [ for (j = lapJoints()) [str("module-", j[0]), bevelJoint(j), "module", "module"] ],
+  [ for (j = lapJoints())
       [str("lid-", j[0]),
        [j[0], j[1] + [0, 0, module_count * module_pitch], j[2], j[3]], "lid", "module"] ],
   [ for (j = filterJoints()) [j[0], j, "filter", "module"] ],
-  // The bottom module's own spigot ribs, into the base's socket.
-  [ for (j = spigotJoints()) [str("base-", j[0]), j, "module", "base"] ]);
+  // The bottom module's own lap ribs, into the base's bevel.
+  [ for (j = lapJoints()) [str("base-", j[0]), j, "module", "base"] ]);
 
-// The mate, as it sits relative to the rib: a spigot rib of the module above, or of
+// The mate, as it sits relative to the rib: a lap rib of the module above, or of
 // the lid, lands in the socket of the module below it.
 module mateOf(row) {
   if (row[3] == "base") baseAt() basePart();
@@ -205,7 +205,7 @@ module mateTerritory(row) {
   if (row[2] == "filter")
     cube([front_wall_t, module_w, module_pitch]);
   else moduleAt(row[3] == "base" ? -1 : row[2] == "lid" ? module_count - 1 : 0)
-    linear_extrude(module_h) difference() { square([module_l, module_w]); insetRect(wall); }
+    linear_extrude(module_h) difference() { square([module_l, module_w]); inset(wall); }
 }
 
 if (test_view == "report-clips") {

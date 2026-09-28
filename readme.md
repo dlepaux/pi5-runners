@@ -3,7 +3,7 @@
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
 runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a round
 dust filter clipped into each module's front, and a lid, all with rounded corners.
-**115.9 × 68 × 147.4 mm** (150 on its base) with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
+**115.9 × 68 × 145.7 mm** (148.7 on its base) with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
 together; only the fans are.
 
 ## What it holds
@@ -44,11 +44,11 @@ its module's dust filter and front wall, pushes over its own SoC and drive, and
 the module exhausts through its rear wall and the rear of both side walls — never the
 lid, which would drop dust onto a board. Each module's exhaust is **129% of its fan's
 throat** (147% with the 20 mm fans) — louvres leaning rearward at the rear of each
-side, straight louvres above the rear ports — and every
-floor is a triangle lattice, so each module also breathes into the one
-above.
+side, straight louvres above the rear ports. The floors are solid by default; set
+`floor_vents = true` for a triangle lattice that lets each module breathe into the
+one above.
 
-Around the rear port cluster the diamond lattice stops at an **exclusion zone**, hexrack's
+Around the rear port cluster the louvres stop at an **exclusion zone**, hexrack's
 back-face idea, so every connector sits in clean solid wall. The Ethernet port is
 flush with the outside of the case and the USB ports 1.3 mm in, so every plug seats.
 
@@ -59,7 +59,7 @@ Seven STLs, **none needing support**, in the orientation they come out of
 
 | Part | Print | Size |
 |------|-------|------|
-| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 52.2 mm |
+| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 49.4 mm |
 | `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 115.9 / 125.0 × 68 × 8.2 mm |
 | `base-NF-A4x10` or `base-NF-A4x20` | rim down | 117.9 / 127.0 × 72 × 9.5 mm |
 | `filter` | ×3, face down, pocket up | 50.8 × 52.6 × 4.0 mm |
@@ -75,16 +75,17 @@ once the whole test suite passes. Or render them yourself:
 
 How each part avoids support:
 
-- **Module.** The bottom is a spigot inset from the side and rear walls, no taller than
-  its clip ribs; the wall steps out to full width on a **45° chamfer that reaches the
-  outer face**, lying on a bevel inside the top of the module below. Nothing on it is
-  printed over air: the first print's chamfer stopped 1.3 mm short and the roof it left
-  sagged. The wall below rises into the chamfer as a lip one extrusion line wide at its
-  top, so the joint is flush but for a 0.4 mm hairline. The floor lattice is the first layers. The
-  filter's recess has its clips at the sides; its top flat is a 32 mm bridge, 4 mm
+- **Module.** The floor is the first layers. Every wall steps out from it on a **45°
+  chamfer that reaches the outer face** — the front too — lying on a bevel inside the
+  top of the module below; each wall's clip rib is a square bar on that chamfer with
+  every face at 45°. Nothing on it is printed over air: the first print's chamfer
+  stopped 1.3 mm short and the roof it left sagged. The wall below rises into the
+  chamfer as a lip one extrusion line wide at its top, so the joint is flush but for
+  a 0.4 mm hairline. The
+  filter's recess has its clips at the sides; its top flat is a 36 mm bridge, 4 mm
   deep off the wall behind it. The rounded corners
   are vertical, so they cost nothing.
-- **Lid.** Upside down, its lap narrows as it rises.
+- **Lid.** Upside down, its lap narrows as it rises and its ribs are 45° bars on it.
 - **Filter.** A flat ring; the glue pocket faces up.
 
 ## Why the case is this tall
@@ -95,8 +96,8 @@ its air gap, so it fits under that.
 
 The filter used to set it. Its window matches the 38 mm fan bore, and a full circle
 with the fabric's glue band round it made the front 55 mm per module. It is now cut
-flat top and bottom, 1 mm short of the module's edge and still over the fan's screw
-heads: the ring is 1.8 mm wide there
+flat top and bottom, as far as the front face allows and still over the fan's screw
+heads: the ring is 1.1 mm wide there
 and the fabric is glued at the sides and corners. That saves 8.5 mm a module, 25.6 on the
 stack.
 
@@ -118,10 +119,10 @@ room to round the front corners.
    the front with four **M3 countersunk self-tappers** through the recess floor into
    the fan's corner holes — **M3 × 12** for the NF-A4x10, **M3 × 20** for the NF-A4x20.
    Plug it into that Pi's GPIO: 5 V on pin 2 or 4, ground on pin 6.
-3. Click the bottom module into the base: a module's socket on an open rim, with a
-   skirt round its sides and rear. Stack the others: each one's spigot drops into the
-   one below and clicks in on hexrack's 45° rib-and-groove clip. Click the lid onto
-   the top one.
+3. Click the bottom module onto the base: a module's bevel on an open rim, with a
+   skirt round its sides and rear. Stack the others: each one's chamfer lies on the
+   bevel of the one below and clicks in on four 45° ribs, one per wall. Click the lid
+   onto the top one.
 4. Glue filter fabric into the pocket on the back of each filter and click
    it into its recess, over the screw heads.
 

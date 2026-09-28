@@ -3,7 +3,7 @@
 # Clips — every rib sits in its groove, and every rib is actually engaged
 # ============================================================================
 # Every clipped joint is one row of allJoints() in cad/tests.scad, built from the same
-# tables the parts use: spigotJoints() for module-to-module and lid-to-module,
+# tables the parts use: lapJoints() for module-to-module and lid-to-module,
 # filterJoints() for the filter. hexrack's own dust clip taught why this needs
 # measuring: its groove was once anchored to a different datum than its rib, 9mm
 # off, and both parts still exported clean. The joint had simply stopped existing.

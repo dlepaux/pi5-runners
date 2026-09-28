@@ -3,19 +3,18 @@
 // ============================================================================
 // Floor and four walls. The Pi screws into heat-set inserts in four posts on the floor;
 // its fan sits on the inside of the front wall, screwed from outside, and hexrack's
-// round dust filter clips into the front wall over it. The module's spigot drops
-// into the module below and clips there; the module above drops into this one's
-// socket. Print it three times.
+// round dust filter clips into the front wall over it. The module's chamfered
+// underside lies on the bevel of the module below and clips there, one rib a wall;
+// the module above lies on this one's. Print it three times.
 //
 // PRINTED FLOOR-DOWN, AS IT STANDS, WITH NO SUPPORT:
-//   - the vented floor is the first layers, on the bed
-//   - the spigot's outer band steps out to the wall on a 45-degree chamfer that
-//     reaches the outer face: no ledge, no roof
+//   - the floor is the first layers, on the bed
+//   - the walls step out from it on a 45-degree chamfer that reaches the outer face,
+//     their ribs square bars on it with every face at 45: no ledge, no roof
 //   - the walls rise straight; port and vent openings are short bridges; the fan
 //     bore is an arch in the front wall, its crown a bridge that shortens to nothing
-//   - the filter's round recess has its flats at the sides; its crown is a 4mm-deep
-//     arc off the web behind it
-//   - the socket's bevel and clip grooves face inward and upward
+//   - the filter's recess has a 4mm-deep flat top off the web behind it
+//   - the bevel and its clip grooves face inward and upward
 // ============================================================================
 
 include <../lib/stacking.scad>
@@ -26,21 +25,20 @@ use <../lib/sbc-helpers.scad>
 include <../lib/dust-filter.scad>
 
 // ----------------------------------------------------------------------------
-// BODY — spigot, floor, walls, socket
+// BODY — lap, floor, walls, bevel
 // ----------------------------------------------------------------------------
+// The front wall is solid front_wall_t deep up to the next module's floor, which lies
+// on it; above that only its outer `wall` rises, into the lap, like the other three.
 module moduleBody() {
   difference() {
     union() {
-      spigotSolid();
-      translate([0, 0, lap_top])
-        linear_extrude(module_h - lap_top) outline();
-      // The front wall: full width, from the bed to the module above, which sits on it.
-      linear_extrude(module_pitch) frontWallOutline();
+      lapSolid();
+      translate([0, 0, lap_top - EPS])
+        linear_extrude(module_h - lap_top + EPS) outline();
     }
-    spigotCavity(floor_t);
-    translate([0, 0, spigot_h - EPS])
-      linear_extrude(module_pitch - spigot_h + 2 * EPS) insetRect(wall, front_wall_t);
-    socketCut();
+    translate([0, 0, floor_t])
+      linear_extrude(module_pitch - floor_t + EPS) cavityOutline();
+    bevelCut();
   }
 }
 
@@ -55,13 +53,13 @@ module postFootprint() {
     for (h = pi5MountingHoles()) translate([h[0], h[1]]) circle(d = post_d, $fn = 48);
 }
 
-// Clipped to the spigot: with the walls this close to the board, a post would
-// otherwise stand out past the spigot band into the module below. As tall as
-// board_lift makes them, less the standoffs: from the floor to rail_top.
+// Clipped to the inside: with the walls this close to the board, a post would
+// otherwise stand into a wall. As tall as board_lift makes them, less the standoffs:
+// from the floor to rail_top.
 module posts() {
   translate([0, 0, floor_t - OVERLAP])
     linear_extrude(rail_top - floor_t + OVERLAP)
-      intersection() { postFootprint(); insetRect(spigot_inset); }
+      intersection() { postFootprint(); inset(wall); }
 }
 
 // Z = 0 of insert_hole_mask() is the entry surface: the rail top, a standoff below
@@ -150,17 +148,18 @@ module sideVentCut(y_inner, outward) {
           linear_extrude(wall + 4 * EPS) sideVentProfile();
 }
 
-// The floor: inside the spigot ring on all four sides, clear of the posts. It is what
-// lets each module breathe into the one above, and it is the first layers of the
-// print. INSIDE THE RING: a field that reaches under the ring leaves the ring's band
-// standing over the holes -- a ledge, found when the front stopped being open.
+// The floor lattice, OFF BY DEFAULT (floor_vents): hexrack's triangles, inside the
+// walls and clear of the posts, letting a module breathe into the one above. Off, the
+// floor is solid -- the first layers print whole and nothing falls from one board
+// onto the next. Every consumer reads this module, so off means off everywhere.
 module floorVentProfile() {
-  m = spigot_inset + spigot_t + vent_margin;
+  m = wall + lap_z0 + vent_margin;
   x0 = front_wall_t + vent_margin;
-  difference() {
-    translate([x0, m]) ventField(module_l - m - x0, module_w - 2 * m);
-    offset(delta = vent_margin) postFootprint();
-  }
+  if (floor_vents)
+    difference() {
+      translate([x0, m]) ventField(module_l - m - x0, module_w - 2 * m);
+      offset(delta = vent_margin) postFootprint();
+    }
 }
 
 module ventCuts() {
@@ -198,10 +197,10 @@ module modulePart() {
       union() {
         moduleBody();
         posts();
-        spigotRibs();
+        lapRibs();
       }
       insertPockets();
-      socketGrooves();
+      bevelGrooves();
       allPortCuts();
       ventCuts();
       fanCut();

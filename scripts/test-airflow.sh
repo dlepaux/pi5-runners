@@ -38,11 +38,20 @@ if awk -v a="$PER" -v t="$THROAT" 'BEGIN { exit !(a >= t) }'; then
 else
     fail "$(printf 'each module exhausts %.0fmm2 and CHOKES its %.0fmm2 fan (%s%%)' "$PER" "$THROAT" "$(pct "$PER")")"
 fi
-# The floor lattice is what lets a module breathe into the one above. It must exist.
-if awk -v f="$FLOOR" 'BEGIN { exit !(f > 1000) }'; then
-    pass "$(printf 'every floor is vented (%.0fmm2)' "$FLOOR")"
+# The floor lattice is an option (floor_vents), off by default: off, the floor is solid
+# and the cutter renders nothing; on, it must be a real lattice. The forced-on render
+# keeps the option from rotting while it is off.
+render floor-vent-area "$WORK/floor-on.stl" -D floor_vents=true
+FLOOR_ON=$(vol "$WORK/floor-on.stl")
+if awk -v f="$FLOOR" 'BEGIN { exit !(f <= 0 || f > 1000) }'; then
+    pass "$(printf 'the floor is solid or properly vented (%.0fmm2)' "$FLOOR")"
 else
-    fail "$(printf 'the floor lattice is %.0fmm2' "$FLOOR")"
+    fail "$(printf 'the floor lattice is only %.0fmm2' "$FLOOR")"
+fi
+if awk -v f="$FLOOR_ON" 'BEGIN { exit !(f > 1000) }'; then
+    pass "$(printf 'floor_vents=true still cuts a lattice (%.0fmm2)' "$FLOOR_ON")"
+else
+    fail "$(printf 'floor_vents=true cuts only %.0fmm2' "$FLOOR_ON")"
 fi
 
 expect_geometry "the side field cuts the -Y wall" side-y-neg-rear-removed

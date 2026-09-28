@@ -12,7 +12,7 @@
 // recess over its fan.
 //
 // FRAMES. The MODULE frame: x=0 the front face, y=0 the -Y outer face, z=0 the bottom
-// of the spigot, which is the print bed. The STACK frame is module 0's; module k sits
+// of the floor, which is the print bed. The STACK frame is module 0's; module k sits
 // at z = k * module_pitch.
 // ============================================================================
 
@@ -149,8 +149,8 @@ fan_throat_area = PI * pow(fan_bore_d, 2) / 4 - PI * pow(fan_hub_d, 2) / 4;   //
 // ----------------------------------------------------------------------------
 // The same joint as hexrack's dust filter: a square-section rib turned 45 degrees,
 // half of it standing proud of one part, dropping into a matching groove in the
-// other. Three ribs on every SPIGOT -- one per side wall, one on the rear -- into
-// grooves in the SOCKET of the module below; and two on every dust filter.
+// other. Four ribs on every module's lap chamfer, one per wall, into grooves in the
+// bevel of the module below; and two on every dust filter.
 // HEXRACK'S FULL SIZE (1.7 x 18). A 40% smaller rib (1.0 x 11) was tried to look
 // lighter and printed too small; back to the size hexrack proved.
 clip_rib     = 1.7;          // hexrack's dust_clip_length: the rib's square section
@@ -160,34 +160,28 @@ clip_rib_len = 18;
 rib_half    = clip_rib * sqrt(2) / 2;                        // proud of the joint plane
 groove_half = (clip_rib + sqrt(2) * clip_clear) * sqrt(2) / 2;
 
-// THE RIB IS THE SPIGOT'S LAST ELEMENT: its lowest vertex is the spigot's bottom edge,
-// so nothing of the spigot hangs below the clip.
-clip_z = rib_half;
-
 // ----------------------------------------------------------------------------
-// STACKING — the spigot, the socket, the lap between them
+// STACKING — one 45-degree lap on all four walls, a clip on each
 // ----------------------------------------------------------------------------
-// A module's bottom band is a SPIGOT: a U inset from its side and rear faces that
-// drops inside the walls of the module below. The walls then meet on a 45-degree LAP:
-// the lower wall's top is bevelled on the inside, and the upper wall's underside is a
-// chamfer lying ON that bevel and running on out to its own outer face. The bevel
-// carries the weight and centres each module on the one below. The lower wall rises
-// into the V under the chamfer as a LIP, so the outer faces meet flush.
+// NO SPIGOT. A module's walls end below in a 45-degree CHAMFER across their whole
+// thickness, low at the inner face and high at the outer one; the module below ends
+// its walls in a BEVEL of the same slope. The chamfer lies on the bevel on all four
+// sides -- the front too, now -- so it carries the weight and centres each module on
+// the one below. The lower wall rises into the V as a LIP, so the outer faces meet
+// flush. Nothing on it prints over air: floor-down, the chamfer is a 45-degree
+// overhang all the way out to the outer face.
 //
-// THE FRONT IS A BUTT JOINT. Each module's front wall runs its full height and sits
-// flat on the front wall below, so the stack's front is one continuous face and each
-// module's dust filter lies wholly in its own module. The lower module's side walls
-// stop behind the front wall above their socket, to leave it room.
+// THE CLIP IS ON THE LAP. A rib centred on the chamfer's plane stands HALF out of it
+// (male, on the module's underside) into a groove in the bevel below (female, on its
+// top). hexrack's square rib turned 45 degrees about its axis has its faces at +-45 --
+// parallel and square to the lap -- so on the lap every face of rib and groove is at
+// 45 degrees and prints. One per wall: four.
 //
-// WHY A CHAMFER TO THE OUTER FACE. The module prints floor-down, so the upper wall
-// starts at the top of the spigot, 3mm outboard of it. As a step that is a 3mm ledge
-// printed over air; a chamfer that stops short of the outer face still leaves a roof
-// there -- the first print's was 1.3mm, bearing on the land, and it sagged. Taken all
-// the way out, nothing on the lap is printed over air. Bearing on the bevel instead of
-// the land is the cost: the bevel's print tolerance, not a layer, sets the stack height.
-stack_gap  = 0.2;     // spigot to socket wall, radially, below the lap
-spigot_t   = 2;       // the spigot ring's own thickness
-stack_land = 1;       // how far in from the outer face the bevel meets socket_z
+// WHERE ON THE LAP. The bevel below is a wedge, thin toward the outer face, so the
+// groove sits near the inner edge: lap_clip_c up the slope from it. Its deepest corner
+// then leaves lap_clip_wall of wall to the outer face. The rib's lower corner hangs
+// below the chamfer's inner edge -- by lap_z0 -- so the floor reaches down to the bed
+// under it, the chamfer carried on down to it; the rib's corner prints from the bed.
 // THE LIP STOPS ONE EXTRUSION LINE WIDE, not at a knife edge. A tip thinner than the
 // nozzle's line is dropped or printed ragged by the slicer and chips in handling; at
 // 0.4 it prints as one clean line and leaves a 0.4mm hairline at the joint.
@@ -196,22 +190,20 @@ lip_t      = 0.4;
 // own tolerance swallows it, so the bevel bears -- but two coincident slanted faces
 // are what a mesh boolean cannot resolve: at zero the fit tests read noise as overlap.
 lap_gap    = 0.05;
+lap_sink   = lap_gap * sqrt(2);   // the bevel below the chamfer, vertically
 
-spigot_inset = wall + stack_gap;
-
-// AS SHORT AS THE CLIP ALLOWS. The groove in the module below must sit wholly under
-// that module's bevel, which starts (wall - stack_land) below socket_z.
-spigot_h = ceil((clip_z + groove_half + wall - stack_land + 0.3) * 10) / 10;
-
-// The upper module's chamfer, in its own frame: lap_gap off the lower bevel's plane,
-// so it reaches its outer face stack_land (and lap_gap*sqrt(2)) above socket_z, and at
-// 45 degrees it rises as far as it runs in, down to the spigot.
-lap_top = spigot_h + stack_land + lap_gap * sqrt(2);
-lap_h   = spigot_inset;
-
-assert(clip_z + rib_half <= lap_top - lap_h,
-       "the spigot rib runs into the spigot's own bevel");
-assert(lip_t > 0 && lip_t < stack_land, "the lip must end between a knife edge and the old land");
+lap_clip_c = 1.0;     // rib's axis, up the slope from the chamfer's inner edge
+// Rib and groove in the lap's frame: s up the slope, t square to it, into the bevel.
+lap_rib_w     = clip_rib;                           // along s
+lap_rib_t     = clip_rib / 2;                       // proud of the chamfer
+lap_groove_w  = clip_rib + sqrt(2) * clip_clear;    // the groove, both ways
+lap_z0        = max(0, (lap_rib_w / 2 + lap_rib_t - lap_clip_c) / sqrt(2));
+lap_top       = lap_z0 + wall;    // where the chamfer reaches the outer face
+// Below the bevel's inner edge, the groove's lowest point; and what it leaves.
+lap_groove_drop = (lap_groove_w - lap_clip_c) / sqrt(2);
+lap_clip_wall   = wall - (lap_clip_c + lap_groove_w) / sqrt(2);
+assert(lap_clip_c >= lap_rib_w / 2, "the rib runs off the chamfer's inner edge");
+assert(lap_clip_wall >= 0.6, "the lap groove leaves under 0.6mm of wall to the outer face");
 
 // ----------------------------------------------------------------------------
 // DUST FILTER — a round ring with four flats, one per module
@@ -341,7 +333,7 @@ module_w = board_y + pi5_pcb[1] + hat_overhang_y + side_clear_pos + wall;
 assert(abs(board_y + pi5_pcb[1] / 2 - module_w / 2) < EPS, "the Pi (and its rails) is not centred across the module");
 
 // THE FOUR VERTICAL CORNERS ARE ROUNDED, for the look. Vertical, so it costs nothing to
-// print. Every outline -- walls, spigot, lap, socket, lid -- is inset from the same
+// print. Every outline -- walls, floor, lap, bevel, lid -- is inset from the same
 // rounded footprint, so the lap stays concentric round the rear corners. The front
 // corners are what limit it: they pass beside the filter's recess, which at its widest
 // leaves 5.3mm of front face each side.
@@ -353,10 +345,10 @@ corner_r = 4;
 // (filter_v_out below), because nothing else earns the 8.5mm a module.
 module_pitch = max(board_z0 + hat_slot_h + module_air,
                    floor_t + fan_size + 2 * fan_clear);
-// socket_z is the bevel's reference: where it is stack_land in from the outer face.
-// The part itself ends higher, on its lip.
-socket_z     = module_pitch + spigot_h;
-module_h     = socket_z + stack_land - lip_t;
+// The next module's floor stands at module_pitch, its chamfer's inner edge lap_z0
+// higher; this module's bevel runs lap_sink under that, up to the lip, lip_t in from
+// the outer face.
+module_h     = module_pitch + lap_top - lap_sink - lip_t;
 
 // The fan and its filter: centred across the module, and between its floor and the
 // next module's.
@@ -370,13 +362,16 @@ fan_zc = (floor_t + module_pitch) / 2;
 // and the glue pocket runs out through the flats: the fabric is held at the sides and
 // corners. The price of the fan setting the height, chosen over a smaller window
 // (blocks the blade tips) and over flats at the glue pocket (a taller module).
-filter_edge_wall = 1;     // recess to the module's top edge
-filter_v_out     = min(filter_r_out, module_pitch - fan_zc - filter_edge_wall - filter_clear);
+// Below, the front's chamfer ends at lap_top on the outer face; above, the lap groove
+// of the module on top dips lap_groove_drop under its bevel's inner edge.
+filter_edge_wall = 0.6;   // recess to the lap's outer edge below, or to the groove above
+filter_v_out     = min(filter_r_out,
+                       fan_zc - lap_top - filter_edge_wall - filter_clear,
+                       module_pitch + lap_z0 - lap_groove_drop - filter_edge_wall
+                         - fan_zc - filter_clear);
 filter_v_recess  = filter_v_out + filter_clear;
 assert(filter_v_out >= fan_bolt_pitch / 2 + fan_csink_d / 2 + 0.5,
        "the top and bottom flats uncover a fan screw head");
-assert(fan_zc - filter_v_recess >= filter_edge_wall - EPS,
-       "the filter recess runs out of the module's bottom edge");
 
 // BOARD LIFT. When the fan sets the module's height the board already sits near its
 // axis and this is 0. Should anything else grow the module, a board left on the floor
@@ -389,20 +384,9 @@ board_z    = board_z0 + board_lift;
 rail_top   = board_z - board_standoff_h;   // where the inserts go in
 
 module_count = 3;
-lid_t        = 3;     // the lid's plate, above its spigot
-stack_h = module_count * module_pitch + spigot_h + lid_t;   // floor of 0 to lid top
+lid_t        = 3;     // the lid's plate, above its lap
+stack_h = module_count * module_pitch + lap_top + lid_t;   // floor of 0 to lid top
 
-// THE BASE: a module's socket on an open rim, with a skirt round it (parts/base.scad).
-base_floor_t     = 3;           // the rim under the bottom module
-base_skirt       = 2;           // skirt beyond the module's sides and rear
-// Skirt top, above the bottom module's underside: DERIVED, because the clip sets
-// spigot_h. Midway between the joint it hides (module_h, spigot_h + 0.6 up) and the
-// lowest vents (vent_z0 - 1, spigot_h + 2 up).
-base_skirt_h     = spigot_h + 1.3;
-base_skirt_clear = stack_gap;   // skirt to the module's outer face, above the lip
-
-assert(base_skirt_h < vent_z0 - 1, "the base's skirt covers the lowest vents");
-assert(module_pitch + base_skirt_h > module_h, "the skirt stops below the joint it hides");
 
 assert(board_lift >= 0, "board_lift cannot sink the board into its floor");
 assert(module_pitch - (board_z + hat_slot_h) >= 3,
@@ -411,13 +395,12 @@ assert(fan_zc - fan_size / 2 >= floor_t + fan_clear - EPS, "the fan sits on the 
 assert(module_w / 2 - filter_a_recess - corner_r >= 1,
        "corner_r cuts into the filter's recess: under 1mm of wall at the front corners");
 assert(fan_size + 2 <= module_w - 2 * wall, "the fan is wider than the module's inside");
-assert(board_y + pi5_hole_inset - boss_d / 2 >= spigot_inset,
-       "the rail's insert boss would stand outside the spigot");
+assert(board_y + pi5_hole_inset - boss_d / 2 >= wall + lap_z0,
+       "a post's insert boss would stand in the floor's band under the lap");
 
-// The Pi's connectors must cut through FULL wall, not the inset spigot band: the
-// lowest connector starts 1.53 above the PCB underside.
+// The Pi's connectors must cut through FULL wall, above the chamfer.
 assert(board_z + 1.5 > lap_top,
-       "a connector would land in the inset spigot band instead of the wall");
+       "a connector would land in the chamfer instead of the wall");
 
 // ----------------------------------------------------------------------------
 // VENTS — triangles on the floor, louvres on the walls
@@ -439,6 +422,7 @@ vent_wall        = 1.6;
 vent_tri_radius  = 1.2;
 vent_tri_stagger = 0.5;
 vent_margin      = 3;    // solid border round every field
+floor_vents      = false; // the floor's triangle lattice: off, the floor is solid
 
 vent_slot_w       = 3;     // side louvre's slot, along the wall
 vent_slot_bar     = 2.5;   // the slat between two slots, along the wall
@@ -446,10 +430,21 @@ vent_side_angle   = 45;    // louvre's lean toward the rear, from the wall's nor
 vent_side_share   = 1;     // how much of the room behind the -Y ports the louvres take
 
 // EXHAUST: the rear wall and the rear of both side walls. Never the lid: a lid with
-// holes drops dust straight onto the top board. Fields stay above the spigot band and
+// holes drops dust straight onto the top board. Fields stay above the chamfer and
 // below the socket's clip grooves.
-vent_z0 = spigot_h + vent_margin;
-vent_z1 = module_pitch + clip_z - groove_half - vent_margin;
+vent_z0 = lap_top + vent_margin;
+vent_z1 = module_pitch + lap_z0 - lap_groove_drop - vent_margin;
+
+// THE BASE: a module's bevel on an open rim, with a skirt round it (parts/base.scad).
+base_floor_t     = 3;           // the rim under the bottom module
+base_skirt       = 2;           // skirt beyond the module's sides and rear
+// Skirt top, above the bottom module's underside: DERIVED, midway between the joint it
+// hides (module_h, on the bottom module's lap) and the lowest vents (vent_z0 - 1).
+base_skirt_h     = (module_h - module_pitch + vent_z0 - 1) / 2;
+base_skirt_clear = 0.2;         // skirt to the module's outer face, above the lip
+
+assert(base_skirt_h < vent_z0 - 1, "the base's skirt covers the lowest vents");
+assert(module_pitch + base_skirt_h > module_h, "the skirt stops below the joint it hides");
 
 // The -Y connectors, measured off the framework's -Y mask: USB-C and the micro-HDMIs
 // span 6.25..42.60 along the board.
