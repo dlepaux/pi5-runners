@@ -1,6 +1,6 @@
 // ============================================================================
-// VENTS — hexrack's triangle lattice on the floor, 45-degree slots and diamonds
-// on the walls (at the end of this file)
+// VENTS — hexrack's triangle lattice on the floor, louvres on the walls (at the
+// end of this file)
 // ============================================================================
 // roundedTriangle() and trianglePattern() are COPIED VERBATIM from
 // hexrack-sbc/cad/lib/vent-patterns.scad, with the same constants -- cell 14, web
@@ -99,32 +99,15 @@ module ventField(w, h, cell = vent_tri_cell, wall = vent_wall,
 }
 
 // ============================================================================
-// SIDES AND REAR — 45-degree bars and diamonds
+// SIDES AND REAR — louvres
 // ============================================================================
-// The triangle lattice stays on the floor only. The walls take simpler shapes with
-// every edge at 45 degrees, so nothing in them overhangs past 45.
-
-// SIDES: LOUVRES. Vertical slots `sw` wide on `pitch` along x, as many as fit, centred
-// on the w x h field. This is only their face; the module shears each one through the
-// wall so it leans toward the rear (sideVentCut()).
+// The triangle lattice stays on the floor only. Vertical slots `sw` wide on `pitch`
+// along x, as many as fit, centred on the w x h field. This is only their face: the
+// module shears the side ones through the wall so they lean toward the rear
+// (sideVentCut()) and cuts the rear ones straight. Their tops are sw-wide bridges.
 module louvreField(w, h, sw = vent_slot_w, pitch = vent_slot_w + vent_slot_bar) {
   n = floor((w - sw) / pitch) + 1;
   x0 = (w - (n - 1) * pitch - sw) / 2;
   for (i = [0 : n - 1]) translate([x0 + i * pitch, 0]) square([sw, h]);
 }
 
-// REAR: a lattice of 45-degree diamonds (squares on a point), `web` between them,
-// over the whole w x h field and CLIPPED by it, as the triangle lattice is -- the
-// caller carves the port exclusion out of it the same way. A diamond cut by the top
-// of the field or of the exclusion gets a short flat ceiling, a bridge no wider than
-// the diamond. Centred on the field, so the two sides mirror.
-module diamondField(w, h, side = vent_diamond, web = vent_diamond_web) {
-  p = (side + web) * sqrt(2);            // centre to centre along a row
-  n = ceil(max(w, h) / p) + 1;
-  intersection() {
-    square([w, h]);
-    for (j = [-2 * n : 2 * n], k = [-2 * n : 2 * n])
-      if ((j + k) % 2 == 0)
-        translate([w / 2 + k * p / 2, h / 2 + j * p / 2]) rotate(45) square(side, center = true);
-  }
-}

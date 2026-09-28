@@ -420,12 +420,12 @@ assert(board_z + 1.5 > lap_top,
        "a connector would land in the inset spigot band instead of the wall");
 
 // ----------------------------------------------------------------------------
-// VENTS — triangles on the floor, 45-degree slots on the sides, diamonds on the rear
+// VENTS — triangles on the floor, louvres on the walls
 // ----------------------------------------------------------------------------
 // FLOOR: hexrack's triangle lattice -- cell 14, web 1.6, corner 1.2, stagger 0.5. A
 // triangle cannot rack, so the floor stays stiff at a high open fraction.
 //
-// WALLS: louvres on the sides, a diamond lattice on the rear round its port cluster
+// WALLS: louvres on the sides and the rear, round the rear port cluster
 // (lib/vents.scad).
 //
 // SIDE LOUVRES: vertical slots, each running through the wall at vent_side_angle
@@ -443,8 +443,6 @@ vent_margin      = 3;    // solid border round every field
 vent_slot_w       = 3;     // side louvre's slot, along the wall
 vent_slot_bar     = 2.5;   // the slat between two slots, along the wall
 vent_side_angle   = 45;    // louvre's lean toward the rear, from the wall's normal
-vent_diamond      = 5;     // rear diamond's side
-vent_diamond_web  = 1.6;   // rear bar between two diamonds, square to them
 vent_side_share   = 1;     // how much of the room behind the -Y ports the louvres take
 
 // EXHAUST: the rear wall and the rear of both side walls. Never the lid: a lid with
@@ -482,7 +480,7 @@ exclusion_r = 3;
 
 // The PCB-edge slot, board frame: from the rear wall's inner face to past the PCB's
 // edge, and its full height with the 45-degree roof. The exclusion zone takes it in
-// too, or the slot's floor clips the tops of the diamonds under it.
+// too, or the slot's floor clips the tops of the louvres under it.
 pcb_slot_x0    = module_l - wall - board_x;
 pcb_slot_depth = pi5_pcb[0] + pcb_slot_clear - pcb_slot_x0;
 pcb_slot_h     = pi5_pcb[2] + 2 * pcb_slot_clear + pcb_slot_depth;
