@@ -77,8 +77,8 @@ tallest board, so any board goes in any module.
   so they cannot stand into a wall
 - **AIR PATH: front to back, along each board's full length.** Each fan draws through
   its dust filter and its front wall's bore, pushes over its own SoC and drive, and
-  the module exhausts through its rear wall and the rear of both side walls — **129%
-  of its fan's throat** with the NF-A4x10 (147% with the NF-A4x20). **Never the lid**: a lid with holes drops dust on a board.
+  the module exhausts through its rear wall and the rear of both side walls — **149%
+  of its fan's throat** with the NF-A4x10 (169% with the NF-A4x20). **Never the lid**: a lid with holes drops dust on a board.
   The floor's triangle lattice is an option, **`floor_vents`, off by default**: a
   solid floor prints whole and drops nothing from one board onto the next; on, each
   module breathes into the one above. `test-airflow.sh` checks both
@@ -101,12 +101,13 @@ tallest board, so any board goes in any module.
   less to leave and there is no line of sight to the board. **Not a Venturi effect**,
   nothing outside moves air past the wall. `test-airflow.sh` counts their THROAT
   (slot × cos 45°), not their face; their flat tops are 3 mm bridges, budgeted.
-  The rear's go **straight through** (the air there already heads out) in one band of
-  ten above the port cluster; the band below it is 2.9 mm, too short for a louvre, and
-  stays solid. **No intake louvres ahead of them**: considered and dropped — the
+  The rear's go **straight through** (the air there already heads out) in the same ten
+  columns above and below the port cluster, so they read as running top to bottom
+  with the ports between (the ports take 55 of the 62 mm inside, so nothing can
+  run through them). **No intake louvres ahead of them**: considered and dropped — the
   module is at positive pressure, so any side opening near the fan leaks filtered air
   before it crosses the board and lets dust in when the fans stop.
-  Exhaust: 129% of the throat with the NF-A4x10 (147% with the NF-A4x20)
+  Exhaust: 149% of the throat with the NF-A4x10 (169% with the NF-A4x20)
 - **Positive pressure.** One filtered intake; dust can only enter where the filter is,
   which is the only reason there is exactly one filter
 - **Six cables leave the box** — 3× Ethernet at the rear, 3× USB-C on −Y — because

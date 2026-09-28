@@ -42,9 +42,9 @@ behind a filter — about a kelvin, not a different class of cooling.
 **Airflow** runs front to back along each board's full length. Each fan draws through
 its module's dust filter and front wall, pushes over its own SoC and drive, and
 the module exhausts through its rear wall and the rear of both side walls — never the
-lid, which would drop dust onto a board. Each module's exhaust is **129% of its fan's
-throat** (147% with the 20 mm fans) — louvres leaning rearward at the rear of each
-side, straight louvres above the rear ports. The floors are solid by default; set
+lid, which would drop dust onto a board. Each module's exhaust is **149% of its fan's
+throat** (169% with the 20 mm fans) — louvres leaning rearward at the rear of each
+side, straight louvres above and below the rear ports. The floors are solid by default; set
 `floor_vents = true` for a triangle lattice that lets each module breathe into the
 one above.
 

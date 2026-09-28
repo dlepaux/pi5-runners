@@ -114,14 +114,14 @@ module exclusionZone() {
 // Each profile is its own module so test-airflow.sh measures EXACTLY what is cut.
 // REAR: the side louvres' shape, straight through -- the air here already heads
 // straight out. The port cluster takes the wall's middle, so they run in a band above
-// and below it, and a band too short for a louvre (3 slot widths) is left solid: the
-// stubs it would cut read as accidents. Below the ports that is the case now.
+// and a band below it, in the same columns, so they read as running top to bottom
+// with the ports between. A band shorter than a slot is wide is left solid.
 module rearVentProfile() {
   x0 = wall + vent_margin;
   w  = module_w - 2 * x0;
   bands = [[vent_z0, rearExclusionZ()[0]], [rearExclusionZ()[1], vent_z1]];
   difference() {
-    for (b = bands) if (b[1] - b[0] >= 3 * vent_slot_w)
+    for (b = bands) if (b[1] - b[0] >= vent_slot_w)
       translate([x0, b[0]]) louvreField(w, b[1] - b[0]);
     exclusionZone();
   }
