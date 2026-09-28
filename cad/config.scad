@@ -262,7 +262,7 @@ assert(fan_csink_d / 2 < fan_web + filter_depth, "the countersink is deeper than
 // ----------------------------------------------------------------------------
 // FASTENERS — the Pi screws into its own module
 // ----------------------------------------------------------------------------
-// M2.5 heat-set inserts in two rails on the floor, one under each mounting hole.
+// M2.5 heat-set inserts in four round posts on the floor, one under each mounting hole.
 // READ FROM lib/theaded-inserts.scad: a Ruthex RX-M2.5x5.7 wants 6.7 of hole, not 5.7.
 // THE BOARD STANDS ON STANDOFFS, not on the rails: an M2.5 x board_standoff_h male-
 // female standoff screws into each insert, female end up, and the HAT's own male-
@@ -270,11 +270,11 @@ assert(fan_csink_d / 2 < fan_web + filter_depth, "the countersink is deeper than
 // The board keeps its height on the fan's axis; the rails stop short of it by the
 // standoff, which leaves air under the whole board instead of a printed bed.
 //
-// The rails run ALONG X, with the airflow, as hexrack's canoes do.
+// POSTS, NOT hexrack's CANOES: the rails joining each row cost plastic and did
+// nothing the posts do not; the air under the board now runs round four posts.
 insert_m25    = "M2.5";
 boss_d        = get_insert_min_boss(insert_m25);   // 7.2
-canoe_w       = boss_d + 2;
-canoe_overrun = 4;
+post_d        = boss_d + 2;   // a millimetre of wall round the insert's minimum boss
 board_standoff_h  = 5;     // M2.5 male-female, rail top to board underside
 board_standoff_af = 5;     // M2.5 standoff hex, across flats
 
@@ -289,7 +289,7 @@ assert(board_standoff_af / cos(30) <= boss_d, "the standoff's hex overhangs its 
 // slot. A bare Pi wastes height; three different modules would waste a reprint every
 // time a board changes role.
 floor_t       = 2.4;   // the vented floor: 12 layers at 0.2
-rail_h        = 5.5;   // the insert rails ("canoes") at their lowest: board_lift adds to it
+rail_h        = 5.5;   // the insert posts at their lowest: board_lift adds to it
 plenum_gap    = 3;     // fan's back face to the Compact HAT's tab
 module_air    = 5;     // top of the tallest board to the next module's floor, at least
 

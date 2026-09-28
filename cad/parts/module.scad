@@ -1,7 +1,7 @@
 // ============================================================================
 // MODULE — one Raspberry Pi 5 and its fan, printed as one piece
 // ============================================================================
-// Floor and four walls. The Pi screws into heat-set inserts in two rails on the floor;
+// Floor and four walls. The Pi screws into heat-set inserts in four posts on the floor;
 // its fan sits on the inside of the front wall, screwed from outside, and hexrack's
 // round dust filter clips into the front wall over it. The module's spigot drops
 // into the module below and clips there; the module above drops into this one's
@@ -45,35 +45,23 @@ module moduleBody() {
 }
 
 // ----------------------------------------------------------------------------
-// RAILS AND INSERTS
+// POSTS AND INSERTS
 // ----------------------------------------------------------------------------
 
-// The Pi's mounting holes, grouped into the two rows the rails run along.
-function holeRows() =
-  let (holes = pi5MountingHoles(),
-       ys = [for (h = holes) h[1]])
-  [ for (y = [min(ys), max(ys)]) [ for (h = holes) if (h[1] == y) h ] ];
-
-// One rail per row, along X -- with the airflow -- from its first hole to its last and
-// canoe_overrun beyond, round-ended.
-module canoeFootprint() {
+// One round post per mounting hole, not a rail per row: less plastic, and the air
+// under the board runs between four posts instead of along two walls.
+module postFootprint() {
   translate([board_x, board_y])
-    for (row = holeRows()) {
-      xs = [for (h = row) h[0]];
-      hull()
-        for (x = [min(xs) - canoe_overrun + canoe_w / 2,
-                  max(xs) + canoe_overrun - canoe_w / 2])
-          translate([x, row[0][1]]) circle(d = canoe_w, $fn = 48);
-    }
+    for (h = pi5MountingHoles()) translate([h[0], h[1]]) circle(d = post_d, $fn = 48);
 }
 
-// Clipped to the spigot: with the walls this close to the board, a round-ended rail
-// would otherwise stand out past the spigot band into the module below. As tall as
+// Clipped to the spigot: with the walls this close to the board, a post would
+// otherwise stand out past the spigot band into the module below. As tall as
 // board_lift makes them, less the standoffs: from the floor to rail_top.
-module canoes() {
+module posts() {
   translate([0, 0, floor_t - OVERLAP])
     linear_extrude(rail_top - floor_t + OVERLAP)
-      intersection() { canoeFootprint(); insetRect(spigot_inset); }
+      intersection() { postFootprint(); insetRect(spigot_inset); }
 }
 
 // Z = 0 of insert_hole_mask() is the entry surface: the rail top, a standoff below
@@ -139,7 +127,7 @@ module sideVentProfile() {
     slotField(side_field_x[1] - side_field_x[0], vent_z1 - vent_z0);
 }
 
-// The floor: inside the spigot ring on all four sides, clear of the rails. It is what
+// The floor: inside the spigot ring on all four sides, clear of the posts. It is what
 // lets each module breathe into the one above, and it is the first layers of the
 // print. INSIDE THE RING: a field that reaches under the ring leaves the ring's band
 // standing over the holes -- a ledge, found when the front stopped being open.
@@ -148,7 +136,7 @@ module floorVentProfile() {
   x0 = front_wall_t + vent_margin;
   difference() {
     translate([x0, m]) ventField(module_l - m - x0, module_w - 2 * m);
-    offset(delta = vent_margin) canoeFootprint();
+    offset(delta = vent_margin) postFootprint();
   }
 }
 
@@ -188,7 +176,7 @@ module modulePart() {
     difference() {
       union() {
         moduleBody();
-        canoes();
+        posts();
         spigotRibs();
       }
       insertPockets();

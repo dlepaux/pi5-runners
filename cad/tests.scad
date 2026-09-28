@@ -123,18 +123,18 @@ if (test_view == "slot-vs-module") intersection() { slotSlab(kind); modulePart()
 if (test_view == "slot-vs-above")
   intersection() { slotSlab(kind); union() { moduleAt(1) modulePart(); moduleAt(1) lidPart(); } }
 
-if (test_view == "canoes-alone")    canoes();
-if (test_view == "canoes-vs-board") intersection() { canoes(); boardPcb(); }
+if (test_view == "posts-alone")    posts();
+if (test_view == "posts-vs-board") intersection() { posts(); boardPcb(); }
 // The standoffs clear the module but for the rails they stand on -- and do stand on
 // them: lowered 0.2mm, they bite.
 if (test_view == "standoffs-vs-module")
-  intersection() { boardStandoffs(); difference() { modulePart(); canoes(); } }
+  intersection() { boardStandoffs(); difference() { modulePart(); posts(); } }
 if (test_view == "standoffs-seated")
-  intersection() { translate([0, 0, -0.2]) boardStandoffs(); canoes(); }
+  intersection() { translate([0, 0, -0.2]) boardStandoffs(); posts(); }
 // A pocket must be VOID in the finished part...
 if (test_view == "pockets-vs-module") intersection() { insertPockets(); modulePart(); }
 // ...must sit in a rail, not in the air beside one...
-if (test_view == "pockets-in-rails") intersection() { insertPockets(); canoes(); }
+if (test_view == "pockets-in-rails") intersection() { insertPockets(); posts(); }
 // ...and WHOLLY in it, or in the SOLID floor under it -- the 6.7mm pocket runs 1.1mm
 // into the floor, which is why the floor's vents keep clear of the rails. The check
 // above only asks for some overlap, so a pocket lifted 3mm -- too shallow for the
@@ -142,7 +142,7 @@ if (test_view == "pockets-in-rails") intersection() { insertPockets(); canoes();
 if (test_view == "pockets-outside-rails")
   difference() {
     insertPockets();
-    canoes();
+    posts();
     linear_extrude(floor_t)
       difference() { insetRect(spigot_inset); floorVentProfile(); }
     translate([-1, -1, rail_top]) cube([module_l + 2, module_w + 2, 0.05]);

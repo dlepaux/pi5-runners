@@ -68,11 +68,11 @@ tallest board, so any board goes in any module.
   taller than the board needs. With the fan setting the height it comes out 0: the
   board already sits 0.3 below the axis. `-D board_lift=0` forces the floor
 - **SIDES: THE PI IS CENTRED ACROSS THE MODULE** — 3 mm to the −Y wall, 2.5 to +Y
-  past the HAT's 0.5 overhang — so the two rails sit symmetrically; the first print
+  past the HAT's 0.5 overhang — so the four posts sit symmetrically; the first print
   had them 2.5 mm toward −Y and it read as a mistake. The cost: the −Y USB-C and
   micro-HDMI sockets sit 3 mm behind the wall, not 0.5, and a USB-C plug's shell is
   ~6.5 mm, so **check a plug seats on the next print**. The Pi is located by its
-  screws; `config.scad` asserts it stays centred. The rails are clipped to the spigot
+  screws; `config.scad` asserts it stays centred. The posts are clipped to the spigot
   so they cannot stand out past it
 - **AIR PATH: front to back, along each board's full length.** Each fan draws through
   its dust filter and its front wall's bore, pushes over its own SoC and drive, and
@@ -110,18 +110,19 @@ tallest board, so any board goes in any module.
 
 | Part | Prints | Is |
 |------|--------|----|
-| `module` ×3 | floor-down | vented floor with two insert rails, four walls; the front one carries the fan, its bore, its screw holes and the filter's round recess; spigot below, socket above |
+| `module` ×3 | floor-down | vented floor with four insert posts, four walls; the front one carries the fan, its bore, its screw holes and the filter's round recess; spigot below, socket above |
 | `lid` | plate-down | a spigot with a solid plate on it, and the last few mm of front wall |
 | `base` | rim-down | the bottom module's feet: a module's socket (module −1's top slice, cut from `moduleBody()` itself) on an open rim, a 2 mm skirt round the sides and rear, front flush so the filter still comes out |
 | `filter` ×3 | face-down | a round ring with four flats, fabric glued into a pocket on its back, two ribs |
 
 - **THE BOARDS ARE NEVER CONNECTED.** Each Pi screws into M2.5 heat-set inserts in
-  two rails on its own module's floor — hexrack's "canoes", running along X with the
-  airflow. **The board stands on M2.5 × 5 male-female standoffs** (`board_standoff_h`)
-  screwed into the inserts, not on the print: the rails stop at `rail_top`, the board
+  four round posts on its own module's floor, one per hole — **not hexrack's
+  "canoes"**: the rails joining each row cost plastic for nothing, and the air under
+  the board now runs round four posts instead of along two walls. **The board stands on M2.5 × 5 male-female standoffs** (`board_standoff_h`)
+  screwed into the inserts, not on the print: the posts stop at `rail_top`, the board
   keeps its height, and air runs under it. The HAT's M2.5
   male-female standoffs thread through the Pi into those. `standoffs-seated` fails if
-  the rails fall short of them
+  the posts fall short of them
 - **STACKING: SPIGOT, SOCKET, 45° LAP ON THE SIDES AND REAR.** A module's bottom band
   is a spigot inset `wall + stack_gap` that drops inside the walls of the module below.
   The walls meet on a lap: the lower wall's top is bevelled inside, and the upper

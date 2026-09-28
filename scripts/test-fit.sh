@@ -34,16 +34,16 @@ done
 echo ""
 echo "Fit — rails and inserts"
 
-expect_geometry "rails render"                              canoes-alone
-expect_empty    "rails do not pierce the board"             canoes-vs-board
+expect_geometry "rails render"                              posts-alone
+expect_empty    "rails do not pierce the board"             posts-vs-board
 expect_empty    "insert pockets are open in the module"     pockets-vs-module
 expect_geometry "insert pockets sit in the rails"           pockets-in-rails
 expect_empty    "insert pockets lie wholly in rail and floor" pockets-outside-rails
 
 # ...and the rails must REACH the standoffs, which reach the board. Both clearance
 # checks above pass on a rail 5mm too short.
-render canoes-alone "$WORK/canoes.stl"
-RAIL_TOP=$(bounds "$WORK/canoes.stl" | awk '{print $6}')
+render posts-alone "$WORK/posts.stl"
+RAIL_TOP=$(bounds "$WORK/posts.stl" | awk '{print $6}')
 WANT_TOP=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
     -D 'test_view="report-geometry"' cad/tests.scad 2>&1 \
   | sed -n 's/.*rail_top = \([0-9.]*\).*/\1/p')
