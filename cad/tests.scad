@@ -188,7 +188,7 @@ function allJoints() = concat(
   [ for (j = lapJoints()) [str("module-", j[0]), bevelJoint(j), "module", "module"] ],
   [ for (j = lapJoints())
       [str("lid-", j[0]),
-       [j[0], j[1] + [0, 0, module_count * module_pitch], j[2], j[3]], "lid", "module"] ],
+       [j[0], j[1] + [0, 0, module_count * module_pitch], j[2], j[3], j[4]], "lid", "module"] ],
   [ for (j = filterJoints()) [j[0], j, "filter", "module"] ],
   // The bottom module's own lap ribs, into the base's bevel.
   [ for (j = lapJoints()) [str("base-", j[0]), j, "module", "base"] ]);

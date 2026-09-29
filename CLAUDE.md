@@ -144,16 +144,21 @@ tallest board, so any board goes in any module.
   sagged. Nothing on the lap prints over air**, and `test-print.sh`'s flat budget has
   no room for a roof. The front wall is solid `front_wall_t` deep up to the next
   module's floor, which lies on it; above that only its outer 3 mm rises, as a lap
-- **THE CLIP IS ON THE LAP — HALF A RIB, HALF A GROOVE.** One rib per wall
-  (`lapJoints()`), four in all, centred on the chamfer's plane so half stands out
-  of the module's underside into a groove in the bevel below. hexrack's square rib
-  turned 45° has its faces at ±45°, parallel and square to the lap, so **every face
-  of rib and groove prints**. The bevel is a wedge, thin toward the outer face, so
-  the groove sits near the inner edge (`lap_clip_c` = 1.0 up the slope) and leaves
-  `lap_clip_wall` (0.69, asserted ≥ 0.6) to the outer face. The rib's lower corner
-  then hangs `lap_z0` (0.49) below the chamfer's inner edge: **the chamfer is carried
-  on down to the bed**, so the floor narrows to it with no step and the rib's corner
-  prints from the bed. This replaced a 5.2 mm spigot band that only carried the clips
+- **THE CLIP IS ON THE LAP — HALF OF THE OLD `>`.** One rib per wall (`lapJoints()`,
+  four in all). Seen end-on, the old rib stood out of its wall as a `>`; on the lap
+  it keeps that `>` as the world sees it, **only its upper half**: a flat underside
+  on the bed, a face falling outward at 45° (the `>`'s upper stroke, 1.7 long, the
+  face that holds), and its third side on the chamfer. The groove in the bevel below
+  is the same triangle grown `clip_clear`. Pushed down, the flat underside rides the
+  bevel and spreads the walls; pulled up, the 45° face resists. Every face lies on
+  the bed or at 45°, so rib and groove both print. **Not a square bar on the
+  chamfer**: that was a first version, and read as a clip turned 45°. The groove
+  runs 2.8 out from the rib's inner corner, so that corner sits `lap_z0` (0.5) in
+  from the wall's inner face to leave `lap_clip_wall` (0.7) outside the groove, and
+  on the bed: **the chamfer is carried on down to it**, so the floor narrows to the
+  rib's corner with no step. A lap joint is a 5-field row (the outward direction);
+  `clipRib()`/`clipGroove()` build it from `lapClipProfile()`. This replaced a 5.2 mm
+  spigot band that only carried the clips
 - **THE SEATING CHECKS MEASURE BODIES, NOT PARTS.** `moduleBody()` and `lidBody()`
   carry no ribs: with the ribs on, a rib biting the ungrooved bevel passes for a lap
   that bears. The lid's check did exactly that until the lid got its own body; all

@@ -171,17 +171,20 @@ groove_half = (clip_rib + sqrt(2) * clip_clear) * sqrt(2) / 2;
 // flush. Nothing on it prints over air: floor-down, the chamfer is a 45-degree
 // overhang all the way out to the outer face.
 //
-// THE CLIP IS ON THE LAP. A rib centred on the chamfer's plane stands HALF out of it
-// (male, on the module's underside) into a groove in the bevel below (female, on its
-// top). hexrack's square rib turned 45 degrees about its axis has its faces at +-45 --
-// parallel and square to the lap -- so on the lap every face of rib and groove is at
-// 45 degrees and prints. One per wall: four.
+// THE CLIP IS ON THE LAP: HALF OF THE OLD '>'. Seen end-on, the old rib stood out of
+// its wall as a '>'. On the lap it keeps that '>' as the world sees it, and only its
+// UPPER half: a triangle with a flat underside, a face falling outward at 45 (the
+// '>''s upper stroke, clip_rib long, the face that holds), and its third side on the
+// chamfer. Male on the module's underside, female in the bevel below -- the groove is
+// the same triangle grown clip_clear all round. Pushed down, the flat underside rides
+// the bevel and spreads the walls; pulled up, the 45 face resists. Every face lies on
+// the bed or at 45, so both print. One per wall: four.
 //
-// WHERE ON THE LAP. The bevel below is a wedge, thin toward the outer face, so the
-// groove sits near the inner edge: lap_clip_c up the slope from it. Its deepest corner
-// then leaves lap_clip_wall of wall to the outer face. The rib's lower corner hangs
-// below the chamfer's inner edge -- by lap_z0 -- so the floor reaches down to the bed
-// under it, the chamfer carried on down to it; the rib's corner prints from the bed.
+// WHERE ON THE LAP. The bevel below is a wedge, thin toward the outer face, and the
+// groove runs 2 * rib_half + clip_clear out from the rib's inner corner. That corner
+// sits lap_z0 in from the wall's inner face so the groove leaves lap_clip_wall of wall
+// outside it -- and as low, on the bed: the chamfer is carried on down to it, so the
+// floor narrows to the rib's corner with no step.
 // THE LIP STOPS ONE EXTRUSION LINE WIDE, not at a knife edge. A tip thinner than the
 // nozzle's line is dropped or printed ragged by the slicer and chips in handling; at
 // 0.4 it prints as one clean line and leaves a 0.4mm hairline at the joint.
@@ -192,18 +195,13 @@ lip_t      = 0.4;
 lap_gap    = 0.05;
 lap_sink   = lap_gap * sqrt(2);   // the bevel below the chamfer, vertically
 
-lap_clip_c = 1.0;     // rib's axis, up the slope from the chamfer's inner edge
-// Rib and groove in the lap's frame: s up the slope, t square to it, into the bevel.
-lap_rib_w     = clip_rib;                           // along s
-lap_rib_t     = clip_rib / 2;                       // proud of the chamfer
-lap_groove_w  = clip_rib + sqrt(2) * clip_clear;    // the groove, both ways
-lap_z0        = max(0, (lap_rib_w / 2 + lap_rib_t - lap_clip_c) / sqrt(2));
+lap_clip_wall = 0.7;  // groove to the lower wall's outer face, at least
+lap_z0        = max(0, 2 * rib_half + clip_clear - (wall - lap_clip_wall));
 lap_top       = lap_z0 + wall;    // where the chamfer reaches the outer face
-// Below the bevel's inner edge, the groove's lowest point; and what it leaves.
-lap_groove_drop = (lap_groove_w - lap_clip_c) / sqrt(2);
-lap_clip_wall   = wall - (lap_clip_c + lap_groove_w) / sqrt(2);
-assert(lap_clip_c >= lap_rib_w / 2, "the rib runs off the chamfer's inner edge");
-assert(lap_clip_wall >= 0.6, "the lap groove leaves under 0.6mm of wall to the outer face");
+// The groove's floor, under the bevel's inner edge: the rib's flat underside, and
+// clip_clear.
+lap_groove_drop = lap_z0 + clip_clear;
+assert(rib_half < wall, "the lap rib's apex stands past the wall");
 
 // ----------------------------------------------------------------------------
 // DUST FILTER — a round ring with four flats, one per module
@@ -494,9 +492,9 @@ case_part = "assembly";
 //
 // THE EXPLODE LIVES ONLY IN case.scad. placement.scad never reads it, so no fit test
 // can measure an exploded position even by accident.
-assembly_space = 30;
+assembly_space = 20;
 
-show_boards    = false;    // the Pi 5s, from the framework (cooler included)
+show_boards    = true;    // the Pi 5s, from the framework (cooler included)
 show_hats      = false;    // both M.2 HAT+ boards and their drives
 show_standoffs = false;    // the M2.5 standoffs: under each board, and each HAT's
 show_fan       = true;    // one fan mesh per module, of fan_model

@@ -6,8 +6,8 @@
 //   lapSolid()     the underside of every module and of the lid: the 45-degree
 //                  chamfer under all four walls, filled across
 //   bevelCut()     the bevel cut into the top of every module's walls
-//   lapJoints()    the clip ribs on a chamfer; the SAME rows, raised by module_pitch,
-//                  are the grooves in the bevel of the module below
+//   lapJoints()    the clip ribs on a chamfer, half a '>' each; the SAME rows, raised
+//                  by module_pitch, are the grooves in the bevel of the module below
 //
 // All in the MODULE frame: x=0 the front face, y=0 the -Y outer face, z=0 the floor's
 // underside. See config.scad.
@@ -79,20 +79,19 @@ module bevelCut() {
 // ----------------------------------------------------------------------------
 // CLIP JOINTS
 // ----------------------------------------------------------------------------
-// One rib per wall on the chamfer, lap_clip_c up the slope from its inner edge, so
-// half of it stands into the bevel below. The chamfer rises outward at 45 degrees:
-// a point c up the slope is c/sqrt(2) out from the inner face and as high.
+// One rib per wall. A lap joint carries a fifth field, the wall's outward direction:
+// clipRib() and clipGroove() build it as half a '>' on the lap (lib/clips.scad) rather
+// than a diamond on a vertical face. Its centre is on the wall's inner face at z = 0,
+// half way along the wall.
 function lapJoints() =
-  let (o  = lap_clip_c / sqrt(2),
-       z  = lap_z0 + o,
-       xm = (front_wall_t + module_l - wall) / 2)
-  [ ["left",  [xm, wall - o, z],               "x", clip_rib_len],
-    ["right", [xm, module_w - wall + o, z],    "x", clip_rib_len],
-    ["rear",  [module_l - wall + o, module_w / 2, z], "y", clip_rib_len],
-    ["front", [wall - o, module_w / 2, z],     "y", clip_rib_len] ];
+  let (xm = (front_wall_t + module_l - wall) / 2)
+  [ ["left",  [xm, wall, 0],               "x", clip_rib_len, [0, -1, 0]],
+    ["right", [xm, module_w - wall, 0],    "x", clip_rib_len, [0,  1, 0]],
+    ["rear",  [module_l - wall, module_w / 2, 0], "y", clip_rib_len, [ 1, 0, 0]],
+    ["front", [wall, module_w / 2, 0],     "y", clip_rib_len, [-1, 0, 0]] ];
 
 // The same joint, seen from the module below: its groove, in its own frame.
-function bevelJoint(j) = [j[0], j[1] + [0, 0, module_pitch], j[2], j[3]];
+function bevelJoint(j) = [j[0], j[1] + [0, 0, module_pitch], j[2], j[3], j[4]];
 
 module lapRibs()      { for (j = lapJoints()) clipRib(j); }
 module bevelGrooves() { for (j = lapJoints()) clipGroove(bevelJoint(j)); }
