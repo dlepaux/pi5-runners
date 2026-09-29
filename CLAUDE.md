@@ -165,7 +165,7 @@ tallest board, so any board goes in any module.
   clips took it, and the walls had only ~0.3 to spring to let go; at 0.1 it is 0.2 of
   play and ~0.5 of spring. `test-clips.sh` lifts every lap rib 0.3 mm and requires it
   to bite. If a printed module will not seat flush, suspect elephant's foot on the
-  rib's bed-side corner before opening `lap_hold_clear` to 0.15 Pushed down, the flat underside rides the
+  rib's bed-side corner before opening `lap_hold_clear` to 0.15. Pushed down, the flat underside rides the
   bevel and spreads the walls; pulled up, the holding face resists. Every face lies
   on the bed or at 45° or steeper, so rib and groove both print. **Not a square bar on the
   chamfer**: that was a first version, and read as a clip turned 45°. The groove
