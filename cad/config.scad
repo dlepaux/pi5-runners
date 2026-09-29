@@ -280,8 +280,8 @@ assert(fan_csink_d / 2 < fan_web + filter_depth, "the countersink is deeper than
 insert_m25    = "M2.5";
 boss_d        = get_insert_min_boss(insert_m25);   // 7.2
 post_d        = boss_d + 2;   // a millimetre of wall round the insert's minimum boss
-board_standoff_h  = 5;     // M2.5 male-female, rail top to board underside
-board_standoff_af = 5;     // M2.5 standoff hex, across flats
+board_standoff_h  = 6;     // M2.5 male-female, rail top to board underside
+board_standoff_af = 6;     // M2.5 standoff hex, across flats
 
 assert(rail_top - get_insert_spec(insert_m25, "hole_depth") >= 1,
        "the insert pocket would break through the floor");
