@@ -32,13 +32,52 @@ include <../lib/dust-filter.scad>
 module moduleBody() {
   difference() {
     union() {
-      lapSolid();
-      translate([0, 0, lap_top - EPS])
-        linear_extrude(module_h - lap_top + EPS) outline();
+      difference() {
+        union() {
+          lapSolid();
+          translate([0, 0, lap_top - EPS])
+            linear_extrude(module_h - lap_top + EPS) outline();
+        }
+        translate([0, 0, floor_t])
+          linear_extrude(module_pitch - floor_t + EPS) cavityOutline();
+        bevelCut();
+      }
+      islandBulge();
     }
-    translate([0, 0, floor_t])
-      linear_extrude(module_pitch - floor_t + EPS) cavityOutline();
-    bevelCut();
+    islandPocket();
+  }
+}
+
+// ----------------------------------------------------------------------------
+// THE PORT ISLAND — the -Y wall stepped in round the USB-C and micro-HDMIs
+// ----------------------------------------------------------------------------
+// The island's face, seen from outside: x along the wall, z up, grown by g above and
+// below only -- its ends stay square to the wall.
+module islandFace(g) {
+  translate([island_x[0], island_z[0] - g])
+    offset(r = island_r) offset(delta = -island_r)
+      square([island_x[1] - island_x[0], island_z[1] - island_z[0] + 2 * g]);
+}
+
+// A wafer of the face at y, [y - EPS, y]: hull() between two is the 45-degree step.
+module islandAt(y) {
+  translate([0, y, 0]) rotate([90, 0, 0]) linear_extrude(EPS) children();
+}
+
+// Outside: from the island's face at island_outer out past the wall, grown as much
+// as it is deep, so the ceiling and the floor of the recess run out at 45.
+module islandPocket() {
+  hull() {
+    islandAt(island_outer) islandFace(0);
+    islandAt(-1) islandFace(island_outer + 1);
+  }
+}
+
+// Inside: from the wall's inner face in to island_inner, the same way.
+module islandBulge() {
+  hull() {
+    islandAt(island_inner) islandFace(0);
+    islandAt(wall) islandFace(island_inner - wall);
   }
 }
 

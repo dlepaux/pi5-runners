@@ -75,6 +75,22 @@ else
     fail "rear ports end at x=$JACK_FACE but the rear face is at x=$WANT_FACE"
 fi
 
+# The -Y connectors sit behind the port island, island_gap off its inner face: they
+# must clear it, and the island is placed from their measured reach -- tied here to
+# the framework, as the rear ports are, so a wrong reach fails instead of moving it.
+expect_geometry "the Pi's -Y connectors render"           side-edge
+expect_empty    "they clear the port island"              side-edge-vs-module
+render side-edge "$WORK/side-edge.stl"
+SIDE_FACE=$(bounds "$WORK/side-edge.stl" | awk '{print $2}')
+WANT_SIDE=$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
+    -D 'test_view="report-geometry"' ${MODE[@]+"${MODE[@]}"} cad/tests.scad 2>&1 \
+  | sed -n 's/.*side_port_face = \([0-9.]*\).*/\1/p')
+if awk -v a="$SIDE_FACE" -v b="$WANT_SIDE" 'BEGIN { exit !(a - b < 0.01 && b - a < 0.01) }'; then
+    pass "the -Y connectors' faces are where the island expects, y=$SIDE_FACE"
+else
+    fail "the -Y connectors' faces are at y=$SIDE_FACE, the island expects y=$WANT_SIDE"
+fi
+
 echo ""
 echo "Fit — the stack"
 

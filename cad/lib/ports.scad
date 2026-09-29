@@ -72,11 +72,19 @@ module wallSlab(which) {
     translate([module_l - wall - EPS, -g, -g]) cube([wall + 2 * EPS, module_w + 2 * g, module_h + 2 * g]);
 }
 
+// Where one wall's openings are cut: the wall, and on -Y the port island's bulge
+// inside it -- the connectors' openings must go through the whole stepped-in panel.
+module portSlab(which) {
+  if (which == "-Y")
+    translate([-2 * EPS, -EPS, -2 * EPS]) cube([module_l + 4 * EPS, island_inner + 2 * EPS, module_h + 4 * EPS]);
+  else wallSlab(which);
+}
+
 // Everything to subtract from one wall for the module's one board.
 module portCuts(which) {
   intersection() {
     onBoard() ioMaskSwept(which);
-    wallSlab(which);
+    portSlab(which);
   }
 }
 
@@ -141,6 +149,18 @@ module rearEdge() {
     sbc(model = "rpi5", enableheatsink = "disable", enablegpio = "disable",
         enablemask = false);
     translate([pcb_slot_x0 - 1, -big/2, -big/2]) cube([big, big, big]);
+  }
+}
+
+// The Pi's -Y CONNECTORS THEMSELVES, not their mask, board frame: everything past the
+// PCB's -Y edge -- USB-C and both micro-HDMIs. The port island stands island_gap off
+// their faces; this is what a clearance test holds it to. Framework CSG, no import.
+module sideEdge() {
+  big = 400;
+  intersection() {
+    sbc(model = "rpi5", enableheatsink = "disable", enablegpio = "disable",
+        enablemask = false);
+    translate([-big/2, -big, -big/2]) cube([big, big, big]);
   }
 }
 

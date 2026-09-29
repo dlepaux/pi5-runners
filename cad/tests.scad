@@ -213,6 +213,10 @@ if (test_view == "ports-blind")
 // must clear them, and the jacks must reach the outer face -- test-fit.sh reads this
 // view's bounds for that. The edge rendering at all is the witness for the clearance.
 if (test_view == "rear-edge") onBoard() rearEdge();
+// THE PORT ISLAND stands just off the -Y connectors: they must clear it, and they must
+// stand side_port_reach past the PCB -- test-fit.sh reads this view's bounds for that.
+if (test_view == "side-edge")            onBoard() sideEdge();
+if (test_view == "side-edge-vs-module")  intersection() { modulePart(); onBoard() sideEdge(); }
 if (test_view == "rear-edge-vs-module") intersection() { modulePart(); onBoard() rearEdge(); }
 // ...and the walls must still EXIST.
 if (test_view == "wall-y-remains") intersection() { modulePart(); wallSlab("-Y"); }
@@ -334,6 +338,7 @@ if (test_view == "report-geometry") {
   echo(str("board_z = ", board_z));
   echo(str("rail_top = ", rail_top));
   echo(str("rear_port_face = ", module_l + rear_port_proud));
+  echo(str("side_port_face = ", board_y - side_port_reach));
   echo(str("bed = ", bed));
   cube(1);
 }

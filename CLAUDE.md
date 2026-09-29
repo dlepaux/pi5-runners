@@ -70,11 +70,21 @@ tallest board, so any board goes in any module.
   board already sits 0.3 below the axis. `-D board_lift=0` forces the floor
 - **SIDES: THE PI IS CENTRED ACROSS THE MODULE** — 3 mm to the −Y wall, 2.5 to +Y
   past the HAT's 0.5 overhang — so the four posts sit symmetrically; the first print
-  had them 2.5 mm toward −Y and it read as a mistake. The cost: the −Y USB-C and
-  micro-HDMI sockets sit 3 mm behind the wall, not 0.5, and a USB-C plug's shell is
-  ~6.5 mm, so **check a plug seats on the next print**. The Pi is located by its
+  had them 2.5 mm toward −Y and it read as a mistake. The Pi is located by its
   screws; `config.scad` asserts it stays centred. The posts are clipped to the inside
   so they cannot stand into a wall
+- **THE PORT ISLAND.** Centred, the −Y USB-C and micro-HDMIs (which stand 1.0 past
+  the PCB, `side_port_reach`, measured off the framework) left a plug 5 mm to reach
+  from outside — too far to seat. Round the cluster the −Y wall **steps in as a
+  panel**: its inner face 0.5 off the connectors (`island_gap`), 2 mm thick there
+  (`island_t`), so the outer face is 2.5 in and a plug's reach halves, to 2.5. A
+  rounded rectangle, 1.5 round the cluster; top and bottom step in at 45°, inside and
+  out, so it reads as one sheared panel and prints; its ends are square, the rear one
+  stopping short of the louvres. **The connectors cannot go into the wall** as the
+  rear jacks do: the Pi goes in lowered and slid back, never sideways. The −Y port
+  cuts reach through the panel (`portSlab()`); `test-fit.sh` holds the connectors clear
+  of it and their measured reach to the framework. **Check a plug seats on the next
+  print**
 - **AIR PATH: front to back, along each board's full length.** Each fan draws through
   its dust filter and its front wall's bore, pushes over its own SoC and drive, and
   the module exhausts through its rear wall and the rear of both side walls — **149%

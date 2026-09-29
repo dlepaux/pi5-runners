@@ -442,8 +442,12 @@ vent_z1 = module_pitch + lap_z0 - lap_groove_drop - vent_margin;
 
 
 // The -Y connectors, measured off the framework's -Y mask: USB-C and the micro-HDMIs
-// span 6.25..42.60 along the board.
+// span 6.25..42.60 along the board, 1.53..6.02 up from the PCB's underside. The
+// connectors themselves stand side_port_reach past the PCB's -Y edge -- measured off
+// the framework too, and test-fit.sh holds it there.
 side_port_cluster_x = [6.25, 42.60];
+side_port_cluster_z = [1.53, 6.02];
+side_port_reach     = 1.0;
 
 // The side fields sit behind the -Y connectors -- both sides, so the two walls match
 // -- and against the rear wall, where the air leaves the board. They take only
@@ -457,6 +461,31 @@ side_field_x = [side_room_x[1] - vent_side_share * (side_room_x[1] - side_room_x
                 side_room_x[1]];
 assert(side_field_x[1] - side_field_x[0] > 3 * (vent_slot_w + vent_slot_bar),
        "the side exhaust field is too short to hold a grille");
+
+// THE PORT ISLAND. The board is centred, which leaves its -Y connectors 2mm behind
+// the wall's inner face and a plug 5mm to reach from outside: too far to seat. Round
+// the cluster the wall steps IN, as a panel: its inner face island_gap off the
+// connectors, its outer face island_t out from that -- a plug's reach halves, to 2.5.
+// The connectors cannot go INTO the wall as the rear jacks do: the Pi goes in by
+// being lowered and slid back, never sideways. The panel's top and bottom step in at
+// 45 degrees, inside and out, so it reads as one sheared panel and prints: the outer
+// recess's ceiling and the inner bulge's underside are 45-degree overhangs. Its ends
+// are square to the wall -- the rear one stops short of the side louvres.
+island_gap = 0.5;    // island's inner face to the connectors' faces
+island_t   = 2;      // the wall in the island; 3 elsewhere
+island_pad = 1.5;    // round the -Y port cluster, on the island's face
+island_r   = 2;      // its corners, seen from outside
+island_inner = board_y - side_port_reach - island_gap;   // y of the island's inner face
+island_outer = island_inner - island_t;                   // y of its outer face
+island_x = [board_x + side_port_cluster_x[0] - island_pad,
+            board_x + side_port_cluster_x[1] + island_pad];
+island_z = [board_z + side_port_cluster_z[0] - island_pad,
+            board_z + side_port_cluster_z[1] + island_pad];
+assert(island_inner > wall && island_outer > 0,
+       "the port island must step the wall in, not out");
+assert(island_x[1] < side_field_x[0] - 1, "the port island runs into the side louvres");
+assert(island_z[0] - island_outer > lap_top, "the port island's outer step reaches the lap");
+assert(island_z[1] + island_outer < module_h - 3, "the port island's outer step reaches the bevel");
 
 // EXCLUSION ZONE, hexrack's idea: the rear port cluster sits in clean solid wall with
 // the lattice running round it. Sized from the MEASURED cluster -- the framework's +X
