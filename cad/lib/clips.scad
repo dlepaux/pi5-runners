@@ -41,12 +41,13 @@ module clipGroove(j) {
 // ON A 45-DEGREE LAP (a joint with a fifth field, the wall's outward direction): the
 // UPPER HALF of the diamond's '>', in the wall's cross-section -- h outward from the
 // inner face, z up from the part's underside. Flat underside on z = 0 from the rib's
-// inner corner at h = -lap_z0, where the chamfer meets the bed; the 45 face falling
-// outward from the apex; the chamfer's plane its third side. grow > 0 is the groove.
+// inner corner at h = -lap_z0, where the chamfer meets the bed; the holding face
+// falling outward from the apex at lap_clip_angle; the chamfer's plane (45) its third
+// side. grow > 0 is the groove.
 module lapClipProfile(grow) {
   a = lap_rib;
   offset(r = grow, $fn = 16)
-    polygon([[-lap_z0, 0], [-lap_z0 + a, a], [-lap_z0 + 2 * a, 0]]);
+    polygon([[-lap_z0, 0], [-lap_z0 + a, a], [-lap_z0 + lap_rib_w, 0]]);
 }
 
 // The profile (h, z) swept `len` along the joint's axis: h along the outward

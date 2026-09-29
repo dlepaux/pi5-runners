@@ -174,14 +174,14 @@ groove_half = (clip_rib + sqrt(2) * clip_clear) * sqrt(2) / 2;
 // THE CLIP IS ON THE LAP: HALF OF THE OLD '>'. Seen end-on, the old rib stood out of
 // its wall as a '>'. On the lap it keeps that '>' as the world sees it, and only its
 // UPPER half: a triangle with a flat underside, a face falling outward at 45 (the
-// '>''s upper stroke, clip_rib long, the face that holds), and its third side on the
+// '>''s upper stroke, the face that holds, at lap_clip_angle), and its third side on the
 // chamfer. Male on the module's underside, female in the bevel below -- the groove is
 // the same triangle grown clip_clear all round. Pushed down, the flat underside rides
-// the bevel and spreads the walls; pulled up, the 45 face resists. Every face lies on
-// the bed or at 45, so both print. One per wall: four.
+// the bevel and spreads the walls; pulled up, the holding face resists. Every face
+// lies on the bed or at 45 or steeper, so both print. One per wall: four.
 //
 // WHERE ON THE LAP. The bevel below is a wedge, thin toward the outer face, and the
-// groove runs 2 * lap_rib + clip_clear out from the rib's inner corner. That corner
+// groove runs lap_rib_w + clip_clear out from the rib's inner corner. That corner
 // sits lap_z0 in from the wall's inner face so the groove leaves lap_clip_wall of wall
 // outside it -- and as low, on the bed: the chamfer is carried on down to it, so the
 // floor narrows to the rib's corner with no step.
@@ -195,14 +195,19 @@ lip_t      = 0.4;
 lap_gap    = 0.05;
 lap_sink   = lap_gap * sqrt(2);   // the bevel below the chamfer, vertically
 
-lap_rib       = 1.0;  // the lap clip's height, half its width on the bed; the filter's is rib_half, 1.2
-lap_clip_wall = 0.7;  // groove to the lower wall's outer face, at least
-lap_z0        = max(0, 2 * lap_rib + clip_clear - (wall - lap_clip_wall));
+lap_rib        = 1;    // the lap clip's height; the filter's is rib_half, 1.2
+// The holding face, from horizontal. 45 is the old '>'; steeper lets go more easily,
+// and in the groove it is a gentler overhang.
+lap_clip_angle = 60;
+lap_rib_w      = lap_rib * (1 + 1 / tan(lap_clip_angle));   // on the bed
+lap_clip_wall  = 0.7;  // groove to the lower wall's outer face, at least
+lap_z0         = max(0, lap_rib_w + clip_clear - (wall - lap_clip_wall));
 lap_top       = lap_z0 + wall;    // where the chamfer reaches the outer face
 // The groove's floor, under the bevel's inner edge: the rib's flat underside, and
 // clip_clear.
 lap_groove_drop = lap_z0 + clip_clear;
 assert(lap_rib < wall, "the lap rib's apex stands past the wall");
+assert(lap_clip_angle >= 45 && lap_clip_angle < 90, "the holding face must print (>= 45) and hold (< 90)");
 
 // ----------------------------------------------------------------------------
 // DUST FILTER — a round ring with four flats, one per module
