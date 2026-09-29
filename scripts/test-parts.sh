@@ -52,11 +52,19 @@ check_part filter    filter
 # THE SHOWCASE MUST RENDER CLEAN. It is the only file that touches the framework's
 # board model and the vendor fan meshes, so it is the only place their path
 # assumptions can bite -- and both announce themselves as WARNING, not ERROR.
+# THE BOARDS ARE PINNED OFF, whatever config.scad's show_boards says while someone
+# previews. With them on, the framework's Active Cooler imports its DXF by a path that
+# CI's newer OpenSCAD resolves against a different file (CLAUDE.md trap 12) and cannot
+# find -- a preview toggle committed by accident failed five CI runs in a row. The
+# boards are the framework's to render; these checks are about the case. Pinned
+# first, so a check can still pass its own -D after it.
+SHOWCASE_PINS=(-D 'show_boards=false')
+
 showcase() {
     local label="$1"; shift
     local out="$WORK/showcase.stl"
     # shellcheck disable=SC2086
-    "$OPENSCAD" $BACKEND --export-format=binstl -o "$out" "$@" cad/case.scad \
+    "$OPENSCAD" $BACKEND --export-format=binstl -o "$out" "${SHOWCASE_PINS[@]}" "$@" cad/case.scad \
         >"$out.log" 2>&1
     if grep -qE "ERROR:|WARNING:" "$out.log"; then
         fail "$label — errors during render"
