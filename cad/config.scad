@@ -181,7 +181,7 @@ groove_half = (clip_rib + sqrt(2) * clip_clear) * sqrt(2) / 2;
 // the bed or at 45, so both print. One per wall: four.
 //
 // WHERE ON THE LAP. The bevel below is a wedge, thin toward the outer face, and the
-// groove runs 2 * rib_half + clip_clear out from the rib's inner corner. That corner
+// groove runs 2 * lap_rib + clip_clear out from the rib's inner corner. That corner
 // sits lap_z0 in from the wall's inner face so the groove leaves lap_clip_wall of wall
 // outside it -- and as low, on the bed: the chamfer is carried on down to it, so the
 // floor narrows to the rib's corner with no step.
@@ -195,13 +195,14 @@ lip_t      = 0.4;
 lap_gap    = 0.05;
 lap_sink   = lap_gap * sqrt(2);   // the bevel below the chamfer, vertically
 
+lap_rib       = 1.0;  // the lap clip's height, half its width on the bed; the filter's is rib_half, 1.2
 lap_clip_wall = 0.7;  // groove to the lower wall's outer face, at least
-lap_z0        = max(0, 2 * rib_half + clip_clear - (wall - lap_clip_wall));
+lap_z0        = max(0, 2 * lap_rib + clip_clear - (wall - lap_clip_wall));
 lap_top       = lap_z0 + wall;    // where the chamfer reaches the outer face
 // The groove's floor, under the bevel's inner edge: the rib's flat underside, and
 // clip_clear.
 lap_groove_drop = lap_z0 + clip_clear;
-assert(rib_half < wall, "the lap rib's apex stands past the wall");
+assert(lap_rib < wall, "the lap rib's apex stands past the wall");
 
 // ----------------------------------------------------------------------------
 // DUST FILTER — a round ring with four flats, one per module

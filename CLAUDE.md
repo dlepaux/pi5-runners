@@ -3,7 +3,7 @@
 Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Actions
 runners. **A stack of three identical modules, one Pi 5 and one 40 mm Noctua each**,
 a round dust filter (hexrack's, reshaped) clipped into each module's front, and a lid,
-all with rounded vertical corners. 115.9 × 68 × 145.7 mm with the 10 mm fans (125.0 deep with the 20 mm ones). No screws
+all with rounded vertical corners. 115.9 × 68 × 145.3 mm with the 10 mm fans (125.0 deep with the 20 mm ones). No screws
 hold the case together; only the fans are screwed.
 
 ## Project intent
@@ -58,12 +58,12 @@ tallest board, so any board goes in any module.
   2.4 floor, 40 of fan and `fan_clear` 2 above and below, for its silicone corner pads. **This is the owner's
   call: no height the fan does not need.** The filter used to set it — a full circle
   over the diagonal screw heads (r 26.3) made a 55 mm front. It is now **cut flat top
-  and bottom at `filter_v_out` (20.1)**: all the front face the module has — above the
-  front's lap chamfer (3.5) and below the lap groove of the module on top — less
+  and bottom at `filter_v_out` (20.5)**: all the front face the module has — above the
+  front's lap chamfer (3.1) and below the lap groove of the module on top — less
   0.6 mm of wall, and still over the screw heads (19.65). The cost, chosen over a smaller window (it would block the blade tips) and
-  over flats at the glue pocket (a taller module): the ring is 1.1 wide above and below
+  over flats at the glue pocket (a taller module): the ring is 1.5 wide above and below
   the 38 mm window, the glue pocket runs out through those flats, and the recess's
-  top is a 36 mm bridge. The side flats stay at 24, set by the
+  top is a 33 mm bridge. The side flats stay at 24, set by the
   glue pocket, and carry the clips. The tallest board needs 41.45 with its air gap
 - **`board_lift`** centres the tallest board on the fan's axis when the module is
   taller than the board needs. With the fan setting the height it comes out 0: the
@@ -147,13 +147,13 @@ tallest board, so any board goes in any module.
 - **THE CLIP IS ON THE LAP — HALF OF THE OLD `>`.** One rib per wall (`lapJoints()`,
   four in all). Seen end-on, the old rib stood out of its wall as a `>`; on the lap
   it keeps that `>` as the world sees it, **only its upper half**: a flat underside
-  on the bed, a face falling outward at 45° (the `>`'s upper stroke, 1.7 long, the
-  face that holds), and its third side on the chamfer. The groove in the bevel below
+  on the bed, a face falling outward at 45° (the `>`'s upper stroke, the face that
+  holds), `lap_rib` (1.0) tall and twice that wide — smaller than the filter's 1.2, and its third side on the chamfer. The groove in the bevel below
   is the same triangle grown `clip_clear`. Pushed down, the flat underside rides the
   bevel and spreads the walls; pulled up, the 45° face resists. Every face lies on
   the bed or at 45°, so rib and groove both print. **Not a square bar on the
   chamfer**: that was a first version, and read as a clip turned 45°. The groove
-  runs 2.8 out from the rib's inner corner, so that corner sits `lap_z0` (0.5) in
+  runs 2.4 out from the rib's inner corner, so that corner sits `lap_z0` (0.1) in
   from the wall's inner face to leave `lap_clip_wall` (0.7) outside the groove, and
   on the bed: **the chamfer is carried on down to it**, so the floor narrows to the
   rib's corner with no step. A lap joint is a 5-field row (the outward direction);

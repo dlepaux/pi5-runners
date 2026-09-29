@@ -57,7 +57,7 @@ budget base-20 base 0 0 -D 'fan_model="NF-A4x20"'
 #                 top flat and its sides (~22); the side port openings' rounded ends
 #                 (~9), the exclusion zone's rounded corners (~7). The wall vents add
 #                 nothing: every edge is 45.
-#   flat ~633  -- the filter recess's TOP FLAT, a 36mm bridge 4mm deep off the web
+#   flat ~633  -- the filter recess's TOP FLAT, a 33mm bridge 4mm deep off the web
 #                 behind it (~136): the price of the fan, not the filter, setting the
 #                 module's height, and the round crown it replaced was ~160 of steep.
 #                 The tops of the port openings, rear (~130) and side (~59); the

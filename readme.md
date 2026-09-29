@@ -3,7 +3,7 @@
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
 runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a round
 dust filter clipped into each module's front, and a lid, all with rounded corners.
-**115.9 × 68 × 145.7 mm** (148.7 on its base) with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
+**115.9 × 68 × 145.3 mm** (148.3 on its base) with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
 together; only the fans are.
 
 ## What it holds
@@ -59,7 +59,7 @@ Seven STLs, **none needing support**, in the orientation they come out of
 
 | Part | Print | Size |
 |------|-------|------|
-| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 49.4 mm |
+| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 49.0 mm |
 | `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 115.9 / 125.0 × 68 × 8.2 mm |
 | `base-NF-A4x10` or `base-NF-A4x20` | rim down | 117.9 / 127.0 × 72 × 9.5 mm |
 | `filter` | ×3, face down, pocket up | 50.8 × 52.6 × 4.0 mm |
@@ -82,7 +82,7 @@ How each part avoids support:
   stopped 1.3 mm short and the roof it left sagged. The wall below rises into the
   chamfer as a lip one extrusion line wide at its top, so the joint is flush but for
   a 0.4 mm hairline. The
-  filter's recess has its clips at the sides; its top flat is a 36 mm bridge, 4 mm
+  filter's recess has its clips at the sides; its top flat is a 33 mm bridge, 4 mm
   deep off the wall behind it. The rounded corners
   are vertical, so they cost nothing.
 - **Lid.** Upside down, its lap narrows as it rises and its ribs are 45° bars on it.
@@ -97,7 +97,7 @@ its air gap, so it fits under that.
 The filter used to set it. Its window matches the 38 mm fan bore, and a full circle
 with the fabric's glue band round it made the front 55 mm per module. It is now cut
 flat top and bottom, as far as the front face allows and still over the fan's screw
-heads: the ring is 1.1 mm wide there
+heads: the ring is 1.5 mm wide there
 and the fabric is glued at the sides and corners. That saves 8.5 mm a module, 25.6 on the
 stack.
 

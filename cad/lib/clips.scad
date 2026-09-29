@@ -44,7 +44,7 @@ module clipGroove(j) {
 // inner corner at h = -lap_z0, where the chamfer meets the bed; the 45 face falling
 // outward from the apex; the chamfer's plane its third side. grow > 0 is the groove.
 module lapClipProfile(grow) {
-  a = rib_half;
+  a = lap_rib;
   offset(r = grow, $fn = 16)
     polygon([[-lap_z0, 0], [-lap_z0 + a, a], [-lap_z0 + 2 * a, 0]]);
 }
