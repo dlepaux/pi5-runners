@@ -8,7 +8,8 @@
 # measuring: its groove was once anchored to a different datum than its rib, 9mm
 # off, and both parts still exported clean. The joint had simply stopped existing.
 #
-# Two checks per joint, because each alone passes on a broken joint:
+# Two checks per joint, because each alone passes on a broken joint (and a third on
+# the lap clips, below, for play):
 #   rib-vs-mate  EMPTY  -- at rest the rib touches nothing of the part it clips into.
 #                A missing or misplaced groove shows up as the rib buried in wall.
 #   rib-reach    VOLUME -- the rib reaches into the mating part's territory. A rib that
@@ -35,6 +36,11 @@ for row in "${JOINTS[@]}"; do
     read -r k name owner mate <<<"$row"
 
     expect_empty "$name: rib clears the $mate at rest" clip-rib-vs-mate -D "clip_k=$k"
+    # A lap clip must HOLD, not rattle: lifted 0.3mm, the rib already bites its groove.
+    # At rest-clear alone it passed with 0.8mm of play before the clips took a module.
+    case "$name" in
+        module-*|lid-*) expect_geometry "$name: holds a module lifted 0.3mm" clip-rib-lifted -D "clip_k=$k" ;;
+    esac
 
     render clip-rib       "$WORK/rib-$k.stl"   -D "clip_k=$k"
     render clip-rib-reach "$WORK/reach-$k.stl" -D "clip_k=$k"

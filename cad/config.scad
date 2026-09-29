@@ -202,6 +202,13 @@ lap_rib        = 1;    // the lap clip's height; the filter's diamond is clip_ri
 lap_clip_angle = 60;
 lap_rib_w      = lap_rib * (1 + 1 / tan(lap_clip_angle));   // on the bed
 lap_clip_wall  = 0.7;  // groove to the lower wall's outer face, at least
+// THE HOLDING FACE FITS CLOSE. The groove stands clip_clear off the rib everywhere
+// else, but off the face that holds only lap_hold_clear: at 0.4 there, a module lifted
+// 0.8mm before its clips took it -- a stack that rattles -- and the walls had only
+// ~0.3mm to spring to let go. Square to a face at lap_clip_angle, a gap g is
+// g / cos(angle) of lift.
+lap_hold_clear = 0.1;
+lap_clip_play  = lap_hold_clear / cos(lap_clip_angle);   // lift before the clips hold
 lap_z0         = max(0, lap_rib_w + clip_clear - (wall - lap_clip_wall));
 lap_top       = lap_z0 + wall;    // where the chamfer reaches the outer face
 // The groove's floor, under the bevel's inner edge: the rib's flat underside, and
@@ -209,6 +216,7 @@ lap_top       = lap_z0 + wall;    // where the chamfer reaches the outer face
 lap_groove_drop = lap_z0 + clip_clear;
 assert(lap_rib < wall, "the lap rib's apex stands past the wall");
 assert(lap_clip_angle >= 45 && lap_clip_angle < 90, "the holding face must print (>= 45) and hold (< 90)");
+assert(lap_clip_play <= 0.25, "the lap clips let a module lift over 0.25mm before they hold");
 
 // ----------------------------------------------------------------------------
 // DUST FILTER — a round ring with four flats, one per module

@@ -202,6 +202,11 @@ if (test_view == "report-clips") {
 if (test_view == "clip-rib")       clipRib(allJoints()[clip_k][1]);
 if (test_view == "clip-rib-vs-mate")
   intersection() { clipRib(allJoints()[clip_k][1]); mateOf(allJoints()[clip_k]); }
+// HOLD, NOT RATTLE: lifted clip_lift, a rib must already bite the groove it sits in --
+// the play before a clip takes the load is under that.
+clip_lift = 0.3;
+if (test_view == "clip-rib-lifted")
+  intersection() { translate([0, 0, clip_lift]) clipRib(allJoints()[clip_k][1]); mateOf(allJoints()[clip_k]); }
 if (test_view == "clip-rib-reach")
   intersection() { clipRib(allJoints()[clip_k][1]); mateTerritory(allJoints()[clip_k]); }
 

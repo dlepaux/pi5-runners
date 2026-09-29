@@ -160,7 +160,12 @@ tallest board, so any board goes in any module.
   **`lap_clip_angle` = 60°**, steeper than the old 45° so a module lets go more
   easily (and a gentler overhang in the groove); `lap_rib` (1.0) tall, 1.58 wide on
   the bed, and its third side on the chamfer. The groove in the bevel below
-  is the same triangle grown `clip_clear`. Pushed down, the flat underside rides the
+  is the same triangle grown `clip_clear` (0.4) — **except on the holding face, which
+  fits at `lap_hold_clear` (0.1)**. At 0.4 all round a module lifted 0.8 mm before its
+  clips took it, and the walls had only ~0.3 to spring to let go; at 0.1 it is 0.2 of
+  play and ~0.5 of spring. `test-clips.sh` lifts every lap rib 0.3 mm and requires it
+  to bite. If a printed module will not seat flush, suspect elephant's foot on the
+  rib's bed-side corner before opening `lap_hold_clear` to 0.15 Pushed down, the flat underside rides the
   bevel and spreads the walls; pulled up, the holding face resists. Every face lies
   on the bed or at 45° or steeper, so rib and groove both print. **Not a square bar on the
   chamfer**: that was a first version, and read as a clip turned 45°. The groove
