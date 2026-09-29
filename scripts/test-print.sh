@@ -46,10 +46,6 @@ budget lid-10 lid    0 0 -D 'fan_model="NF-A4x10"'
 budget lid-20 lid    0 0 -D 'fan_model="NF-A4x20"'
 budget filter filter 0 0
 
-# BASE: nothing at all. Rim on the bed, the skirt vertical, the socket's bevel and
-# grooves facing inward and up as on a module's top.
-budget base-10 base 0 0 -D 'fan_model="NF-A4x10"'
-budget base-20 base 0 0 -D 'fan_model="NF-A4x20"'
 
 # MODULE, measured by where it is (both fans measure the same):
 #   steep ~152 -- the fan bore's crown in the 3mm web and the countersinks' upper

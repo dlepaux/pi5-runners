@@ -8,7 +8,7 @@
 // fan_model changes the module and the lid; the dust filter is the same either way.
 //
 // Every printed part comes out of here IN ITS PRINT ORIENTATION: module floor-down,
-// lid plate-down, dust filter face-down, base rim-down.
+// lid plate-down, dust filter face-down.
 //
 // THIS IS THE ONLY FILE ALLOWED TO TOUCH cad/assets/. The vendor fan mesh enters
 // through fanVisualization(), which marks it with % so it is drawn in preview and
@@ -23,15 +23,13 @@ use <lib/sbc-helpers.scad>
 use <parts/module.scad>
 use <parts/lid.scad>
 use <parts/filter.scad>
-use <parts/base.scad>
 
-case_parts = ["module", "lid", "filter", "base"];
+case_parts = ["module", "lid", "filter"];
 
 module casePart(name) {
   if (name == "module") modulePart();
   if (name == "lid")    lidPrint();
   if (name == "filter") filterPart();
-  if (name == "base")   basePrint();
 }
 
 // ----------------------------------------------------------------------------
@@ -80,7 +78,6 @@ if (case_part == "assembly") {
       if (show_filter) color("DimGray") filterMounted(assembly_space);
     }
   if (show_case) translate(explodeLid()) lidAt() lidPart();
-  if (show_case) translate(-[0, 0, assembly_space]) baseAt() basePart();
 } else {
   // One printed part, with no preview geometry anywhere near it.
   assert(len([for (p = case_parts) if (p == case_part) p]) == 1,

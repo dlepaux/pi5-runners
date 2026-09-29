@@ -3,7 +3,7 @@
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
 runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a round
 dust filter clipped into each module's front, and a lid, all with rounded corners.
-**115.9 × 68 × 145.2 mm** (148.2 on its base) with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
+**115.9 × 68 × 145.2 mm** with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
 together; only the fans are.
 
 ## What it holds
@@ -61,7 +61,6 @@ Seven STLs, **none needing support**, in the orientation they come out of
 |------|-------|------|
 | `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 48.9 mm |
 | `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 115.9 / 125.0 × 68 × 8.2 mm |
-| `base-NF-A4x10` or `base-NF-A4x20` | rim down | 117.9 / 127.0 × 72 × 9.5 mm |
 | `filter` | ×3, face down, pocket up | 50.8 × 52.6 × 4.0 mm |
 
 **Download them** from the project's GitHub Pages site, rebuilt on every push to main
@@ -119,10 +118,9 @@ room to round the front corners.
    the front with four **M3 countersunk self-tappers** through the recess floor into
    the fan's corner holes — **M3 × 12** for the NF-A4x10, **M3 × 20** for the NF-A4x20.
    Plug it into that Pi's GPIO: 5 V on pin 2 or 4, ground on pin 6.
-3. Click the bottom module onto the base: a module's bevel on an open rim, with a
-   skirt round its sides and rear. Stack the others: each one's chamfer lies on the
-   bevel of the one below and clicks in on four 45° ribs, one per wall. Click the lid
-   onto the top one.
+3. Stand the bottom module on the desk on its floor. Stack the others: each one's
+   chamfer lies on the bevel of the one below and clicks in on four ribs, one per
+   wall. Click the lid onto the top one.
 4. Glue filter fabric into the pocket on the back of each filter and click
    it into its recess, over the screw heads.
 

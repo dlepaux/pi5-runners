@@ -26,7 +26,6 @@ use <lib/ports.scad>
 use <lib/vents.scad>
 use <parts/module.scad>
 use <parts/lid.scad>
-use <parts/base.scad>
 use <parts/filter.scad>
 
 test_view = "";
@@ -93,23 +92,20 @@ module partByName(n) {
   if (n == "module") modulePart();
   if (n == "lid")    lidAt() lidPart();
   if (n == "filter") filterMounted();
-  if (n == "base")   baseAt() basePart();
 }
 // As they print: what the bed check and the printability check measure.
 module printByName(n) {
   if (n == "module") modulePart();
   if (n == "lid")    lidPrint();
   if (n == "filter") filterPart();
-  if (n == "base")   basePrint();
 }
 if (test_view == "part")  partByName(part);
 if (test_view == "print") printByName(part);
 
-// The whole case, as it stands: every module with its filter, the lid and the base.
+// The whole case, as it stands: every module with its filter, and the lid.
 module wholeCase() {
   for (k = [0 : module_count - 1]) moduleAt(k) { modulePart(); filterMounted(); }
   lidAt() lidPart();
-  baseAt() basePart();
 }
 module allModules() {
   for (k = [0 : module_count - 1]) moduleAt(k) modulePart();
@@ -152,9 +148,6 @@ if (test_view == "pockets-outside-rails")
 // Neighbours touch on the lap, and the floor on the front wall below, and nowhere else.
 if (test_view == "module-vs-above") intersection() { modulePart(); moduleAt(1) modulePart(); }
 if (test_view == "module-vs-lid")   intersection() { modulePart(); moduleAt(1) lidPart(); }
-// The bottom module, and its filter -- which must still come out past the skirt.
-if (test_view == "module-vs-base")
-  intersection() { union() { modulePart(); filterMounted(); } baseAt() basePart(); }
 // ...and they DO touch. "Nothing overlaps" is also true of a module floating 5mm up;
 // lowered 0.2mm, the module above must bite into this one. moduleBody(), not the part:
 // anything else running the full height -- rails, once -- would pass this for a
@@ -173,10 +166,6 @@ if (test_view == "module-seated-on-lap")
   intersection() {
     moduleBody(); translate([0, 0, module_pitch - 0.2]) moduleBody(); behindFrontWall();
   }
-if (test_view == "base-seated")
-  intersection() { translate([0, 0, -0.2]) moduleBody(); baseAt() basePart(); }
-if (test_view == "base-seated-on-lap")
-  intersection() { translate([0, 0, -0.2]) moduleBody(); baseAt() basePart(); behindFrontWall(); }
 if (test_view == "lid-seated-on-lap")
   intersection() {
     moduleBody(); translate([0, 0, module_pitch - 0.2]) lidBody(); behindFrontWall();
@@ -189,22 +178,19 @@ function allJoints() = concat(
   [ for (j = lapJoints())
       [str("lid-", j[0]),
        [j[0], j[1] + [0, 0, module_count * module_pitch], j[2], j[3], j[4]], "lid", "module"] ],
-  [ for (j = filterJoints()) [j[0], j, "filter", "module"] ],
-  // The bottom module's own lap ribs, into the base's bevel.
-  [ for (j = lapJoints()) [str("base-", j[0]), j, "module", "base"] ]);
+  [ for (j = filterJoints()) [j[0], j, "filter", "module"] ]);
 
 // The mate, as it sits relative to the rib: a lap rib of the module above, or of
 // the lid, lands in the socket of the module below it.
 module mateOf(row) {
-  if (row[3] == "base") baseAt() basePart();
-  else moduleAt(row[2] == "lid" ? module_count - 1 : 0) modulePart();
+  moduleAt(row[2] == "lid" ? module_count - 1 : 0) modulePart();
 }
 // The mate's own territory -- where a rib must reach to be engaged: the walls of the
 // module below, or for a filter, the front wall it clips into.
 module mateTerritory(row) {
   if (row[2] == "filter")
     cube([front_wall_t, module_w, module_pitch]);
-  else moduleAt(row[3] == "base" ? -1 : row[2] == "lid" ? module_count - 1 : 0)
+  else moduleAt(row[2] == "lid" ? module_count - 1 : 0)
     linear_extrude(module_h) difference() { square([module_l, module_w]); inset(wall); }
 }
 

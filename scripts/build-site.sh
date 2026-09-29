@@ -22,7 +22,7 @@ cp stl/*.stl "$OUT/stl/"
 # Everything for one build, per fan: three of each part are printed, but one file is
 # all a slicer needs.
 for fan in NF-A4x10 NF-A4x20; do
-    zip -jq "$OUT/pi5-runners-$fan.zip" "stl/module-$fan.stl" "stl/lid-$fan.stl" "stl/base-$fan.stl" stl/filter.stl
+    zip -jq "$OUT/pi5-runners-$fan.zip" "stl/module-$fan.stl" "stl/lid-$fan.stl" stl/filter.stl
 done
 
 size() {
@@ -120,15 +120,8 @@ cat >"$OUT/index.html" <<HTML
   </section>
 
   <section class="card">
-    <div class="head"><h2>Base — the feet</h2><span class="count">print ×1</span></div>
-    <p class="meta">Rim down. The bottom module clips into it; a skirt wraps its foot.<br>
-    NF-A4x10: $(size base-NF-A4x10) · NF-A4x20: $(size base-NF-A4x20)</p>
-    <div class="row">$(dl base-NF-A4x10 "NF-A4x10") $(dl base-NF-A4x20 "NF-A4x20")</div>
-  </section>
-
-  <section class="card">
     <div class="head"><h2>Everything</h2></div>
-    <p class="meta">Module, dust filter, lid and base for one fan, zipped.</p>
+    <p class="meta">Module, dust filter and lid for one fan, zipped.</p>
     <div class="row">
       <a class="dl ghost" href="pi5-runners-NF-A4x10.zip" download>All parts · NF-A4x10</a>
       <a class="dl ghost" href="pi5-runners-NF-A4x20.zip" download>All parts · NF-A4x20</a>

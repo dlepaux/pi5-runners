@@ -149,13 +149,14 @@ fan_throat_area = PI * pow(fan_bore_d, 2) / 4 - PI * pow(fan_hub_d, 2) / 4;   //
 // ----------------------------------------------------------------------------
 // The same joint as hexrack's dust filter: a square-section rib turned 45 degrees,
 // half of it standing proud of one part, dropping into a matching groove in the
-// other. Four ribs on every module's lap chamfer, one per wall, into grooves in the
-// bevel of the module below; and two on every dust filter.
-// HEXRACK'S FULL SIZE (1.7 x 18). A 40% smaller rib (1.0 x 11) was tried to look
-// lighter and printed too small; back to the size hexrack proved.
-clip_rib     = 1.7;          // hexrack's dust_clip_length: the rib's square section
+// other. The DIAMOND is the dust filter's now, two per filter; the modules' lap
+// clips are half of it, sized by lap_rib below, clip_rib_len long.
+// THE FILTER'S IS 20% UNDER HEXRACK'S 1.7, the owner's call for a lighter look. A 40%
+// smaller rib (1.0 x 11) was once tried on the module joints and printed too small;
+// 20% on a clip that only holds a filter ring is not that.
+clip_rib     = 0.8 * 1.7;    // hexrack's dust_clip_length, less 20%: the rib's square section
 clip_clear   = tolerance;    // groove stands this far off the rib all round
-clip_rib_len = 18;
+clip_rib_len = 18;           // the lap clips' length
 
 rib_half    = clip_rib * sqrt(2) / 2;                        // proud of the joint plane
 groove_half = (clip_rib + sqrt(2) * clip_clear) * sqrt(2) / 2;
@@ -195,7 +196,7 @@ lip_t      = 0.4;
 lap_gap    = 0.05;
 lap_sink   = lap_gap * sqrt(2);   // the bevel below the chamfer, vertically
 
-lap_rib        = 1;    // the lap clip's height; the filter's is rib_half, 1.2
+lap_rib        = 1;    // the lap clip's height; the filter's diamond is clip_rib
 // The holding face, from horizontal. 45 is the old '>'; steeper lets go more easily,
 // and in the groove it is a gentler overhang.
 lap_clip_angle = 60;
@@ -248,7 +249,7 @@ filter_a_out = filter_r_in + filter_glue_band + 1;          // centre to a flat
 filter_r_recess = filter_r_out + filter_clear;
 filter_a_recess = filter_a_out + filter_clear;
 filter_flat  = 2 * sqrt(filter_r_out ^ 2 - filter_a_out ^ 2);   // a flat's length
-filter_rib_len = 0.6 * filter_flat;      // clear of the arc at both ends, groove included
+filter_rib_len = 0.8 * 0.6 * filter_flat;   // 20% under the 0.6 that cleared the arc
 
 assert(filter_a_out < filter_r_out, "the flats miss the circle -- the ring has no flats");
 assert(fan_bolt_pitch / 2 + fan_csink_d / 2 + 0.5 <= filter_a_out,
@@ -439,16 +440,6 @@ vent_side_share   = 1;     // how much of the room behind the -Y ports the louvr
 vent_z0 = lap_top + vent_margin;
 vent_z1 = module_pitch + lap_z0 - lap_groove_drop - vent_margin;
 
-// THE BASE: a module's bevel on an open rim, with a skirt round it (parts/base.scad).
-base_floor_t     = 3;           // the rim under the bottom module
-base_skirt       = 2;           // skirt beyond the module's sides and rear
-// Skirt top, above the bottom module's underside: DERIVED, midway between the joint it
-// hides (module_h, on the bottom module's lap) and the lowest vents (vent_z0 - 1).
-base_skirt_h     = (module_h - module_pitch + vent_z0 - 1) / 2;
-base_skirt_clear = 0.2;         // skirt to the module's outer face, above the lip
-
-assert(base_skirt_h < vent_z0 - 1, "the base's skirt covers the lowest vents");
-assert(module_pitch + base_skirt_h > module_h, "the skirt stops below the joint it hides");
 
 // The -Y connectors, measured off the framework's -Y mask: USB-C and the micro-HDMIs
 // span 6.25..42.60 along the board.

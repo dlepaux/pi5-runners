@@ -121,7 +121,6 @@ tallest board, so any board goes in any module.
 |------|--------|----|
 | `module` ×3 | floor-down | a floor (solid by default, `floor_vents`) with four insert posts, four walls; the front one carries the fan, its bore, its screw holes and the filter's recess; a 45° chamfer with four clip ribs below, a bevel with four grooves above |
 | `lid` | plate-down | a module's chamfer and four ribs with a solid plate on it |
-| `base` | rim-down | the bottom module's feet: a module's bevel (module −1's top slice, cut from `moduleBody()` itself) on an open rim, a 2 mm skirt round the sides and rear, front flush so the filter still comes out |
 | `filter` ×3 | face-down | a round ring with four flats, fabric glued into a pocket on its back, two ribs |
 
 - **THE BOARDS ARE NEVER CONNECTED.** Each Pi screws into M2.5 heat-set inserts in
@@ -150,7 +149,7 @@ tallest board, so any board goes in any module.
   on the bed, a face falling outward (the `>`'s upper stroke, the face that holds) at
   **`lap_clip_angle` = 60°**, steeper than the old 45° so a module lets go more
   easily (and a gentler overhang in the groove); `lap_rib` (1.0) tall, 1.58 wide on
-  the bed — smaller than the filter's 1.2, and its third side on the chamfer. The groove in the bevel below
+  the bed, and its third side on the chamfer. The groove in the bevel below
   is the same triangle grown `clip_clear`. Pushed down, the flat underside rides the
   bevel and spreads the walls; pulled up, the holding face resists. Every face lies
   on the bed or at 45° or steeper, so rib and groove both print. **Not a square bar on the
@@ -182,10 +181,14 @@ tallest board, so any board goes in any module.
   and only clips it at the front (the front wall is solid full width there). An assert
   keeps 1 mm of wall between a front corner and the filter recess's flats: 4 now, up
   to 6.5 possible
-- **CLIPS: hexrack's 45° rib into a groove**, everywhere, **at hexrack's size** (rib 1.7
-  square, 18 long on the modules). A 40% smaller rib (1.0 × 11) was printed and came out too
-  small. hexrack's `snap-fit.scad` is
+- **CLIPS: hexrack's 45° rib into a groove.** The dust filter keeps the full diamond,
+  **20% under hexrack's size** (rib 1.36 square, `clip_rib`), the owner's call; the
+  modules' lap clips are half of it (above). A 40% smaller rib (1.0 × 11) was once
+  printed on the module joints and came out too small. hexrack's `snap-fit.scad` is
   **dead code**; do not port it
+- **NO BASE.** There were feet — a module's bevel on an open rim with a skirt — and
+  they were dropped as useless: the bottom module stands on its own floor, flat on
+  the bed side, the lap ribs' flat undersides flush with it
 - **Assembly**: slide each Pi back into its rear wall's holes, fit its HAT and screw it into its module and each fan in from the front; stack the
   modules and press them together until the four lap clips click; click the lid on; glue fabric into each filter and
   click it into its recess
