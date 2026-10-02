@@ -3,7 +3,8 @@
 // ============================================================================
 // A round ring with four flats that sits FLUSH in the recess in a module's front wall, over its
 // fan. Filter fabric is glued into a 0.32mm pocket on its BACK, reaching 4mm out from
-// the window, and spans the window; the ring only frames it. Two 45-degree ribs on its
+// the window, and spans the window; the ring only frames it. The window is a 45-degree
+// funnel from the front face down to the fabric, so dust wipes out of it. Two 45-degree ribs on its
 // left and right flats, at its back, click into grooves in the recess -- hexrack's
 // sectionDust(), sized for a 40mm fan. The ring also covers the fan's four screw heads.
 //
@@ -23,6 +24,15 @@ module filterRingLocal() {
   difference() {
     linear_extrude(filter_depth) filterProfile(filter_r_out, filter_a_out, filter_v_out);
     translate([0, 0, -EPS]) linear_extrude(filter_depth + 2 * EPS) circle(r = filter_r_in, $fn = 128);
+    // The funnel: a 45-degree cone, clipped to the ring's outline less its land.
+    intersection() {
+      translate([0, 0, -EPS])
+        cylinder(r1 = filter_r_in + filter_funnel + EPS, r2 = filter_r_in,
+                 h = filter_funnel + EPS, $fn = 128);
+      translate([0, 0, -EPS]) linear_extrude(filter_funnel + 2 * EPS)
+        filterProfile(filter_r_out - filter_land, filter_a_out - filter_land,
+                      filter_v_out - filter_land);
+    }
     translate([0, 0, filter_depth - filter_glue_d])
       linear_extrude(filter_glue_d + EPS) circle(r = filter_r_in + filter_glue_band, $fn = 128);
   }

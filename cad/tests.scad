@@ -299,6 +299,32 @@ if (test_view == "filter-vs-module") intersection() { filterMounted(); modulePar
 if (test_view == "filter-seated")
   intersection() { translate([0.2, 0, 0]) filterMounted(); modulePart(); }
 
+// THE WINDOW IS A FUNNEL, in the printed part's own frame: front face at z = 0, x across
+// the side flats, y across the top and bottom ones. Probes sit half-way down the slope,
+// a hair either side of where its surface must be.
+module funnelProbe(r, at = 0) {
+  rotate(at) translate([r, 0, filter_funnel / 2]) cube(0.1, center = true);
+}
+// At the sides it is a full 45-degree slope: air just inside it...
+if (test_view == "funnel-open-at-side")
+  intersection() { filterPart(); funnelProbe(filter_r_in + filter_funnel / 2 - 0.2); }
+// ...and ring just outside it.
+if (test_view == "funnel-ring-at-side")
+  intersection() { filterPart(); funnelProbe(filter_r_in + filter_funnel / 2 + 0.2); }
+// Above and below, the flats clip it: the front face keeps its land.
+if (test_view == "funnel-land-at-flat")
+  intersection() {
+    filterPart();
+    translate([0, filter_v_out - filter_land / 2, 0.1]) cube(0.1, center = true);
+  }
+// It stops at the fabric: the window there is still the fan's bore, no wider.
+if (test_view == "funnel-ends-at-fabric")
+  intersection() {
+    filterPart();
+    for (at = [0, 90])
+      rotate(at) translate([filter_r_in + 0.2, 0, filter_funnel - 0.1]) cube(0.1, center = true);
+  }
+
 // -- fan screws --------------------------------------------------------------
 // hexrack's way round: in from outside, heads countersunk into the recess floor.
 module screwAxes() {

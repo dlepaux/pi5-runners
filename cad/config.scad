@@ -386,6 +386,20 @@ filter_v_recess  = filter_v_out + filter_clear;
 assert(filter_v_out >= fan_bolt_pitch / 2 + fan_csink_d / 2 + 0.5,
        "the top and bottom flats uncover a fan screw head");
 
+// THE WINDOW IS A 45-DEGREE FUNNEL, DOWN TO THE FABRIC, so dust wipes out of it instead
+// of packing into the corner a straight 4mm wall made with the fabric. It opens toward
+// the room; at the fabric the window is still the fan's bore.
+//
+// IT IS AS WIDE AS THE RING ALLOWS, and the ring does not allow it everywhere. A full
+// funnel is 3.68 wide and the ring is 1.6 wide at its top and bottom flats, so the funnel
+// is clipped to the ring's own outline less filter_land: full at the sides and corners,
+// and above and below the window it is a straight wall with only the last 0.8mm sloped.
+// The land is the front face left at the flats -- and the first layer on the bed.
+filter_land   = 0.8;                            // two 0.4mm perimeters
+filter_funnel = filter_depth - filter_glue_d;   // its depth, and its widening per side
+assert(filter_v_out - filter_land > filter_r_in && filter_a_out - filter_land > filter_r_in,
+       "the ring is narrower than filter_land at a flat -- the funnel has nothing to keep");
+
 // BOARD LIFT. When the fan sets the module's height the board already sits near its
 // axis and this is 0. Should anything else grow the module, a board left on the floor
 // sends the top of the fan's flow over the HAT instead of across the board, so by

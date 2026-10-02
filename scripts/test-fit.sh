@@ -108,6 +108,10 @@ echo "Fit — the dust filters"
 
 expect_empty    "a filter sits in its recess, touching nothing"  filter-vs-module
 expect_geometry "a filter sits on its recess floor"             filter-seated
+expect_empty    "the window's funnel is open at the sides"       funnel-open-at-side
+expect_geometry "the funnel is a 45-degree slope, not a bigger hole" funnel-ring-at-side
+expect_geometry "the funnel leaves its land at the flats"        funnel-land-at-flat
+expect_geometry "the funnel ends at the fabric, on the fan's bore" funnel-ends-at-fabric
 
 echo ""
 echo "Fit — fans"
