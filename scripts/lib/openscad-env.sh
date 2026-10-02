@@ -18,6 +18,12 @@
 
 set -uo pipefail
 
+# Numbers here are parsed and compared by awk and printf. Under a comma-decimal locale
+# (fr_FR) "933.4" is not a number to them: printf prints 0 and awk falls back to comparing
+# STRINGS, so 1416 >= 933 is false and a healthy module "chokes its 0mm2 fan". CI runs in
+# C and never saw it.
+export LC_NUMERIC=C
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT" || exit 1
 
