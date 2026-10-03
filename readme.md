@@ -3,7 +3,7 @@
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
 runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a round
 dust filter clipped into each module's front, and a lid, all with rounded corners.
-**115.9 × 68 × 145.2 mm** with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
+**115.9 × 68 × 175.2 mm** with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
 together; only the fans are.
 
 ## What it holds
@@ -42,8 +42,8 @@ behind a filter — about a kelvin, not a different class of cooling.
 **Airflow** runs front to back along each board's full length. Each fan draws through
 its module's dust filter and front wall, pushes over its own SoC and drive, and
 the module exhausts through its rear wall and the rear of both side walls — never the
-lid, which would drop dust onto a board. Each module's exhaust is **149% of its fan's
-throat** (169% with the 20 mm fans) — louvres leaning rearward at the rear of each
+lid, which would drop dust onto a board. Each module's exhaust is **211% of its fan's
+throat** (240% with the 20 mm fans) — louvres leaning rearward at the rear of each
 side, straight louvres above and below the rear ports. The floors are solid by default; set
 `floor_vents = true` for a triangle lattice that lets each module breathe into the
 one above.
@@ -59,7 +59,7 @@ Seven STLs, **none needing support**, in the orientation they come out of
 
 | Part | Print | Size |
 |------|-------|------|
-| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 48.9 mm |
+| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 58.9 mm |
 | `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 115.9 / 125.0 × 68 × 8.2 mm |
 | `filter` | ×3, face down, pocket up | 50.8 × 52.6 × 4.0 mm |
 
@@ -90,8 +90,13 @@ How each part avoids support:
 ## Why the case is this tall
 
 The fan sets each module's height: a 2.4 mm floor, the 40 mm fan and 2 mm above and
-below it for its silicone corner pads, 46.4 mm floor to floor. The tallest board (Pi, HAT and drive) needs 41.5 with
+below it for its silicone corner pads, 46.4 mm. The tallest board (Pi, HAT and drive) needs 42.5 with
 its air gap, so it fits under that.
+
+On top of that come 10 mm of headroom (`module_headroom`), 56.4 mm floor to floor: a
+taller passive heatsink did not fit under the next module's floor. The headroom is all
+above the board and the fan, which stay where they were, so the dust filter is the same
+part and the side and rear louvres simply run taller.
 
 The filter used to set it. Its window matches the 38 mm fan bore, and a full circle
 with the fabric's glue band round it made the front 55 mm per module. It is now cut

@@ -41,11 +41,25 @@ module moduleBody() {
         translate([0, 0, floor_t])
           linear_extrude(module_pitch - floor_t + EPS) cavityOutline();
         bevelCut();
+        frontFlexCut();
       }
       islandBulge();
     }
     islandPocket();
   }
+}
+
+// The front wall thinned from the inside, above the fan, so its lip can spring (see
+// front_flex_t). Profile x into the wall, y up: the thin band, the 45-degree corbel
+// back to `wall` under the lap, and open to the top behind it like the other walls.
+// Between the corners only -- they stay solid.
+module frontFlexCut() {
+  if (front_flex)
+    onYWall(module_w - wall - corner_r)
+      linear_extrude(module_w - 2 * (wall + corner_r))
+        polygon([[front_flex_t, front_flex_z0], [front_wall_t + EPS, front_flex_z0],
+                 [front_wall_t + EPS, module_pitch + EPS], [wall, module_pitch + EPS],
+                 [wall, front_flex_z1 + wall - front_flex_t], [front_flex_t, front_flex_z1]]);
 }
 
 // ----------------------------------------------------------------------------

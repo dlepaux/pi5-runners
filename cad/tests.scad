@@ -171,6 +171,14 @@ if (test_view == "lid-seated-on-lap")
     moduleBody(); translate([0, 0, module_pitch - 0.2]) lidBody(); behindFrontWall();
   }
 
+// THE FRONT LIP CAN SPRING: behind the front clip, half way up the band, there is air
+// behind the skin, and the skin itself is there.
+module frontFlexProbe(x) {
+  translate([x, module_w / 2, (front_flex_z0 + front_flex_z1) / 2]) cube(0.2, center = true);
+}
+if (test_view == "front-flex-open") intersection() { modulePart(); frontFlexProbe(front_flex_t + 0.3); }
+if (test_view == "front-flex-skin") intersection() { modulePart(); frontFlexProbe(front_flex_t - 0.3); }
+
 // -- clips -------------------------------------------------------------------
 // One table of every clipped joint: [name, rib (stack frame), owner, mate].
 function allJoints() = concat(

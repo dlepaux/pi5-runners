@@ -103,6 +103,10 @@ expect_geometry "the lid sits on the top module"       lid-seated
 expect_geometry "a module's lap bears on the one below" module-seated-on-lap
 expect_geometry "the lid's lap bears on the top module" lid-seated-on-lap
 
+# The front clip only goes in if the lip below can give: the front wall is thin there.
+expect_empty    "the front wall is open behind its lip"  front-flex-open
+expect_geometry "and keeps its skin"                      front-flex-skin
+
 echo ""
 echo "Fit — the dust filters"
 

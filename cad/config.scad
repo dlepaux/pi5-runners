@@ -356,17 +356,41 @@ corner_r = 4;
 // the floor, 40mm and fan_clear either side. The filter used to set it, as a full
 // circle 55mm tall; it is cut flat top and bottom to fit the fan's height instead
 // (filter_v_out below), because nothing else earns the 8.5mm a module.
-module_pitch = max(board_z0 + hat_slot_h + module_air,
-                   floor_t + fan_size + 2 * fan_clear);
+//
+// PLUS module_headroom, the owner's call: a taller passive heatsink did not fit under
+// the next module's floor. It is all ABOVE the board and the fan -- neither moves (see
+// fan_zc), so the dust filter is the same part and only the modules are reprinted.
+module_headroom  = 10;
+module_pitch_min = max(board_z0 + hat_slot_h + module_air,
+                       floor_t + fan_size + 2 * fan_clear);
+module_pitch     = module_pitch_min + module_headroom;
+assert(module_headroom >= 0, "module_headroom cannot take height the board or the fan needs");
 // The next module's floor stands at module_pitch, its chamfer's inner edge lap_z0
 // higher; this module's bevel runs lap_sink under that, up to the lip, lip_t in from
 // the outer face.
 module_h     = module_pitch + lap_top - lap_sink - lip_t;
 
-// The fan and its filter: centred across the module, and between its floor and the
-// next module's.
+// THE FRONT LIP SPRINGS, IN THE HEADROOM. A lap rib passes the lip below by pushing it
+// 0.48mm out. The side and rear walls are 3mm sheets a module tall and give; the front
+// was 7mm solid to its top under a solid floor, so nothing gave and the front clip never
+// went in pressed straight down (the lid's did: its lap is a hollow skirt). Above the
+// fan the front wall now thins to front_flex_t, from the inside, and comes back to
+// `wall` under the lap on a 45-degree corbel, front_flex_roof under the groove's floor.
+// It needs the headroom: with none, the wall stays solid and the front must be hooked
+// in first. THINNER SPRINGS EASIER -- the force goes with the cube: 1.2 is three
+// perimeters and ~20 N by a cantilever estimate, NOT measured on a print.
+front_flex_t    = 1.2;
+front_flex_roof = 0.8;
+front_flex_z0   = module_pitch_min;   // the fan's own height stays solid
+front_flex_z1   = module_pitch - lap_groove_drop - front_flex_roof - (wall - front_flex_t);
+front_flex      = front_flex_z1 - front_flex_z0 >= 3;   // under 3mm of band it is no spring
+assert(front_flex_t > 0 && front_flex_t <= wall, "front_flex_t is a thinner wall, not a thicker one");
+
+// The fan and its filter: centred across the module, and in the height the board and
+// the fan need -- not in the headroom, which would lift the fan off the board's axis
+// and stretch the filter's flats into a different part.
 fan_yc = module_w / 2;
-fan_zc = (floor_t + module_pitch) / 2;
+fan_zc = (floor_t + module_pitch_min) / 2;
 
 // THE FILTER'S TOP AND BOTTOM FLATS take all the front face the module has, less a
 // millimetre of wall to its top edge. The side flats are set by the glue pocket; these
