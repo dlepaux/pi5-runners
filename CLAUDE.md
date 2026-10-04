@@ -177,8 +177,10 @@ tallest board, so any board goes in any module.
   flush but for a hairline. **A step would be a ledge printed over air; a chamfer
   stopping short of the outer face leaves a roof — the first print's 1.3 mm one
   sagged. Nothing on the lap prints over air**, and `test-print.sh`'s flat budget has
-  no room for a roof. The front wall is solid `front_wall_t` deep up to the next
-  module's floor, which lies on it; above that only its outer 3 mm rises, as a lap
+  no room for a roof. The front wall is solid `front_wall_t` deep for the filter's
+  recess and the fan, but **stops 0.4 short of the next module's floor** (`front_top`,
+  the groove's floor); above that only its outer 3 mm rises, as a lap. The module above
+  bears on its lap alone, on all four walls
 - **THE CLIP IS ON THE LAP — HALF OF THE OLD `>`.** One rib per wall (`lapJoints()`,
   four in all). Seen end-on, the old rib stood out of its wall as a `>`; on the lap
   it keeps that `>` as the world sees it, **only its upper half**: a flat underside
@@ -199,20 +201,35 @@ tallest board, so any board goes in any module.
   in from the wall's inner face to leave `lap_clip_wall` (0.7) outside the groove —
   0 now, so the rib starts on the inner edge, on the bed. **So the female is OPEN
   INWARD**: a floor 0.4 under the bevel's inner edge, running out to the inside, under
-  the 60° face that holds. Not a mistake — a closed pocket would need the rib moved
+  the 60° face that holds — at the front too, now its inner part stops at that floor, so
+  a rib hooks in from the inside. Not a mistake — a closed pocket would need the rib moved
   out, and the wall only has 0.3 to spare, a sliver. Were `lap_z0` > 0, the chamfer
   is carried on down to the bed so the floor narrows to the rib with no step. A lap joint is a 5-field row (the outward direction);
   `clipRib()`/`clipGroove()` build it from `lapClipProfile()`. This replaced a 5.2 mm
   spigot band that only carried the clips
 - **THE FRONT LIP DOES NOT SPRING; THE FRONT CLIP IS HOOKED IN FIRST.** A rib passes
   the lip below by pushing it 0.48 mm out. The side and rear walls give; the front is
-  7 mm solid to its top, so a module goes on tilted, its front clip hooked in first,
+  7 mm solid under its lip, so a module goes on tilted, its front clip hooked in first,
   then its rear pressed down. **A thinned band above the fan was tried** (4b24efa,
   `frontFlexCut()`): the front wall cut to 1.2 from the inside, between the corners.
   The two corners it left solid clamped the lip at both ends, and on the print they
   kept the lid from clipping properly; it also made the front's inside a clutter of
   pillars and corbels for nothing. With the fan centred the band has no room anyway.
-  It is gone, and the inside of the front wall is one face
+  It is gone
+- **THE FRONT WALL'S INNER PART STOPS SHORT OF THE MODULE ABOVE.** It rose flush with
+  the next module's floor: a second seat beside the lap (whichever prints high bears,
+  and the clips stop short of seating), and a wall closing the front groove's inner
+  side, so the rib slid in over it at zero clearance, where a first layer's squish
+  catches.
+  Its top is now `front_top`, the groove's floor, 0.4 under the next floor, level over
+  the filter's recess. Behind the recess it **falls steeply to the fan's top**, the
+  owner's call: ~73°, from 4.6 mm into the wall down to 50.7 on the inside face, so the
+  inside face ends where the fan's frame does. Straight from the recess's back it left
+  0.24 of web behind the recess's crown, under one extrusion line, and a pinhole there
+  lets unfiltered air round the ring; it passes `front_web_min` (0.8) behind it.
+  Lower over the recess it cannot go: the round recess's crown is 0.6 under
+  `front_top`. `test-fit.sh` sinks the module above 0.3 mm and slides the front rib in
+  from the inside 0.2 mm low, and holds the wall over and behind the crown
 - **THE SEATING CHECKS MEASURE BODIES, NOT PARTS.** `moduleBody()` and `lidBody()`
   carry no ribs: with the ribs on, a rib biting the ungrooved bevel passes for a lap
   that bears. The lid's check did exactly that until the lid got its own body; all
@@ -424,7 +441,9 @@ without error and exports a clean single body.
 31. **A joint with two bearing faces can hide one.** Once the lap bore on its bevel
     instead of the land, `module-seated` still passed on the front butt joint alone. A
     lap standing 0.2 mm off would have let the rear hang on the clips. `*-seated-on-lap`
-    looks behind the front wall only, and fails with `lap_gap = 0.2`.
+    looks behind the front wall only, and fails with `lap_gap = 0.2`. The butt joint
+    was also the seat — the lap stood `lap_gap` off it — so on a print whichever face
+    came out high bore. It is gone (`front_top`); `front-wall-clear` keeps it gone.
 32. **A placeholder that gets printed is no longer a placeholder.** The fan screws were
     drawn as an M3 DIN 7991, "confirm against the screws actually used before
     printing". Nobody did, and the fans' own 4.3 mm corner holes, in Noctua's STEP all

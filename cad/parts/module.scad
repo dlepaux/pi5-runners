@@ -27,8 +27,9 @@ include <../lib/dust-filter.scad>
 // ----------------------------------------------------------------------------
 // BODY — lap, floor, walls, bevel
 // ----------------------------------------------------------------------------
-// The front wall is solid front_wall_t deep up to the next module's floor, which lies
-// on it; above that only its outer `wall` rises, into the lap, like the other three.
+// The front wall is solid front_wall_t deep for the filter's recess and the fan, up to
+// front_top, short of the next module's floor; above that only its outer `wall` rises,
+// into the lap, like the other three.
 module moduleBody() {
   difference() {
     union() {
@@ -41,10 +42,24 @@ module moduleBody() {
         translate([0, 0, floor_t])
           linear_extrude(module_pitch - floor_t + EPS) cavityOutline();
         bevelCut();
+        frontTopCut();
       }
       islandBulge();
     }
     islandPocket();
+  }
+}
+
+// The front wall's inner part: level at front_top over the filter's recess, then
+// falling to the fan's top on the inside face (config.scad). Profile x into the wall,
+// y up; inside the walls only, so the corners keep their round.
+module frontTopCut() {
+  intersection() {
+    translate([0, 0, floor_t]) linear_extrude(module_pitch) inset(wall);
+    onYWall(module_w) linear_extrude(module_w)
+      polygon([[0, front_top], [front_fall_x, front_top], [front_wall_t, front_foot],
+               [front_wall_t + EPS, front_foot], [front_wall_t + EPS, module_pitch + 1],
+               [0, module_pitch + 1]]);
   }
 }
 

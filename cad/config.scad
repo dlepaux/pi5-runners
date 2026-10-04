@@ -391,17 +391,23 @@ assert(module_headroom >= 0, "module_headroom cannot take height the board or th
 module_h     = module_pitch + lap_top - lap_sink - lip_t;
 
 // THE FRONT LIP DOES NOT SPRING: a lap rib passes the lip below by pushing it 0.48mm
-// out, and the front wall is 7mm solid to its top, so the front clip is hooked in
+// out, and the front wall is 7mm solid below its lip, so the front clip is hooked in
 // first, tilted, and the rear pressed down -- the side and rear walls give. A thinned
 // band above the fan was tried; the corners it left solid held the lip anyway, and
 // with the fan centred the band has no room.
+//
+// THE FRONT WALL'S INNER PART STOPS SHORT OF THE MODULE ABOVE: its top is the lap
+// groove's floor, lap_groove_drop under the next module's floor, not that floor. Flush
+// with it, it was a second seat beside the lap -- a print's tolerances picked which one
+// bore, and the clips stopped short of seating -- and it closed the front groove's
+// inner side, so the rib could not be hooked in from inside as on the other walls.
+front_top = module_pitch + lap_z0 - lap_groove_drop;
 
 // THE ROUND FILTER'S ROOM ON THE FRONT FACE: from where the front's chamfer reaches the
-// outer face, up to the floor of the lap groove of the module on top, less
-// filter_edge_wall of wall at either end. The ring and its clearance must fit in it.
+// outer face, up to the front wall's top, less filter_edge_wall of wall at either end.
+// The ring and its clearance must fit in it.
 filter_edge_wall = 0.6;
-filter_room      = [lap_top + filter_edge_wall,
-                    module_pitch + lap_z0 - lap_groove_drop - filter_edge_wall];
+filter_room      = [lap_top + filter_edge_wall, front_top - filter_edge_wall];
 assert(filter_room[1] - filter_room[0] >= 2 * filter_r_recess,
        "the round filter runs into the lap: module_headroom is too small for it");
 
@@ -411,6 +417,19 @@ assert(filter_room[1] - filter_room[0] >= 2 * filter_r_recess,
 // the floors. The board does not follow it up (board_z).
 fan_yc = module_w / 2;
 fan_zc = (filter_room[0] + filter_room[1]) / 2;
+
+// BEHIND THE FILTER'S RECESS THE FRONT WALL'S TOP FALLS TO THE FAN'S TOP, the owner's
+// call: its inside face ends where the fan's frame does, not at the next floor. Steep,
+// ~73 degrees, so it passes front_web_min behind the recess's crown -- straight from the
+// recess's back to the fan's top it left 0.24 there, under one extrusion line, and a
+// pinhole there lets unfiltered air round the ring. It faces up: nothing to support.
+front_web_min = 0.8;                           // two perimeters
+front_foot    = fan_zc + fan_size / 2;         // where the fall meets the inside face
+front_crown   = fan_zc + filter_r_recess;      // the recess's top, at the middle
+front_fall_x  = filter_depth + front_web_min
+                - (front_top - front_crown) * (front_wall_t - filter_depth - front_web_min)
+                  / (front_crown - front_foot);   // where the fall leaves front_top
+assert(front_fall_x >= filter_depth, "the front wall's fall cuts over the filter's recess");
 
 // THE WINDOW IS A 45-DEGREE FUNNEL, DOWN TO THE FABRIC, so dust wipes out of it instead
 // of packing into the corner a straight 4mm wall made with the fabric. It opens toward

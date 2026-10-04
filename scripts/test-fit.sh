@@ -102,6 +102,12 @@ expect_geometry "the lid sits on the top module"       lid-seated
 # Both pass on the front butt joint alone. Behind it, the lap must bear too.
 expect_geometry "a module's lap bears on the one below" module-seated-on-lap
 expect_geometry "the lid's lap bears on the top module" lid-seated-on-lap
+# ...on the lap ALONE: the front wall's inner part is no second seat, and leaves the
+# front groove open inward, so its rib hooks in from the inside like the other three.
+expect_empty    "a module sunk 0.3mm still clears the front wall" front-wall-clear
+expect_empty    "the front clip's rib hooks in from the inside"    front-rib-hooks-in
+expect_geometry "the front wall still closes over the filter's crown" front-wall-over-crown
+expect_geometry "and keeps two perimeters of web behind it"       front-web-behind-crown
 
 echo ""
 echo "Fit — the dust filters"

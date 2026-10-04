@@ -171,6 +171,36 @@ if (test_view == "lid-seated-on-lap")
     moduleBody(); translate([0, 0, module_pitch - 0.2]) lidBody(); behindFrontWall();
   }
 
+// THE MODULE ABOVE BEARS ON ITS LAP ALONE, not on the front wall's inner part as well:
+// sunk 0.3mm, its floor still clears the front wall behind the lap. A second bearing
+// face there is the one a print's tolerances pick, and the clips stop short of seating.
+if (test_view == "front-wall-clear")
+  intersection() {
+    modulePart();
+    translate([0, 0, module_pitch - 0.3]) modulePart();
+    translate([wall + 0.5, wall + 0.5, 0]) cube([front_wall_t - wall, module_w - 2 * wall - 1, 2 * module_h]);
+  }
+// ...AND ITS FRONT CLIP HOOKS IN FROM THE INSIDE, as on the other three walls: the rib,
+// 0.2mm low for a first layer's squish, slides out from the module's inside to its
+// groove without touching the module below.
+function frontJoint() = [for (j = lapJoints()) if (j[0] == "front") j][0];
+if (test_view == "front-rib-hooks-in")
+  intersection() {
+    modulePart();
+    hull() for (dx = [0, front_wall_t - wall])
+      translate([dx, 0, -0.2]) clipRib(bevelJoint(frontJoint()));
+  }
+// The front wall still closes over the filter recess's crown, filter_edge_wall thick...
+module crownProbe(x, dz) {
+  translate([x, fan_yc, fan_zc + filter_r_recess + dz]) cube(0.1, center = true);
+}
+if (test_view == "front-wall-over-crown")
+  intersection() { modulePart(); crownProbe((wall + filter_depth) / 2, filter_edge_wall / 2); }
+// ...and behind the crown its web keeps two perimeters, however steep the top falls:
+// there is wall 0.75 behind the recess, just under its crown. 0.6 of web fails it.
+if (test_view == "front-web-behind-crown")
+  intersection() { modulePart(); crownProbe(filter_depth + 0.75, -0.1); }
+
 // -- clips -------------------------------------------------------------------
 // One table of every clipped joint: [name, rib (stack frame), owner, mate].
 function allJoints() = concat(
