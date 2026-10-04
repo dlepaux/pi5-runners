@@ -94,15 +94,23 @@ echo ""
 echo "Fan screws"
 # In from outside, hexrack's way: countersunk into the recess floor, under the ring.
 expect_empty "every screw head lies under the filter ring"   screw-heads-outside-ring
-expect_empty "every screw has a clear path to the fan"       screw-paths
+expect_empty "every screw's thread passes its hole freely"   screw-paths
+# Noctua's self-tapping fan screws, not the M3 the first prints were drawn for: every
+# one cut its own thread through a 3.4mm hole, wedged its head into a cone too small
+# for it, and cracked the web toward the bore.
+expect_empty    "every screw head sinks under the recess floor" screw-heads-sunk
+expect_geometry "and has a cone to bear on"                     screw-heads-bear
+# A MILLIMETRE OF WALL ROUND EVERY COUNTERSINK. The corner holes sit 3.6mm outside the
+# bore, so this is what notices a countersink breaking into it -- or the web round it
+# thinning to a sliver that cracks.
 render screw-seat-annuli "$WORK/seat-rings.stl"
 render screw-seats       "$WORK/seats.stl"
 RING=$(vol "$WORK/seat-rings.stl"); SEAT=$(vol "$WORK/seats.stl")
-if awk -v m="$SEAT" -v a="$RING" 'BEGIN { exit !(a > 0 && m >= 0.9 * a) }'; then
-    pass "$(printf 'every screw head has a solid seat (%.0f%% of the rings round them)' \
+if awk -v m="$SEAT" -v a="$RING" 'BEGIN { exit !(a > 0 && m >= 0.97 * a) }'; then
+    pass "$(printf 'every countersink has a millimetre of wall round it (%.0f%% solid)' \
             "$(awk -v m="$SEAT" -v a="$RING" 'BEGIN{print m/a*100}')")"
 else
-    fail "$(printf 'only %.1fmm3 of %.1f round the screw heads is wall — a countersink breaks into the bore?' "$SEAT" "$RING")"
+    fail "$(printf 'only %.1fmm3 of %.1f round the countersinks is wall — one breaks into the bore?' "$SEAT" "$RING")"
 fi
 
 report "airflow and port checks"

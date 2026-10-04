@@ -3,7 +3,7 @@
 Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Actions
 runners. **A stack of three identical modules, one Pi 5 and one 40 mm Noctua each**,
 a round dust filter (hexrack's, reshaped) clipped into each module's front, and a lid,
-all with rounded vertical corners. 115.9 × 68 × 175.2 mm with the 10 mm fans (125.0 deep with the 20 mm ones). No screws
+all with rounded vertical corners. 115.9 × 68 × 182.4 mm with the 10 mm fans (125.0 deep with the 20 mm ones). No screws
 hold the case together; only the fans are screwed.
 
 ## Project intent
@@ -40,8 +40,9 @@ tallest board, so any board goes in any module.
   standoffs. **This is not re-openable as a preference** — it is the height that
   clears the cooler, and `config.scad` asserts it
 - **ONE FAN PER MODULE.** Each module carries a 40 mm Noctua on the inside of its front
-  wall, **screwed in from outside, hexrack's way**: M3 countersunk through the 3 mm web
-  behind the filter recess into the fan's standard corner holes. Powered from its own
+  wall, **screwed in from outside, hexrack's way**: Noctua's own self-tapping screws
+  from the fan's bag (~M5), countersunk through the 3 mm web behind the filter recess
+  into the fan's 4.3 mm corner holes. Powered from its own
   Pi's GPIO 5 V (pins 2 or 4, ground on 6): a module is a complete unit. Three fans against the two a shared column had is **+50% airflow**:
   ~9.7 K case-air rise, ~15 K under the M.2 HAT's 50 °C rating in a 25 °C room.
   **The owner has two NF-A4x10s; the third is bought**
@@ -54,25 +55,45 @@ tallest board, so any board goes in any module.
 - **WHAT THE 20 mm FANS BUY.** +15% free airflow (9.4 against 8.2 m³/h) and +27%
   static pressure (2.26 against 1.78 mmH₂O) — the figure that counts behind a filter.
   About 1 K more margin with three of them, not a different class of cooling
-- **THE FAN SETS THE MODULE'S HEIGHT, PLUS `module_headroom`, NOT THE FILTER.** 46.4
-  (`module_pitch_min`): the
-  2.4 floor, 40 of fan and `fan_clear` 2 above and below, for its silicone corner pads. **`module_headroom` = 10
-  on top, 56.4 floor to floor, is the owner's call**: a taller passive heatsink did not
-  fit on srv-runner-1. It replaces "no height the fan does not need". The headroom is
-  all ABOVE the board and the fan: `fan_zc` is centred in `module_pitch_min`, not in
-  the pitch, so the fan stays on the board's axis, `board_lift` stays 0 and **the
-  filter is the same part** — only the modules are reprinted. The filter used to set it — a full circle
-  over the diagonal screw heads (r 26.3) made a 55 mm front. It is now **cut flat top
-  and bottom at `filter_v_out` (20.6)**: all the front face the module has — above the
-  front's lap chamfer (3.0) and below the lap groove of the module on top — less
-  0.6 mm of wall, and still over the screw heads (19.65). The cost, chosen over a smaller window (it would block the blade tips) and
-  over flats at the glue pocket (a taller module): the ring is 1.6 wide above and below
-  the 38 mm window, the glue pocket runs out through those flats, and the recess's
-  top is a 33 mm bridge. The side flats stay at 24, set by the
-  glue pocket, and carry the clips. The tallest board needs 42.45 with its air gap
-- **`board_lift`** centres the tallest board on the fan's axis when the module is
-  taller than the board needs. With the fan setting the height it comes out 0: the
-  board already sits 0.3 below the axis. `-D board_lift=0` forces the floor
+- **THE FAN SCREWS ARE NOCTUA'S, NOT M3.** The first prints cut a 3.4 mm hole and a
+  6.3 countersink for an M3 DIN 7991, "to confirm against the screws actually used".
+  The screws were Noctua's ~M5 self-tappers (4.8 thread, 7.05 head, hexrack's
+  `M5-Noctua`), which the fans' 4.3 mm holes said all along. Every one cut its own
+  thread through the web and wedged its head, and the web cracked toward the bore,
+  0.5 mm from the countersink. Now: **a 5.3 hole** (the thread and 0.5), **a 90°
+  countersink 7.5 wide under a 0.4 counterbore** (`fan_screw_sink`), so the head sits
+  ~0.35 under the recess floor and the filter lies flat, and **a boss round each
+  screw**: the 38 mm bore gives up a crescent at each corner so every countersink keeps
+  1.2 of web round it. The bosses stop at 17.68 from the axis, short of the blade tips
+  (17.41 and 17.57, measured off Noctua's STEP, `fan_tip_r`); they take ~2.5% of the
+  throat, left in the airflow figure. `test-airflow.sh` holds the thread's clearance,
+  the head's sink, a cone to bear on and a millimetre of wall round every countersink.
+  **Check a screw goes in clean on the next print**
+- **THE FAN SETS THE MODULE'S HEIGHT, PLUS `module_headroom`.** 46.4
+  (`module_pitch_min`): the 2.4 floor, 40 of fan and `fan_clear` 2 above and below, for
+  its silicone corner pads. **`module_headroom` = 12.4, 58.8 floor to floor, is the
+  owner's call**: 10 at first, because a taller passive heatsink did not fit on
+  srv-runner-1; 12.4 once the fan was centred, because that is what the round filter
+  needs over Noctua's screw heads (`filter_room` asserts it). The tallest board needs
+  42.45 with its air gap
+- **THE FAN IS CENTRED**, the owner's call: it sat at the bottom of the front with all
+  the headroom above it. `fan_zc` is the middle of `filter_room`, the front face from
+  where the front's chamfer reaches the outer face (3.0) to the floor of the lap
+  groove of the module on top, less `filter_edge_wall` (0.6) at each end; that is 0.1
+  above the middle between the floors. Seen from the front the ring still sits 0.8
+  over the seam below and 4.2 under the seam above: the top 3.4 of each face is the
+  lap's lip, where the recess cannot go
+- **THE BOARD STAYS ON ITS POSTS**, wherever the fan is: the headroom is room for a
+  heatsink on it. `board_lift` used to raise it onto the fan's axis when the module
+  grew; it never fired until the fan was centred, and then would have eaten 5 mm of
+  that room. It is gone, and the board's centre sits 5 below the fan's axis
+- **THE FILTER IS ROUND ABOVE AND BELOW**, flats only at the sides (24 from the axis,
+  set by the glue pocket), where the clips are. While the fan set the height and sat
+  low, the ring was also cut flat top and bottom (`filter_v_out`), 1.6 wide there, and
+  the recess's top was a 33 mm bridge. Round, the recess's crown is an arch again,
+  ~160 mm² steeper than 45° 4 mm deep off the web, as it was before 6c9bf5f;
+  `test-print.sh` budgets it. The front lap groove sits `filter_edge_wall` over that
+  crown
 - **SIDES: THE PI IS CENTRED ACROSS THE MODULE** — 3 mm to the −Y wall, 2.5 to +Y
   past the HAT's 0.5 overhang — so the four posts sit symmetrically; the first print
   had them 2.5 mm toward −Y and it read as a mistake. The Pi is located by its
@@ -92,8 +113,8 @@ tallest board, so any board goes in any module.
   print**
 - **AIR PATH: front to back, along each board's full length.** Each fan draws through
   its dust filter and its front wall's bore, pushes over its own SoC and drive, and
-  the module exhausts through its rear wall and the rear of both side walls — **211%
-  of its fan's throat** with the NF-A4x10 (240% with the NF-A4x20). **Never the lid**: a lid with holes drops dust on a board.
+  the module exhausts through its rear wall and the rear of both side walls — **225%
+  of its fan's throat** with the NF-A4x10 (257% with the NF-A4x20). **Never the lid**: a lid with holes drops dust on a board.
   The floor's triangle lattice is an option, **`floor_vents`, off by default**: a
   solid floor prints whole and drops nothing from one board onto the next; on, each
   module breathes into the one above. `test-airflow.sh` checks both
@@ -122,7 +143,7 @@ tallest board, so any board goes in any module.
   run through them). **No intake louvres ahead of them**: considered and dropped — the
   module is at positive pressure, so any side opening near the fan leaks filtered air
   before it crosses the board and lets dust in when the fans stop.
-  Exhaust: 211% of the throat with the NF-A4x10 (240% with the NF-A4x20)
+  Exhaust: 225% of the throat with the NF-A4x10 (257% with the NF-A4x20)
 - **Positive pressure.** One filtered intake; dust can only enter where the filter is,
   which is the only reason there is exactly one filter
 - **Six cables leave the box** — 3× Ethernet at the rear, 3× USB-C on −Y — because
@@ -136,7 +157,7 @@ tallest board, so any board goes in any module.
 |------|--------|----|
 | `module` ×3 | floor-down | a floor (solid by default, `floor_vents`) with four insert posts, four walls; the front one carries the fan, its bore, its screw holes and the filter's recess; a 45° chamfer with four clip ribs below, a bevel with four grooves above |
 | `lid` | plate-down | a module's chamfer and four ribs with a solid plate on it |
-| `filter` ×3 | face-down | a round ring with four flats, fabric glued into a pocket on its back, two ribs |
+| `filter` ×3 | face-down | a round ring with two flats, fabric glued into a pocket on its back, two ribs |
 
 - **THE BOARDS ARE NEVER CONNECTED.** Each Pi screws into M2.5 heat-set inserts in
   four round posts on its own module's floor, one per hole — **not hexrack's
@@ -183,26 +204,26 @@ tallest board, so any board goes in any module.
   is carried on down to the bed so the floor narrows to the rib with no step. A lap joint is a 5-field row (the outward direction);
   `clipRib()`/`clipGroove()` build it from `lapClipProfile()`. This replaced a 5.2 mm
   spigot band that only carried the clips
-- **THE FRONT LIP SPRINGS, IN THE HEADROOM.** A rib passes the lip below by pushing it
-  0.48 mm out. The side and rear walls give; the front was 7 mm solid to its top under
-  a solid floor, so the front clip never went in pressed straight down (the lid's did:
-  its lap is a hollow skirt). Above the fan the front wall now thins from the inside to
-  `front_flex_t` (1.2) and comes back to 3 under the lap on a 45° corbel
-  (`frontFlexCut()`), between the corners. ~20 N by a cantilever estimate, **not yet
-  proven on a print**: thinner springs easier. With `module_headroom` = 0 there is no
-  band and the front must be hooked in first, tilted. The front groove also no longer
-  sits on the 0.8 mm bridge over the filter recess
+- **THE FRONT LIP DOES NOT SPRING; THE FRONT CLIP IS HOOKED IN FIRST.** A rib passes
+  the lip below by pushing it 0.48 mm out. The side and rear walls give; the front is
+  7 mm solid to its top, so a module goes on tilted, its front clip hooked in first,
+  then its rear pressed down. **A thinned band above the fan was tried** (4b24efa,
+  `frontFlexCut()`): the front wall cut to 1.2 from the inside, between the corners.
+  The two corners it left solid clamped the lip at both ends, and on the print they
+  kept the lid from clipping properly; it also made the front's inside a clutter of
+  pillars and corbels for nothing. With the fan centred the band has no room anyway.
+  It is gone, and the inside of the front wall is one face
 - **THE SEATING CHECKS MEASURE BODIES, NOT PARTS.** `moduleBody()` and `lidBody()`
   carry no ribs: with the ribs on, a rib biting the ungrooved bevel passes for a lap
   that bears. The lid's check did exactly that until the lid got its own body; all
   three `*-seated-on-lap` checks fail with `lap_gap = 0.3`
 - **THE DUST FILTER IS hexrack's `sectionDust()`, MADE ROUND, sized for a 40 mm fan**:
-  a circular ring cut by flats left and right (the clips) and top and bottom (the
-  height), flush in a 4 mm recess; a 0.32 mm glue
+  a circular ring cut by flats left and right (the clips), flush in a 4 mm recess; a
+  0.32 mm glue
   pocket reaching 4 mm out from the window; two 45° ribs running vertically on the
   flats at the ring's back. **One table** — `filterJoints()` in `lib/dust-filter.scad`
   — cuts the grooves, builds the ribs and feeds `test-clips.sh`. Standing, the
-  recess's top flat is a 32 × 4 mm bridge off the web behind it, which `test-print.sh`
+  recess's crown is an arch 4 mm deep off the web behind it, which `test-print.sh`
   budgets. **Round, not hexrack's hexagon, for the rounded
   corners**: the hexagon's side points left 2 mm of front face, the flats 7.5
 - **ROUNDED VERTICAL CORNERS, `corner_r`**, from one footprint, `outline()` in
@@ -218,9 +239,10 @@ tallest board, so any board goes in any module.
 - **NO BASE.** There were feet — a module's bevel on an open rim with a skirt — and
   they were dropped as useless: the bottom module stands on its own floor, flat on
   the bed side, the lap ribs' flat undersides flush with it
-- **Assembly**: slide each Pi back into its rear wall's holes, fit its HAT and screw it into its module and each fan in from the front; stack the
-  modules and press them together until the four lap clips click; click the lid on; glue fabric into each filter and
-  click it into its recess
+- **Assembly**: slide each Pi back into its rear wall's holes, fit its HAT and screw it into its module and each fan in from the front, with
+  the screws in the fan's bag; stack the modules, each tilted with its front clip
+  hooked in first, then pressed down at the rear until the other three lap clips click;
+  click the lid on; glue fabric into each filter and click it into its recess
 
 ### The framework has no HAT models
 
@@ -403,6 +425,13 @@ without error and exports a clean single body.
     instead of the land, `module-seated` still passed on the front butt joint alone. A
     lap standing 0.2 mm off would have let the rear hang on the clips. `*-seated-on-lap`
     looks behind the front wall only, and fails with `lap_gap = 0.2`.
+32. **A placeholder that gets printed is no longer a placeholder.** The fan screws were
+    drawn as an M3 DIN 7991, "confirm against the screws actually used before
+    printing". Nobody did, and the fans' own 4.3 mm corner holes, in Noctua's STEP all
+    along, said M5. Every one of Noctua's self-tappers cut its own thread through the
+    3.4 mm hole and cracked the web. **Measure what goes in a hole, or read it off the
+    part it goes into, before the first print.** The suite could not have caught it:
+    every check read the same wrong spec.
 
 
 

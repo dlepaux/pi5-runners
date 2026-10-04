@@ -3,7 +3,7 @@
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
 runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a round
 dust filter clipped into each module's front, and a lid, all with rounded corners.
-**115.9 × 68 × 175.2 mm** with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
+**115.9 × 68 × 182.4 mm** with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
 together; only the fans are.
 
 ## What it holds
@@ -42,8 +42,8 @@ behind a filter — about a kelvin, not a different class of cooling.
 **Airflow** runs front to back along each board's full length. Each fan draws through
 its module's dust filter and front wall, pushes over its own SoC and drive, and
 the module exhausts through its rear wall and the rear of both side walls — never the
-lid, which would drop dust onto a board. Each module's exhaust is **211% of its fan's
-throat** (240% with the 20 mm fans) — louvres leaning rearward at the rear of each
+lid, which would drop dust onto a board. Each module's exhaust is **225% of its fan's
+throat** (257% with the 20 mm fans) — louvres leaning rearward at the rear of each
 side, straight louvres above and below the rear ports. The floors are solid by default; set
 `floor_vents = true` for a triangle lattice that lets each module breathe into the
 one above.
@@ -59,9 +59,9 @@ Seven STLs, **none needing support**, in the orientation they come out of
 
 | Part | Print | Size |
 |------|-------|------|
-| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 58.9 mm |
-| `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 115.9 / 125.0 × 68 × 8.2 mm |
-| `filter` | ×3, face down, pocket up | 50.8 × 52.6 × 4.0 mm |
+| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 61.3 mm |
+| `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 115.9 / 125.0 × 68 × 6.0 mm |
+| `filter` | ×3, face down, pocket up | 50.3 × 53.8 × 4.0 mm |
 
 **Download them** from the project's GitHub Pages site, rebuilt on every push to main
 once the whole test suite passes. Or render them yourself:
@@ -81,8 +81,8 @@ How each part avoids support:
   stopped 1.3 mm short and the roof it left sagged. The wall below rises into the
   chamfer as a lip one extrusion line wide at its top, so the joint is flush but for
   a 0.4 mm hairline. The
-  filter's recess has its clips at the sides; its top flat is a 33 mm bridge, 4 mm
-  deep off the wall behind it. The rounded corners
+  filter's recess has its clips at the sides and a round crown, an arch 4 mm deep off
+  the wall behind it, steeper than 45° only near its top. The rounded corners
   are vertical, so they cost nothing.
 - **Lid.** Upside down, its lap narrows as it rises and its ribs are 45° bars on it.
 - **Filter.** A flat ring; the glue pocket faces up.
@@ -93,22 +93,18 @@ The fan sets each module's height: a 2.4 mm floor, the 40 mm fan and 2 mm above 
 below it for its silicone corner pads, 46.4 mm. The tallest board (Pi, HAT and drive) needs 42.5 with
 its air gap, so it fits under that.
 
-On top of that come 10 mm of headroom (`module_headroom`), 56.4 mm floor to floor: a
-taller passive heatsink did not fit under the next module's floor. The headroom is all
-above the board and the fan, which stay where they were, so the dust filter is the same
-part and the side and rear louvres simply run taller.
+On top of that come 12.4 mm of headroom (`module_headroom`), 58.8 mm floor to floor.
+It started at 10, because a taller passive heatsink did not fit under the next module's
+floor. The board stays where it was, so all of that room is above it. **The fan is
+centred** on the module's front, sharing the headroom out above and below it. Centred, the
+round filter needs 12.4 mm to clear the lap below and the clip groove above.
 
-The filter used to set it. Its window matches the 38 mm fan bore, and a full circle
-with the fabric's glue band round it made the front 55 mm per module. It is now cut
-flat top and bottom, as far as the front face allows and still over the fan's screw
-heads: the ring is 1.6 mm wide there
-and the fabric is glued at the sides and corners. That saves 8.5 mm a module, 25.6 on the
-stack.
-
-The fan screws go in from the front, so their heads sit in the filter's recess and the
-ring has to cover them. They sit on the diagonals, which is why the filter is round: a
-circle through the heads is 52.6 mm wide, where hexrack's hexagon was 59.4 and left no
-room to round the front corners.
+The filter is round above and below, with flats only at the sides, where its clips
+are. Its window matches the 38 mm fan bore. The fan screws go in from the front, so
+their heads sit under the ring, and the ring has to cover them. They sit on the
+diagonals, which is why the filter is round: a circle over the heads is 53.8 mm across,
+where hexrack's hexagon was 59.4 and left no room to round the front corners. While
+the fan sat low the ring was cut flat top and bottom too.
 
 ## Assembly
 
@@ -120,12 +116,14 @@ room to round the front corners.
    its edge in the slot under them. Do this before its HAT. Then the HAT's M2.5
    male-female standoffs thread through the Pi into them (a bare Pi takes M2.5 screws).
 2. Hold each fan against the inside of its module's front wall and screw it in from
-   the front with four **M3 countersunk self-tappers** through the recess floor into
-   the fan's corner holes — **M3 × 12** for the NF-A4x10, **M3 × 20** for the NF-A4x20.
-   Plug it into that Pi's GPIO: 5 V on pin 2 or 4, ground on pin 6.
-3. Stand the bottom module on the desk on its floor. Stack the others: each one's
-   chamfer lies on the bevel of the one below and clicks in on four ribs, one per
-   wall. Click the lid onto the top one.
+   the front with **the four self-tapping screws in the fan's own bag** (Noctua's,
+   about M5) through the recess floor into the fan's corner holes. Their heads sink
+   below the recess floor. Not M3s: the fan's holes are 4.3 mm, and an earlier hole
+   drawn for M3 cracked round every screw. Plug the fan into that Pi's GPIO: 5 V on
+   pin 2 or 4, ground on pin 6.
+3. Stand the bottom module on the desk on its floor. Stack the others: tilt each one,
+   hook its front clip in first, then press its rear down until the other three click.
+   Its chamfer lies on the bevel of the one below. Click the lid onto the top one.
 4. Glue filter fabric into the pocket on the back of each filter and click
    it into its recess, over the screw heads.
 

@@ -48,21 +48,22 @@ budget filter filter 0 0
 
 
 # MODULE, measured by where it is (both fans measure the same):
-#   steep ~152 -- the fan bore's crown in the 3mm web and the countersinks' upper
-#                 halves (~114); what is left of the filter recess's arcs between its
-#                 top flat and its sides (~22); the side port openings' rounded ends
-#                 (~9), the exclusion zone's rounded corners (~7). The wall vents add
-#                 nothing: every edge is 45.
-#   flat ~633  -- the filter recess's TOP FLAT, a 33mm bridge 4mm deep off the web
-#                 behind it (~136): the price of the fan, not the filter, setting the
-#                 module's height, and the round crown it replaced was ~160 of steep.
-#                 The tops of the port openings, rear (~130) and side (~59); the
-#                 louvres' flat tops, 3mm bridges, six a side and ten above and
-#                 ten below the rear ports (~290). NOTHING ON THE LAP: its chamfer runs to the outer face and
+#   steep ~285 -- the filter recess's round CROWN, the arc within 45 degrees of its
+#                 top, 4mm deep off the web behind it (~160): the ring is round above
+#                 and below since the fan was centred. It had a 33mm flat top there
+#                 while the fan sat low, a bridge instead. The fan bore's crown in the
+#                 3mm web with the screw bosses' undersides (~83); the countersinks'
+#                 and counterbores' upper halves (~36); the side port openings'
+#                 rounded ends and the exclusion zone's rounded corners (~6). The wall
+#                 vents add nothing: every edge is 45.
+#   flat ~487  -- the tops of the port openings, rear and side, and the louvres' flat
+#                 tops, 3mm bridges, six a side and ten above and ten below the rear
+#                 ports (~465 together); the topmost facets of the recess crown (~14)
+#                 and of the bore (~8). NOTHING ON THE LAP: its chamfer runs to the outer face and
 #                 on down to the bed, and its ribs are square bars with every face at
 #                 45 -- the first print's chamfer stopped 1.3mm short and left a roof
 #                 (~371) that sagged.
-budget module-10 module 170 650 -D 'fan_model="NF-A4x10"'
-budget module-20 module 170 650 -D 'fan_model="NF-A4x20"'
+budget module-10 module 300 510 -D 'fan_model="NF-A4x10"'
+budget module-20 module 300 510 -D 'fan_model="NF-A4x20"'
 
 report "printability checks"

@@ -1,7 +1,7 @@
 // ============================================================================
 // DUST FILTER — hexrack's, made round, one per module
 // ============================================================================
-// A round ring with four flats that sits FLUSH in the recess in a module's front wall, over its
+// A round ring with two flats that sits FLUSH in the recess in a module's front wall, over its
 // fan. Filter fabric is glued into a 0.32mm pocket on its BACK, reaching 4mm out from
 // the window, and spans the window; the ring only frames it. The window is a 45-degree
 // funnel from the front face down to the fabric, so dust wipes out of it. Two 45-degree ribs on its
@@ -22,17 +22,12 @@ include <../lib/dust-filter.scad>
 // The ring in its own frame: front face at z = 0, thickness up, fabric pocket on top.
 module filterRingLocal() {
   difference() {
-    linear_extrude(filter_depth) filterProfile(filter_r_out, filter_a_out, filter_v_out);
+    linear_extrude(filter_depth) filterProfile(filter_r_out, filter_a_out);
     translate([0, 0, -EPS]) linear_extrude(filter_depth + 2 * EPS) circle(r = filter_r_in, $fn = 128);
-    // The funnel: a 45-degree cone, clipped to the ring's outline less its land.
-    intersection() {
-      translate([0, 0, -EPS])
-        cylinder(r1 = filter_r_in + filter_funnel + EPS, r2 = filter_r_in,
-                 h = filter_funnel + EPS, $fn = 128);
-      translate([0, 0, -EPS]) linear_extrude(filter_funnel + 2 * EPS)
-        filterProfile(filter_r_out - filter_land, filter_a_out - filter_land,
-                      filter_v_out - filter_land);
-    }
+    // The funnel: a 45-degree cone, full all round (config.scad keeps it off the flats).
+    translate([0, 0, -EPS])
+      cylinder(r1 = filter_r_in + filter_funnel + EPS, r2 = filter_r_in,
+               h = filter_funnel + EPS, $fn = 128);
     translate([0, 0, filter_depth - filter_glue_d])
       linear_extrude(filter_glue_d + EPS) circle(r = filter_r_in + filter_glue_band, $fn = 128);
   }

@@ -139,9 +139,13 @@ fan_bolt_pitch = 32;
 fan_clear      = 2;      // fan frame to the floors below and above: its silicone corner pads
 
 // A ROUND BORE, NOT A SQUARE OPENING: a square as big as the fan removes the wall
-// exactly where its corner screws go. 38 leaves every corner solid.
+// exactly where its corner screws go. 38, less a boss round each screw (fan_boss_r).
 fan_bore_d  = 38;
+// The blades' tips, measured off Noctua's STEP: 17.41 (NF-A4x10) and 17.57 (NF-A4x20).
+// The bore may close in on its corners down to here without shading a blade.
+fan_tip_r   = 17.6;
 
+// The bosses take ~2.5% of it, left in: the exhaust check errs on the safe side.
 fan_throat_area = PI * pow(fan_bore_d, 2) / 4 - PI * pow(fan_hub_d, 2) / 4;   // per fan
 
 // ----------------------------------------------------------------------------
@@ -219,10 +223,9 @@ assert(lap_clip_angle >= 45 && lap_clip_angle < 90, "the holding face must print
 assert(lap_clip_play <= 0.25, "the lap clips let a module lift over 0.25mm before they hold");
 
 // ----------------------------------------------------------------------------
-// DUST FILTER — a round ring with four flats, one per module
+// DUST FILTER — a round ring with two flats, one per module
 // ----------------------------------------------------------------------------
-// hexrack's filter, reshaped: a CIRCULAR ring cut by flats left and right and top and
-// bottom (the top and bottom ones sit by the module pitch, see filter_v_out), that
+// hexrack's filter, reshaped: a CIRCULAR ring cut by flats left and right only, that
 // sits FLUSH in a recess in the module's front wall. Fabric is glued into a 0.32mm
 // pocket on its back reaching 4mm out from the window; two 45-degree ribs on the
 // side flats, running vertically at the ring's back, click into grooves in the recess.
@@ -230,13 +233,15 @@ assert(lap_clip_play <= 0.25, "the lap clips let a module lift over 0.25mm befor
 // WHY A CIRCLE, NOT hexrack's HEXAGON. The ring must cover the fan's corner screws,
 // which sit on the DIAGONALS. A hexagon with flats top and bottom has its points on
 // the horizontal, so it came 59.4mm wide and left 2mm of front face each side -- no
-// room for rounded corners (corner_r). A circle through the same heads is 52.5 wide.
+// room for rounded corners (corner_r). A circle over the same heads is 53.8 wide.
 //
-// THE FLATS ARE THE CLIP SEATS, AT THE SIDES. They sit just past the glue pocket, and
-// on the sides the clips read as part of the ring's outline rather than as caps on
-// it. Standing in the module, the recess's top flat is a 4mm-deep bridge off the web
-// behind it, and the arcs either side of it steeper than 45 (test-print.sh budgets
-// both).
+// THE FLATS ARE THE CLIP SEATS, AT THE SIDES, and the only ones. They sit just past the
+// glue pocket, and on the sides the clips read as part of the ring's outline rather
+// than as caps on it. Above and below, the ring is round: standing in the module, the
+// recess's crown is an arch 4mm deep off the web behind it, steeper than 45 within 45
+// degrees of its top (test-print.sh budgets it). It once had flats there too, while
+// the fan sat low; centred, the module is made tall enough for the round ring
+// (module_headroom).
 //
 // THE RING COVERS THE FAN SCREWS. They go in from outside, countersunk into the
 // recess floor, so the ring is sized to lie over every head: a corner hole at (16, 16)
@@ -247,9 +252,22 @@ filter_clear     = tolerance / 2;        // ring to recess, all round: hexrack's
 filter_glue_d    = 0.32;                 // hexrack's glue pocket depth
 filter_glue_band = 4;                    // pocket reaches this far out from the window
 
-fan_screw    = "M3-Noctua";
+// NOCTUA'S OWN SELF-TAPPING SCREWS, ~M5: the first prints were drawn for an M3, and
+// every screw cut its thread through the web and cracked it (lib/screws.scad).
+fan_screw    = "M5-Noctua";
 fan_csink_d  = get_screw_spec(fan_screw, "countersink_diameter");
 fan_screw_r  = fan_bolt_pitch / 2 * sqrt(2);                // a corner hole, from the centre
+// THE HEADS SINK UNDER THE RECESS FLOOR, so the filter lies flat over them: the
+// countersink starts this far down, under a counterbore its own width.
+fan_screw_sink = 0.4;
+// A BOSS ROUND EVERY SCREW. The holes sit 3.6mm outside the bore and the countersink is
+// 3.75 in radius: bare, it broke into the bore. The bore gives up a crescent at each
+// corner instead, and every countersink keeps three perimeters of web round it.
+fan_boss_r   = fan_csink_d / 2 + 1.2;
+assert(fan_screw_r - fan_boss_r >= fan_tip_r, "a screw boss shades the fan's blade tips");
+assert(fan_screw_sink + (fan_csink_d - get_screw_spec(fan_screw, "through_hole_diameter")) / 2
+         <= fan_web - 1,
+       "the countersink leaves under 1mm of web under it");
 
 filter_r_in  = fan_bore_d / 2;                              // the window frames the bore
 filter_r_out = fan_screw_r + fan_csink_d / 2 + 0.5;         // the ring covers every head
@@ -294,7 +312,7 @@ assert(board_standoff_af / cos(30) <= boss_d, "the standoff's hex overhangs its 
 // slot. A bare Pi wastes height; three different modules would waste a reprint every
 // time a board changes role.
 floor_t       = 2.4;   // the vented floor: 12 layers at 0.2
-rail_h        = 5.5;   // the insert posts at their lowest: board_lift adds to it
+rail_h        = 5.5;   // the insert posts, floor to rail_top
 plenum_gap    = 3;     // fan's back face to the Compact HAT's tab
 module_air    = 5;     // top of the tallest board to the next module's floor, at least
 
@@ -334,7 +352,10 @@ front_wall_t = filter_depth + fan_web;
 // measured from the tab.
 board_x = front_wall_t + fan_depth + plenum_gap + hat_compact_overhang_x;
 board_y = wall + side_clear;
-board_z0 = floor_t + rail_h + board_standoff_h;   // the board at its lowest; board_lift raises it below
+// THE BOARD STAYS ON THE FLOOR'S POSTS, whatever the headroom: that is room for a taller
+// heatsink ON it. It used to rise onto the fan's axis (board_lift), which never fired
+// until the fan was centred -- and then would have eaten 5mm of that room.
+board_z = floor_t + rail_h + board_standoff_h;   // the PCB's underside
 
 module_l = board_x + pi5_pcb[0] + rear_port_reach - rear_port_proud;
 // The jacks sit wall + rear_port_proud deep in the rear wall. Slid that far forward
@@ -353,15 +374,14 @@ assert(abs(board_y + pi5_pcb[1] / 2 - module_w / 2) < EPS, "the Pi (and its rail
 corner_r = 4;
 
 // FLOOR TO FLOOR: the tallest board or the fan, whichever needs more. It is the fan:
-// the floor, 40mm and fan_clear either side. The filter used to set it, as a full
-// circle 55mm tall; it is cut flat top and bottom to fit the fan's height instead
-// (filter_v_out below), because nothing else earns the 8.5mm a module.
+// the floor, 40mm and fan_clear either side.
 //
-// PLUS module_headroom, the owner's call: a taller passive heatsink did not fit under
-// the next module's floor. It is all ABOVE the board and the fan -- neither moves (see
-// fan_zc), so the dust filter is the same part and only the modules are reprinted.
-module_headroom  = 10;
-module_pitch_min = max(board_z0 + hat_slot_h + module_air,
+// PLUS module_headroom, the owner's call: 10 at first, because a taller passive
+// heatsink did not fit under the next module's floor; 12.4 since the fan is centred,
+// because that is what the ROUND filter needs over Noctua's screw heads (filter_room
+// below asserts it). The board stays down; the fan shares the headroom out.
+module_headroom  = 12.4;
+module_pitch_min = max(board_z + hat_slot_h + module_air,
                        floor_t + fan_size + 2 * fan_clear);
 module_pitch     = module_pitch_min + module_headroom;
 assert(module_headroom >= 0, "module_headroom cannot take height the board or the fan needs");
@@ -370,68 +390,38 @@ assert(module_headroom >= 0, "module_headroom cannot take height the board or th
 // the outer face.
 module_h     = module_pitch + lap_top - lap_sink - lip_t;
 
-// THE FRONT LIP SPRINGS, IN THE HEADROOM. A lap rib passes the lip below by pushing it
-// 0.48mm out. The side and rear walls are 3mm sheets a module tall and give; the front
-// was 7mm solid to its top under a solid floor, so nothing gave and the front clip never
-// went in pressed straight down (the lid's did: its lap is a hollow skirt). Above the
-// fan the front wall now thins to front_flex_t, from the inside, and comes back to
-// `wall` under the lap on a 45-degree corbel, front_flex_roof under the groove's floor.
-// It needs the headroom: with none, the wall stays solid and the front must be hooked
-// in first. THINNER SPRINGS EASIER -- the force goes with the cube: 1.2 is three
-// perimeters and ~20 N by a cantilever estimate, NOT measured on a print.
-front_flex_t    = 1.2;
-front_flex_roof = 0.8;
-front_flex_z0   = module_pitch_min;   // the fan's own height stays solid
-front_flex_z1   = module_pitch - lap_groove_drop - front_flex_roof - (wall - front_flex_t);
-front_flex      = front_flex_z1 - front_flex_z0 >= 3;   // under 3mm of band it is no spring
-assert(front_flex_t > 0 && front_flex_t <= wall, "front_flex_t is a thinner wall, not a thicker one");
+// THE FRONT LIP DOES NOT SPRING: a lap rib passes the lip below by pushing it 0.48mm
+// out, and the front wall is 7mm solid to its top, so the front clip is hooked in
+// first, tilted, and the rear pressed down -- the side and rear walls give. A thinned
+// band above the fan was tried; the corners it left solid held the lip anyway, and
+// with the fan centred the band has no room.
 
-// The fan and its filter: centred across the module, and in the height the board and
-// the fan need -- not in the headroom, which would lift the fan off the board's axis
-// and stretch the filter's flats into a different part.
+// THE ROUND FILTER'S ROOM ON THE FRONT FACE: from where the front's chamfer reaches the
+// outer face, up to the floor of the lap groove of the module on top, less
+// filter_edge_wall of wall at either end. The ring and its clearance must fit in it.
+filter_edge_wall = 0.6;
+filter_room      = [lap_top + filter_edge_wall,
+                    module_pitch + lap_z0 - lap_groove_drop - filter_edge_wall];
+assert(filter_room[1] - filter_room[0] >= 2 * filter_r_recess,
+       "the round filter runs into the lap: module_headroom is too small for it");
+
+// THE FAN IS CENTRED, across the module and up its front face: the owner's call -- it
+// sat at the bottom of the front with the headroom all above it. Centred on the
+// filter's room, where the round ring is tight; that is 0.1 above the middle between
+// the floors. The board does not follow it up (board_z).
 fan_yc = module_w / 2;
-fan_zc = (floor_t + module_pitch_min) / 2;
-
-// THE FILTER'S TOP AND BOTTOM FLATS take all the front face the module has, less a
-// millimetre of wall to its top edge. The side flats are set by the glue pocket; these
-// by the module pitch, and must still cover the screw heads -- 16 up, half a
-// countersink and 0.5 of ring over it. The window (r 19) leaves the ring 1.8 wide there
-// and the glue pocket runs out through the flats: the fabric is held at the sides and
-// corners. The price of the fan setting the height, chosen over a smaller window
-// (blocks the blade tips) and over flats at the glue pocket (a taller module).
-// Below, the front's chamfer ends at lap_top on the outer face; above, the lap groove
-// of the module on top dips lap_groove_drop under its bevel's inner edge.
-filter_edge_wall = 0.6;   // recess to the lap's outer edge below, or to the groove above
-filter_v_out     = min(filter_r_out,
-                       fan_zc - lap_top - filter_edge_wall - filter_clear,
-                       module_pitch + lap_z0 - lap_groove_drop - filter_edge_wall
-                         - fan_zc - filter_clear);
-filter_v_recess  = filter_v_out + filter_clear;
-assert(filter_v_out >= fan_bolt_pitch / 2 + fan_csink_d / 2 + 0.5,
-       "the top and bottom flats uncover a fan screw head");
+fan_zc = (filter_room[0] + filter_room[1]) / 2;
 
 // THE WINDOW IS A 45-DEGREE FUNNEL, DOWN TO THE FABRIC, so dust wipes out of it instead
 // of packing into the corner a straight 4mm wall made with the fabric. It opens toward
-// the room; at the fabric the window is still the fan's bore.
-//
-// IT IS AS WIDE AS THE RING ALLOWS, and the ring does not allow it everywhere. A full
-// funnel is 3.68 wide and the ring is 1.6 wide at its top and bottom flats, so the funnel
-// is clipped to the ring's own outline less filter_land: full at the sides and corners,
-// and above and below the window it is a straight wall with only the last 0.8mm sloped.
-// The land is the front face left at the flats -- and the first layer on the bed.
+// the room; at the fabric the window is still the fan's bore. With the ring round above
+// and below, it runs full all the way round: the side flats still leave filter_land of
+// front face beside it -- and the first layer on the bed.
 filter_land   = 0.8;                            // two 0.4mm perimeters
 filter_funnel = filter_depth - filter_glue_d;   // its depth, and its widening per side
-assert(filter_v_out - filter_land > filter_r_in && filter_a_out - filter_land > filter_r_in,
-       "the ring is narrower than filter_land at a flat -- the funnel has nothing to keep");
+assert(filter_a_out - filter_land >= filter_r_in + filter_funnel,
+       "the funnel runs into a side flat: under filter_land of front face beside it");
 
-// BOARD LIFT. When the fan sets the module's height the board already sits near its
-// axis and this is 0. Should anything else grow the module, a board left on the floor
-// sends the top of the fan's flow over the HAT instead of across the board, so by
-// default the tallest board (the Pi, its HAT and the drive's screw) is CENTRED ON THE
-// FAN'S AXIS; the rails grow by the lift, so the Pi still screws straight into its
-// inserts. Override with -D board_lift=0 for the floor.
-board_lift = max(0, fan_zc - hat_slot_h / 2 - board_z0);
-board_z    = board_z0 + board_lift;
 rail_top   = board_z - board_standoff_h;   // where the inserts go in
 
 module_count = 3;
@@ -439,9 +429,8 @@ lid_t        = 3;     // the lid's plate, above its lap
 stack_h = module_count * module_pitch + lap_top + lid_t;   // floor of 0 to lid top
 
 
-assert(board_lift >= 0, "board_lift cannot sink the board into its floor");
 assert(module_pitch - (board_z + hat_slot_h) >= 3,
-       "board_lift leaves less than 3mm between a HAT and the next module's floor");
+       "less than 3mm between a HAT and the next module's floor");
 assert(fan_zc - fan_size / 2 >= floor_t + fan_clear - EPS, "the fan sits on the floor");
 assert(module_w / 2 - filter_a_recess - corner_r >= 1,
        "corner_r cuts into the filter's recess: under 1mm of wall at the front corners");

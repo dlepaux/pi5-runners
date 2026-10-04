@@ -171,14 +171,6 @@ if (test_view == "lid-seated-on-lap")
     moduleBody(); translate([0, 0, module_pitch - 0.2]) lidBody(); behindFrontWall();
   }
 
-// THE FRONT LIP CAN SPRING: behind the front clip, half way up the band, there is air
-// behind the skin, and the skin itself is there.
-module frontFlexProbe(x) {
-  translate([x, module_w / 2, (front_flex_z0 + front_flex_z1) / 2]) cube(0.2, center = true);
-}
-if (test_view == "front-flex-open") intersection() { modulePart(); frontFlexProbe(front_flex_t + 0.3); }
-if (test_view == "front-flex-skin") intersection() { modulePart(); frontFlexProbe(front_flex_t - 0.3); }
-
 // -- clips -------------------------------------------------------------------
 // One table of every clipped joint: [name, rib (stack frame), owner, mate].
 function allJoints() = concat(
@@ -281,6 +273,8 @@ module fanAt(k) {
 module allFans() { for (k = [0 : module_count - 1]) fanAt(k); }
 
 if (test_view == "fans-alone")   allFans();
+// One fan on its own, so test-fit.sh can read where it sits in its module.
+if (test_view == "fan-0")        fanAt(0);
 if (test_view == "fans-vs-case") intersection() { allFans(); wholeCase(); }
 // Every kind of board must clear the fan -- the Compact's tab hangs toward it.
 if (test_view == "fan-vs-boards")
@@ -290,14 +284,15 @@ if (test_view == "fans-seated")
   intersection() { translate([-0.2, 0, 0]) fanAt(0); modulePart(); }
 
 // THE AIR PATH MUST BE OPEN, from outside to each fan: through the filter's window
-// and the front wall's bore. A probe a hair smaller than the bore, through the whole
-// case with every filter in place.
+// and the front wall's bore. A probe as wide as the blades sweep, through the whole
+// case with every filter in place -- the screw bosses close in on the bore's corners,
+// short of the blade tips.
 if (test_view == "bores-open")
   intersection() {
     wholeCase();
     for (k = [0 : module_count - 1])
       moduleAt(k) translate([-1, fan_yc, fan_zc])
-        rotate([0, 90, 0]) cylinder(d = fan_bore_d - 0.2, h = front_wall_t + 2, $fn = 96);
+        rotate([0, 90, 0]) cylinder(r = fan_tip_r, h = front_wall_t + 2, $fn = 96);
   }
 
 // -- the dust filter ---------------------------------------------------------
@@ -319,12 +314,19 @@ if (test_view == "funnel-open-at-side")
 // ...and ring just outside it.
 if (test_view == "funnel-ring-at-side")
   intersection() { filterPart(); funnelProbe(filter_r_in + filter_funnel / 2 + 0.2); }
-// Above and below, the flats clip it: the front face keeps its land.
+// Beside it, at the side flats, the front face keeps its land.
 if (test_view == "funnel-land-at-flat")
   intersection() {
     filterPart();
-    translate([0, filter_v_out - filter_land / 2, 0.1]) cube(0.1, center = true);
+    translate([filter_a_out - filter_land / 2, 0, 0.1]) cube(0.1, center = true);
   }
+// ROUND ABOVE AND BELOW THE WINDOW: the ring's only flats are the side ones, which
+// carry the clips. Just inside its radius, straight up and straight down, there is ring.
+module ringEdgeProbe(at) {
+  rotate(at) translate([0, filter_r_out - 0.3, filter_depth / 2]) cube(0.1, center = true);
+}
+if (test_view == "ring-round-above") intersection() { filterPart(); ringEdgeProbe(0); }
+if (test_view == "ring-round-below") intersection() { filterPart(); ringEdgeProbe(180); }
 // It stops at the fabric: the window there is still the fan's bore, no wider.
 if (test_view == "funnel-ends-at-fabric")
   intersection() {
@@ -343,7 +345,7 @@ module screwAxes() {
 module seatRings() {
   screwAxes() translate([filter_depth, 0, 0]) rotate([0, 90, 0])
     linear_extrude(0.5)
-      difference() { circle(d = fan_csink_d + 1, $fn = 32); circle(d = fan_csink_d, $fn = 32); }
+      difference() { circle(d = fan_csink_d + 2, $fn = 32); circle(d = fan_csink_d, $fn = 32); }
 }
 // Every head lies under the ring. A countersink outside it would sit in the gap round
 // the ring, or cut the recess wall.
@@ -351,16 +353,27 @@ if (test_view == "screw-heads-outside-ring")
   difference() {
     screwAxes() translate([filter_depth - 0.2, 0, 0]) rotate([0, 90, 0])
       cylinder(d = fan_csink_d, h = 0.2, $fn = 32);
-    onFrontWall(-1) linear_extrude(filter_depth + 2) filterProfile(filter_r_out, filter_a_out, filter_v_out);
+    onFrontWall(-1) linear_extrude(filter_depth + 2) filterProfile(filter_r_out, filter_a_out);
   }
-// Every shank has a clear path from the recess floor, through the wall, to the fan.
+// Every shank has a clear path from the recess floor, through the wall, to the fan --
+// room for its THREAD, not for a probe the hole's own size: a printed hole comes out
+// up to 0.3 under size, and a self-tapping thread that bites the print splits it.
 if (test_view == "screw-paths")
   intersection() {
     modulePart();
     screwAxes() translate([filter_depth, 0, 0]) rotate([0, 90, 0])
-      cylinder(d = get_screw_spec(fan_screw, "through_hole_diameter") - 0.2,
+      cylinder(d = get_screw_spec(fan_screw, "thread_diameter") + 0.3,
                h = fan_web + 1, $fn = 24);
   }
+// Every head SINKS: 0.3mm under the recess floor the cut is already as wide as the
+// head, so the filter lies flat over it...
+module headDiscs(depth) {
+  screwAxes() translate([filter_depth + depth, 0, 0]) rotate([0, 90, 0])
+    cylinder(d = get_screw_spec(fan_screw, "head_diameter"), h = 0.1, center = true, $fn = 48);
+}
+if (test_view == "screw-heads-sunk") intersection() { modulePart(); headDiscs(0.3); }
+// ...and has a cone to bear on: a millimetre deeper, the cut is narrower than the head.
+if (test_view == "screw-heads-bear") intersection() { modulePart(); headDiscs(1.3); }
 // ...and every head has a SEAT: a ring round each countersink's mouth, in the recess
 // floor, is solid. The corner holes sit 3.6mm outside the bore; this is what notices
 // a countersink breaking into it.
@@ -372,9 +385,10 @@ if (test_view == "screw-seats") intersection() { modulePart(); seatRings(); }
 // reporting view that rendered nothing would be indistinguishable from one that died.
 if (test_view == "report-geometry") {
   echo(str("module = ", module_l, " x ", module_w, " x ", module_h, " pitch ", module_pitch));
-  echo(str("stack = ", stack_h, " filter r = ", filter_r_out, " flats = ", filter_a_out, " / ", filter_v_out));
+  echo(str("stack = ", stack_h, " filter r = ", filter_r_out, " flats = ", filter_a_out));
   echo(str("fan_model = ", fan_model, " fan_throat_area = ", fan_throat_area));
   echo(str("board_z = ", board_z));
+  echo(str("fan_room = ", floor_t, " ", module_pitch));
   echo(str("rail_top = ", rail_top));
   echo(str("rear_port_face = ", module_l + rear_port_proud));
   echo(str("side_port_face = ", board_y - side_port_reach));

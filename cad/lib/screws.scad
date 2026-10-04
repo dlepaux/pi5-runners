@@ -155,46 +155,30 @@ screw_specs = [
     52.0,
   ],
   [
+    // NOCTUA'S SELF-TAPPING FAN SCREW, the one in the bag with every fan here. Thread
+    // and head are the screw's, measured by hexrack on its 92mm fan; a 40mm Noctua's
+    // corner holes are 4.3 for it (Noctua's STEP). The rest is what pi5-runners cuts for
+    // it. The first prints were drawn for an M3 -- a 3.4 hole and a 6.3 countersink --
+    // and every screw cut its own thread through the web and wedged its head, and the
+    // web cracked toward the fan bore.
     // name
     "M5-Noctua",
     // thread_diameter
     4.8,
     // pilot_hole_diameter
     4.8 * pilot_hole_regular_thread_factor,
-    // through_hole_diameter
-    5.0,
+    // through_hole_diameter -- the thread and 0.5: a printed hole comes out under size,
+    // and a self-tapping thread that bites the print splits it
+    5.3,
     // head_diameter
     7.05,
     // head_height
     1.4,
     // countersink_diameter
     7.5,
-    // countersink_depth
-    1.5,
-    // min_engagement_depth
-    10.0,
-  ],
-  [
-    // THIS PROJECT'S, not hexrack's: hexrack only carries its 92mm fan's M5. A 40mm
-    // Noctua's corner holes take M3; a flat-head (DIN 7991) M3 through the front wall
-    // self-taps into the fan frame. Head figures are DIN 7991's -- confirm against the
-    // screws actually used before printing.
-    // name
-    "M3-Noctua",
-    // thread_diameter
-    3.0,
-    // pilot_hole_diameter
-    3.0 * pilot_hole_regular_thread_factor,
-    // through_hole_diameter
-    3.4,
-    // head_diameter
-    6.0,
-    // head_height
-    1.7,
-    // countersink_diameter
-    6.3,
-    // countersink_depth
-    1.8,
+    // countersink_depth -- a 90-degree cone down to the hole. A cone steeper than the
+    // head's takes it on its rim alone, which is a wedge.
+    1.1,
     // min_engagement_depth -- the pass-through is cut this deep, past the fan web
     6.0,
   ],

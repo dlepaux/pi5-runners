@@ -103,18 +103,16 @@ expect_geometry "the lid sits on the top module"       lid-seated
 expect_geometry "a module's lap bears on the one below" module-seated-on-lap
 expect_geometry "the lid's lap bears on the top module" lid-seated-on-lap
 
-# The front clip only goes in if the lip below can give: the front wall is thin there.
-expect_empty    "the front wall is open behind its lip"  front-flex-open
-expect_geometry "and keeps its skin"                      front-flex-skin
-
 echo ""
 echo "Fit — the dust filters"
 
 expect_empty    "a filter sits in its recess, touching nothing"  filter-vs-module
 expect_geometry "a filter sits on its recess floor"             filter-seated
+expect_geometry "the ring is round above the window"            ring-round-above
+expect_geometry "and below it: its only flats carry the clips"  ring-round-below
 expect_empty    "the window's funnel is open at the sides"       funnel-open-at-side
 expect_geometry "the funnel is a 45-degree slope, not a bigger hole" funnel-ring-at-side
-expect_geometry "the funnel leaves its land at the flats"        funnel-land-at-flat
+expect_geometry "the funnel leaves its land at the side flats"   funnel-land-at-flat
 expect_geometry "the funnel ends at the fabric, on the fan's bore" funnel-ends-at-fabric
 
 echo ""
@@ -124,5 +122,20 @@ expect_geometry "fans render"                             fans-alone
 expect_empty    "every fan clears every printed part"     fans-vs-case
 expect_empty    "the fan clears every kind of board"      fan-vs-boards
 expect_geometry "the fan sits on its front wall"          fans-seated
+
+# THE FAN IS CENTRED in its module, as far from the next floor as from its own: the
+# headroom shares out above and below it. Within 0.5mm, because it is centred on the
+# front face, whose middle sits 0.1 above the middle of the inside.
+render fan-0 "$WORK/fan-0.stl"
+read -r _ _ FAN_Z0 _ _ FAN_Z1 <<<"$(bounds "$WORK/fan-0.stl")"
+read -r FLOOR_TOP NEXT_FLOOR <<<"$("$OPENSCAD" $BACKEND --export-format=binstl -o /dev/null \
+    -D 'test_view="report-geometry"' ${MODE[@]+"${MODE[@]}"} cad/tests.scad 2>&1 \
+  | sed -n 's/.*fan_room = \([0-9.]*\) \([0-9.]*\).*/\1 \2/p')"
+if awk -v a="$FAN_Z0" -v b="$FAN_Z1" -v f="$FLOOR_TOP" -v n="$NEXT_FLOOR" \
+       'BEGIN { d = (a - f) - (n - b); exit !(d < 0.5 && d > -0.5) }'; then
+    pass "the fan is centred: z=$FAN_Z0..$FAN_Z1 between floors at $FLOOR_TOP and $NEXT_FLOOR"
+else
+    fail "the fan is off centre: z=$FAN_Z0..$FAN_Z1 between floors at $FLOOR_TOP and $NEXT_FLOOR"
+fi
 
 report "fit checks"

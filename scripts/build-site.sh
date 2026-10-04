@@ -128,8 +128,8 @@ cat >"$OUT/index.html" <<HTML
     </div>
   </section>
 
-  <p class="note">Also needed: 3 × Noctua 40&nbsp;mm 5V fans, 12 × M3 countersunk
-  self-tappers (M3×12 for the NF-A4x10, M3×20 for the NF-A4x20), 12 × M2.5 heat-set
+  <p class="note">Also needed: 3 × Noctua 40&nbsp;mm 5V fans, with the self-tapping
+  screws in their bags (not M3), 12 × M2.5 heat-set
   inserts, filter fabric. Built from <code>$COMMIT</code> on $BUILT$TESTED.
   CC BY-NC-SA 4.0.</p>
 </main>

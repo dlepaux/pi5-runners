@@ -13,7 +13,7 @@
 //     their ribs square bars on it with every face at 45: no ledge, no roof
 //   - the walls rise straight; port and vent openings are short bridges; the fan
 //     bore is an arch in the front wall, its crown a bridge that shortens to nothing
-//   - the filter's recess has a 4mm-deep flat top off the web behind it
+//   - the filter's recess is an arch too, 4mm deep off the web behind it
 //   - the bevel and its clip grooves face inward and upward
 // ============================================================================
 
@@ -41,25 +41,11 @@ module moduleBody() {
         translate([0, 0, floor_t])
           linear_extrude(module_pitch - floor_t + EPS) cavityOutline();
         bevelCut();
-        frontFlexCut();
       }
       islandBulge();
     }
     islandPocket();
   }
-}
-
-// The front wall thinned from the inside, above the fan, so its lip can spring (see
-// front_flex_t). Profile x into the wall, y up: the thin band, the 45-degree corbel
-// back to `wall` under the lap, and open to the top behind it like the other walls.
-// Between the corners only -- they stay solid.
-module frontFlexCut() {
-  if (front_flex)
-    onYWall(module_w - wall - corner_r)
-      linear_extrude(module_w - 2 * (wall + corner_r))
-        polygon([[front_flex_t, front_flex_z0], [front_wall_t + EPS, front_flex_z0],
-                 [front_wall_t + EPS, module_pitch + EPS], [wall, module_pitch + EPS],
-                 [wall, front_flex_z1 + wall - front_flex_t], [front_flex_t, front_flex_z1]]);
 }
 
 // ----------------------------------------------------------------------------
@@ -107,8 +93,7 @@ module postFootprint() {
 }
 
 // Clipped to the inside: with the walls this close to the board, a post would
-// otherwise stand into a wall. As tall as board_lift makes them, less the standoffs:
-// from the floor to rail_top.
+// otherwise stand into a wall. From the floor to rail_top, a standoff under the board.
 module posts() {
   translate([0, 0, floor_t - OVERLAP])
     linear_extrude(rail_top - floor_t + OVERLAP)
@@ -227,15 +212,25 @@ module ventCuts() {
 // ----------------------------------------------------------------------------
 // FAN AND FILTER
 // ----------------------------------------------------------------------------
-// The bore, through the whole front wall, and the fan's four screw holes: hexrack's
-// screw_hole_mask "front" -- countersink and pass-through -- cut from the recess floor
-// inward, so the screws go in from outside and their heads sit flush under the ring.
-// Rotated so the mask's -Z runs +X, into the wall.
+// The bore, through the whole front wall, less a boss round each screw; and the fan's
+// four screw holes: hexrack's screw_hole_mask "front" -- countersink and pass-through --
+// cut fan_screw_sink under the recess floor, a counterbore over it, so the screws go
+// in from outside and their heads sit below the ring. Rotated so the mask's -Z runs
+// +X, into the wall.
 module fanCut() {
-  onFrontWall(-EPS) linear_extrude(front_wall_t + 2 * EPS) circle(d = fan_bore_d, $fn = 96);
+  onFrontWall(-EPS) linear_extrude(front_wall_t + 2 * EPS)
+    difference() {
+      circle(d = fan_bore_d, $fn = 96);
+      for (sy = [-1, 1], sz = [-1, 1])
+        translate([sy * fan_bolt_pitch / 2, sz * fan_bolt_pitch / 2]) circle(r = fan_boss_r, $fn = 48);
+    }
   for (sy = [-1, 1], sz = [-1, 1])
     translate([filter_depth, fan_yc + sy * fan_bolt_pitch / 2, fan_zc + sz * fan_bolt_pitch / 2])
-      rotate([0, -90, 0]) screw_hole_mask(fan_screw, "front");
+      rotate([0, -90, 0]) {
+        translate([0, 0, -fan_screw_sink]) screw_hole_mask(fan_screw, "front");
+        translate([0, 0, -fan_screw_sink - EPS])
+          cylinder(d = fan_csink_d, h = fan_screw_sink + 2 * EPS, $fn = 48);
+      }
 }
 
 // ----------------------------------------------------------------------------
