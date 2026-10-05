@@ -89,6 +89,10 @@ else
     fail "the -Y connectors' faces are at y=$SIDE_FACE, the island expects y=$WANT_SIDE"
 fi
 
+expect_empty    "the island's ends step at 45, like its top and bottom" island-ends-open
+expect_geometry "+Y carries the island's bulge too"         island-pos-bulge
+expect_empty    "and its recess, open outside"              island-pos-open
+
 echo ""
 echo "Fit — the stack"
 

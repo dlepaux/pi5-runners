@@ -44,9 +44,9 @@ module moduleBody() {
         bevelCut();
         frontTopCut();
       }
-      islandBulge();
+      bothYWalls() islandBulge();
     }
-    islandPocket();
+    bothYWalls() islandPocket();
   }
 }
 
@@ -64,14 +64,21 @@ module frontTopCut() {
 }
 
 // ----------------------------------------------------------------------------
-// THE PORT ISLAND — the -Y wall stepped in round the USB-C and micro-HDMIs
+// THE PORT ISLAND — the -Y wall stepped in round the USB-C and micro-HDMIs, and the
+// +Y wall the same, mirrored, uncut
 // ----------------------------------------------------------------------------
-// The island's face, seen from outside: x along the wall, z up, grown by g above and
-// below only -- its ends stay square to the wall.
+// The island's face, seen from outside: x along the wall, z up, grown by g on every
+// side, its corners with it -- so hull() between two is a 45-degree step all round.
 module islandFace(g) {
-  translate([island_x[0], island_z[0] - g])
-    offset(r = island_r) offset(delta = -island_r)
-      square([island_x[1] - island_x[0], island_z[1] - island_z[0] + 2 * g]);
+  translate([island_x[0] + island_r, island_z[0] + island_r])
+    offset(r = island_r + g)
+      square([island_x[1] - island_x[0] - 2 * island_r, island_z[1] - island_z[0] - 2 * island_r]);
+}
+
+// The -Y wall's geometry, and its mirror on +Y.
+module bothYWalls() {
+  children();
+  translate([0, module_w, 0]) mirror([0, 1, 0]) children();
 }
 
 // A wafer of the face at y, [y - EPS, y]: hull() between two is the 45-degree step.

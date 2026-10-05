@@ -104,9 +104,11 @@ tallest board, so any board goes in any module.
   from outside — too far to seat. Round the cluster the −Y wall **steps in as a
   panel**: its inner face 0.5 off the connectors (`island_gap`), 2 mm thick there
   (`island_t`), so the outer face is 2.5 in and a plug's reach halves, to 2.5. A
-  rounded rectangle, 1.5 round the cluster; top and bottom step in at 45°, inside and
-  out, so it reads as one sheared panel and prints; its ends are square, the rear one
-  stopping short of the louvres. **The connectors cannot go into the wall** as the
+  rounded rectangle, 1.5 round the cluster; it steps in at 45° on all four sides,
+  inside and out, so it reads as one sheared panel and prints (square ends read as
+  unfinished); the rear step pushes the side louvres back by `island_outer`. **The
+  +Y wall carries the same island, mirrored, with no openings**, for symmetry
+  (`island-pos-*` checks). **The connectors cannot go into the wall** as the
   rear jacks do: the Pi goes in lowered and slid back, never sideways. The −Y port
   cuts reach through the panel (`portSlab()`); `test-fit.sh` holds the connectors clear
   of it and their measured reach to the framework. **Check a plug seats on the next

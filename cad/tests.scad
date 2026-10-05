@@ -137,6 +137,35 @@ if (test_view == "pilots-outside-posts")
     translate([-1, -1, board_z]) cube([module_l + 2, module_w + 2, 0.05]);
   }
 
+// -- the port islands ---------------------------------------------------------
+// A probe 0.6 into the -Y wall's outer face, 1mm past each end of the island: open
+// if the end steps at 45 like the top and bottom, solid if it is square.
+module islandProbe(x, y0, y1) {
+  translate([x - 0.3, y0, (island_z[0] + island_z[1]) / 2 - 0.3])
+    cube([0.6, y1 - y0, 0.6]);
+}
+if (test_view == "island-ends-open")
+  intersection() {
+    modulePart();
+    union() {
+      islandProbe(island_x[0] - 1, 0.1, 0.7);
+      islandProbe(island_x[1] + 1, 0.1, 0.7);
+    }
+  }
+// +Y carries the same island, uncut: its bulge stands inside the wall, its recess is
+// open outside, at the middle of the panel, where -Y has its connectors.
+if (test_view == "island-pos-bulge")
+  intersection() {
+    modulePart();
+    islandProbe((island_x[0] + island_x[1]) / 2,
+                module_w - island_inner + 0.1, module_w - wall - 0.1);
+  }
+if (test_view == "island-pos-open")
+  intersection() {
+    modulePart();
+    islandProbe((island_x[0] + island_x[1]) / 2, module_w - island_outer + 0.1, module_w + 1);
+  }
+
 // -- stacking -----------------------------------------------------------------
 // Neighbours touch on the lap, and the floor on the front wall below, and nowhere else.
 if (test_view == "module-vs-above") intersection() { modulePart(); moduleAt(1) modulePart(); }

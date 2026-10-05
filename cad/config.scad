@@ -506,19 +506,6 @@ side_port_cluster_x = [6.25, 42.60];
 side_port_cluster_z = [1.53, 6.02];
 side_port_reach     = 1.0;
 
-// The side fields sit behind the -Y connectors -- both sides, so the two walls match
-// -- and against the rear wall, where the air leaves the board. They take only
-// vent_side_share of that room: the full length read as too much opening.
-// The louvres lean rearward by wall * tan(angle) from the inner face to the outer one:
-// the room ends that much short, so the outer mouths keep vent_margin too.
-vent_side_lean = wall * tan(vent_side_angle);
-side_room_x  = [board_x + side_port_cluster_x[1] + vent_margin,
-                module_l - wall - vent_margin - vent_side_lean];
-side_field_x = [side_room_x[1] - vent_side_share * (side_room_x[1] - side_room_x[0]),
-                side_room_x[1]];
-assert(side_field_x[1] - side_field_x[0] > 3 * (vent_slot_w + vent_slot_bar),
-       "the side exhaust field is too short to hold a grille");
-
 // THE PORT ISLAND. The board is centred, which leaves its -Y connectors 2mm behind
 // the wall's inner face and a plug 5mm to reach from outside: too far to seat. Round
 // the cluster the wall steps IN, as a panel: its inner face island_gap off the
@@ -527,7 +514,12 @@ assert(side_field_x[1] - side_field_x[0] > 3 * (vent_slot_w + vent_slot_bar),
 // being lowered and slid back, never sideways. The panel's top and bottom step in at
 // 45 degrees, inside and out, so it reads as one sheared panel and prints: the outer
 // recess's ceiling and the inner bulge's underside are 45-degree overhangs. Its ends
-// are square to the wall -- the rear one stops short of the side louvres.
+// step at 45 too, the owner's call: square, the chamfer ran round only two sides of
+// the panel and read as unfinished. The rear one pushes the side louvres back.
+//
+// THE +Y WALL CARRIES THE SAME ISLAND, MIRRORED, WITH NO OPENINGS: the owner's call,
+// for symmetry. The +Y edge has no connectors; its HAT overhang clears the bulge
+// (test-fit.sh's slot checks hold it).
 island_gap = 0.5;    // island's inner face to the connectors' faces
 island_t   = 2;      // the wall in the island; 3 elsewhere
 island_pad = 1.5;    // round the -Y port cluster, on the island's face
@@ -538,9 +530,24 @@ island_x = [board_x + side_port_cluster_x[0] - island_pad,
             board_x + side_port_cluster_x[1] + island_pad];
 island_z = [board_z + side_port_cluster_z[0] - island_pad,
             board_z + side_port_cluster_z[1] + island_pad];
+
+// The side fields sit behind the -Y connectors -- both sides, so the two walls match
+// -- and against the rear wall, where the air leaves the board. They take only
+// vent_side_share of that room: the full length read as too much opening.
+// The louvres lean rearward by wall * tan(angle) from the inner face to the outer one:
+// the room ends that much short, so the outer mouths keep vent_margin too.
+vent_side_lean = wall * tan(vent_side_angle);
+side_room_x  = [island_x[1] + island_outer + vent_margin,   // past the island's outer step
+                module_l - wall - vent_margin - vent_side_lean];
+side_field_x = [side_room_x[1] - vent_side_share * (side_room_x[1] - side_room_x[0]),
+                side_room_x[1]];
+assert(side_field_x[1] - side_field_x[0] > 3 * (vent_slot_w + vent_slot_bar),
+       "the side exhaust field is too short to hold a grille");
+
 assert(island_inner > wall && island_outer > 0,
        "the port island must step the wall in, not out");
-assert(island_x[1] < side_field_x[0] - 1, "the port island runs into the side louvres");
+assert(island_x[1] + island_outer < side_field_x[0] - 1, "the port island's step runs into the side louvres");
+assert(island_x[0] - island_outer > front_wall_t + corner_r, "the port island's front step reaches the front wall");
 assert(island_z[0] - island_outer > lap_top, "the port island's outer step reaches the lap");
 assert(island_z[1] + island_outer < module_h - 3, "the port island's outer step reaches the bevel");
 
