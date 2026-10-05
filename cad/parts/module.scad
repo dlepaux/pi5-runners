@@ -5,7 +5,7 @@
 // its fan sits on the inside of the front wall, screwed from outside, and hexrack's
 // round dust filter clips into the front wall over it. The module's chamfered
 // underside lies on the bevel of the module below and clips there, one rib a wall;
-// the module above lies on this one's. Print it three times.
+// the module above lies on this one's. Print it three times, once per runner name.
 //
 // PRINTED FLOOR-DOWN, AS IT STANDS, WITH NO SUPPORT:
 //   - the floor is the first layers, on the bed
@@ -101,6 +101,28 @@ module islandBulge() {
     islandAt(island_inner) islandFace(0);
     islandAt(wall) islandFace(island_inner - wall);
   }
+}
+
+// ----------------------------------------------------------------------------
+// THE LABEL — the runner's hostname, engraved in both side walls
+// ----------------------------------------------------------------------------
+module labelText(n, font = label_font) {
+  text(runnerName(n), size = label_size, font = font, halign = "center", valign = "center");
+}
+
+// Local frame: x along the text, z up, y into the wall from its outer face at y = 0.
+// Cut straight in, then sheared so z falls as y rises: every ceiling at 45.
+module labelCut(n, font = label_font) {
+  multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, -1, 1, 0]])
+    translate([0, label_depth, 0]) rotate([90, 0, 0])
+      linear_extrude(label_depth + 1) labelText(n, font);
+}
+
+// Rotated, not mirrored, onto +Y, so both sides read left to right from outside --
+// front to rear on -Y, rear to front on +Y, over the same stretch of wall.
+module labelCuts(n, font = label_font) {
+  translate([label_xc, 0, label_zc]) labelCut(n, font);
+  translate([label_xc, module_w, label_zc]) rotate([0, 0, 180]) labelCut(n, font);
 }
 
 // ----------------------------------------------------------------------------
@@ -261,7 +283,7 @@ module fanCut() {
 // render() is NOT optional: preview does not evaluate booleans, and a body cut by
 // ports, four vent fields, a bore, a recess and eight clip features blows past OpenSCAD's normalisation
 // limit -- blank window, perfect export.
-module modulePart() {
+module modulePart(n = runner) {
   render()
     difference() {
       union() {
@@ -276,6 +298,7 @@ module modulePart() {
       fanCut();
       filterRecess();
       filterGrooves();
+      labelCuts(n);
     }
 }
 

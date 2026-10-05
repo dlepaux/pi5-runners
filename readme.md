@@ -1,7 +1,7 @@
 # pi5-runners
 
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
-runners. **Three identical modules, one Pi 5 and one 40 mm Noctua each**, a round
+runners. **Three modules, one Pi 5 and one 40 mm Noctua each**, a round
 dust filter clipped into each module's front, and a lid, all with rounded corners.
 **115.9 × 68 × 182.4 mm** with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
 together; only the fans are.
@@ -14,8 +14,9 @@ together; only the fans are.
 | Middle | Pi 5 | Raspberry Pi M.2 HAT+ Compact (2230 NVMe) | Active Cooler, on custom 16 mm standoffs |
 | Top | Pi 5 | — | Active Cooler |
 
-Every module is the same part, sized for the tallest board, so any board goes in any
-module. Each Pi screws straight into printed feet on its own module's floor; the boards are
+Every module is the same shape, sized for the tallest board, so any board fits any
+module. Each is engraved on both sides with its runner's hostname, **srv-runner-1** at
+the bottom to **srv-runner-3** at the top, in Grenze Gotisch. Each Pi screws straight into printed feet on its own module's floor; the boards are
 never connected to each other.
 
 Plus **three Noctua 40 mm 5V fans**, one per module, screwed in from the front and
@@ -54,12 +55,12 @@ flush with the outside of the case and the USB ports 1.3 mm in, so every plug se
 
 ## Printing
 
-Seven STLs, **none needing support**, in the orientation they come out of
-`generate-stl.sh`. PETG. Print the module and lid for the fans you fit.
+Eleven STLs, **none needing support**, in the orientation they come out of
+`generate-stl.sh`. PETG. Print the modules and lid for the fans you fit.
 
 | Part | Print | Size |
 |------|-------|------|
-| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 61.3 mm |
+| `module-srv-runner-{1,2,3}-NF-A4x10` or `…-NF-A4x20` | one of each, floor down | 115.9 / 125.0 × 68 × 61.3 mm |
 | `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 115.9 / 125.0 × 68 × 6.0 mm |
 | `filter` | ×3, face down, pocket up | 50.3 × 53.8 × 4.0 mm |
 

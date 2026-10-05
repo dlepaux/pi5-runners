@@ -63,6 +63,7 @@ budget filter filter 0 0
 #                 on down to the bed, and its ribs are square bars with every face at
 #                 45 -- the first print's chamfer stopped 1.3mm short and left a roof
 #                 (~371) that sagged.
+#   the label  -- nothing: its cut is sheared, so every ceiling falls at 45.
 budget module-10 module 300 510 -D 'fan_model="NF-A4x10"'
 budget module-20 module 300 510 -D 'fan_model="NF-A4x20"'
 

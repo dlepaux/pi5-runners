@@ -94,6 +94,15 @@ expect_geometry "+Y carries the island's bulge too"         island-pos-bulge
 expect_empty    "and its recess, open outside"              island-pos-open
 
 echo ""
+echo "Fit — the label"
+
+expect_geometry "the label is in Grenze Gotisch, not a fallback" label-font
+for n in 1 2 3; do
+    expect_geometry "srv-runner-$n is engraved"                label-cuts           -D "runner=$n"
+    expect_empty    "srv-runner-$n stays in its clear face"    label-outside-region -D "runner=$n"
+done
+
+echo ""
 echo "Fit — the stack"
 
 expect_empty    "a module clears the module above it"  module-vs-above

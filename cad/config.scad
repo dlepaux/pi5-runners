@@ -21,6 +21,9 @@
 // config.scad, so there is no cycle. OpenSCAD does not hoist it, which is why it is
 // at the top rather than beside the block that reads it.
 include <lib/screws.scad>
+// The label's typeface, vendored (SIL OFL, fonts/OFL.txt): a font OpenSCAD cannot
+// find falls back to its default WITHOUT A WARNING, so it travels with the CAD.
+use <fonts/GrenzeGotisch-ExtraBold.ttf>
 
 EPS       = 0.01;     // CSG safety
 OVERLAP   = 0.1;
@@ -88,7 +91,7 @@ compact_standoff_h = hat_stack_h;
 assert(compact_standoff_h >= active_cooler_h + 3,
        "the Compact's standoff must clear the Active Cooler by at least 3mm");
 
-// Slot k's board. Every module is the same part, so the slot only says what the
+// Slot k's board. Every module is the same shape, so the slot only says what the
 // preview puts in it -- and which envelope the fit tests check against the module.
 slot_kind = ["standard", "compact", "bare"];   // bottom to top
 function slot_h(k) = slot_kind[k] == "bare" ? bare_slot_h : hat_slot_h;
@@ -312,8 +315,8 @@ assert(post_d - pilot_d >= 2 * 1.6, "under 1.6mm of wall round the pilot hole");
 // ----------------------------------------------------------------------------
 // MODULE — one Pi 5 and its fan, printed floor-down as one piece
 // ----------------------------------------------------------------------------
-// SIZED FOR THE TALLEST BOARD, so there is ONE module part and any board goes in any
-// slot. A bare Pi wastes height; three different modules would waste a reprint every
+// SIZED FOR THE TALLEST BOARD, so there is ONE module shape and any board goes in any
+// slot -- only its engraved name (runner) differs. A bare Pi wastes height; three different modules would waste a reprint every
 // time a board changes role.
 floor_t       = 2.4;   // the vented floor: 12 layers at 0.2
 post_h        = 11.5;  // the feet, floor to the board's underside
@@ -550,6 +553,30 @@ assert(island_x[1] + island_outer < side_field_x[0] - 1, "the port island's step
 assert(island_x[0] - island_outer > front_wall_t + corner_r, "the port island's front step reaches the front wall");
 assert(island_z[0] - island_outer > lap_top, "the port island's outer step reaches the lap");
 assert(island_z[1] + island_outer < module_h - 3, "the port island's outer step reaches the bevel");
+
+// THE LABEL: EACH MODULE CARRIES ITS RUNNER'S HOSTNAME, on both side walls, the
+// owner's call. The name, not the RAM: a failed job names its runner, and the label is
+// how you find the box. It makes the three modules three parts -- a board belongs in
+// its own module now -- told apart only by this; `runner` picks which one renders.
+//
+// Engraved in Grenze Gotisch, a blackletter whose 45-degree strokes suit the case. The
+// cut is SHEARED like the side louvres: its floor lies label_depth lower than its
+// mouth, so every ceiling in it falls at 45 into the wall instead of printing flat
+// over air -- the face still reads the font exactly.
+runner       = 1;    // 1..module_count, bottom to top
+function runnerName(n) = str("srv-runner-", n);
+label_font   = "Grenze Gotisch:style=ExtraBold";
+label_size   = 9;    // 61mm long, digits 6.2 tall
+label_depth  = 1;    // of the 3mm wall
+label_margin = 3;
+// The clear face above the island: past the front corner's round, short of the
+// louvres, above the island's outer step and below the bevel inside the wall's top.
+label_region_x = [corner_r + label_margin, side_field_x[0] - label_margin];
+label_region_z = [island_z[1] + island_outer + label_margin, module_pitch - label_margin];
+label_xc = (label_region_x[0] + label_region_x[1]) / 2;
+label_zc = (label_region_z[0] + label_region_z[1]) / 2;
+assert(runner >= 1 && runner <= module_count, "runner is a module, 1..module_count");
+assert(wall - label_depth >= 1.6, "the label leaves under four perimeters of side wall");
 
 // EXCLUSION ZONE, hexrack's idea: the rear port cluster sits in clean solid wall with
 // the lattice running round it. Sized from the MEASURED cluster -- the framework's +X

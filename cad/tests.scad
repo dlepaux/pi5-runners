@@ -166,6 +166,26 @@ if (test_view == "island-pos-open")
     islandProbe((island_x[0] + island_x[1]) / 2, module_w - island_outer + 0.1, module_w + 1);
   }
 
+// -- the label ----------------------------------------------------------------
+// What the name takes out of the walls...
+module labelRemoved() { intersection() { labelCuts(runner); moduleBody(); } }
+if (test_view == "label-cuts") labelRemoved();
+// ...WHOLLY inside its clear face, on both walls, for every runner's name.
+if (test_view == "label-outside-region")
+  difference() {
+    labelRemoved();
+    translate([label_region_x[0], -1, label_region_z[0]])
+      cube([label_region_x[1] - label_region_x[0], module_w + 2,
+            label_region_z[1] - label_region_z[0]]);
+  }
+// OpenSCAD swaps a font it cannot find for its default, silently. Set against a
+// name no font has -- which gets that same default -- the label must differ.
+if (test_view == "label-font")
+  difference() {
+    linear_extrude(1) labelText(runner);
+    linear_extrude(1) labelText(runner, "no such font");
+  }
+
 // -- stacking -----------------------------------------------------------------
 // Neighbours touch on the lap, and the floor on the front wall below, and nowhere else.
 if (test_view == "module-vs-above") intersection() { modulePart(); moduleAt(1) modulePart(); }

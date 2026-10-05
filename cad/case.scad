@@ -4,8 +4,10 @@
 //   openscad -D 'case_part="module"' cad/case.scad
 //   openscad -D 'assembly_space=30' cad/case.scad          // pull the stack apart
 //   openscad -D 'fan_model="NF-A4x20"' cad/case.scad       // the 20mm fans
+//   openscad -D 'case_part="module"' -D 'runner=2' cad/case.scad   // srv-runner-2's
 //
 // fan_model changes the module and the lid; the dust filter is the same either way.
+// runner changes only the module's engraved name; the assembly labels them 1..3 up.
 //
 // Every printed part comes out of here IN ITS PRINT ORIENTATION: module floor-down,
 // lid plate-down, dust filter face-down.
@@ -27,7 +29,7 @@ use <parts/filter.scad>
 case_parts = ["module", "lid", "filter"];
 
 module casePart(name) {
-  if (name == "module") modulePart();
+  if (name == "module") modulePart(runner);
   if (name == "lid")    lidPrint();
   if (name == "filter") filterPart();
 }
@@ -71,7 +73,7 @@ module fanContents() {
 if (case_part == "assembly") {
   for (k = [0 : module_count - 1])
     translate(explodeModule(k)) moduleAt(k) {
-      if (show_case) modulePart();
+      if (show_case) modulePart(k + 1);
       slotContents(slot_kind[k]);
       fanContents();
       if (show_filter) color("DimGray") filterMounted(assembly_space);

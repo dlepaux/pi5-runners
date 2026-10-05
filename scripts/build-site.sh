@@ -19,10 +19,11 @@ rm -rf "$OUT"
 mkdir -p "$OUT/stl"
 cp stl/*.stl "$OUT/stl/"
 
-# Everything for one build, per fan: three of each part are printed, but one file is
-# all a slicer needs.
+# Everything for one build, per fan: the three named modules, and one lid and one
+# filter -- three filters are printed, but one file is all a slicer needs.
 for fan in NF-A4x10 NF-A4x20; do
-    zip -jq "$OUT/pi5-runners-$fan.zip" "stl/module-$fan.stl" "stl/lid-$fan.stl" stl/filter.stl
+    zip -jq "$OUT/pi5-runners-$fan.zip" stl/module-srv-runner-[123]-"$fan".stl \
+        "stl/lid-$fan.stl" stl/filter.stl
 done
 
 size() {
@@ -99,10 +100,12 @@ cat >"$OUT/index.html" <<HTML
   Noctua you fit: <b>NF-A4x10</b> (10&nbsp;mm) or <b>NF-A4x20</b> (20&nbsp;mm).</p>
 
   <section class="card">
-    <div class="head"><h2>Module — the shell</h2><span class="count">print ×3</span></div>
-    <p class="meta">Floor down. One Pi 5 and its fan each; they stack and clip together.<br>
-    NF-A4x10: $(size module-NF-A4x10) · NF-A4x20: $(size module-NF-A4x20)</p>
-    <div class="row">$(dl module-NF-A4x10 "NF-A4x10") $(dl module-NF-A4x20 "NF-A4x20")</div>
+    <div class="head"><h2>Module — the shell</h2><span class="count">print one of each</span></div>
+    <p class="meta">Floor down. One Pi 5 and its fan each; they stack and clip together.
+    Each is engraved with its runner's hostname, srv-runner-1 at the bottom.<br>
+    NF-A4x10: $(size module-srv-runner-1-NF-A4x10) · NF-A4x20: $(size module-srv-runner-1-NF-A4x20)</p>
+    <div class="row">$(for n in 1 2 3; do dl "module-srv-runner-$n-NF-A4x10" "srv-runner-$n · NF-A4x10"; done)</div>
+    <div class="row">$(for n in 1 2 3; do dl "module-srv-runner-$n-NF-A4x20" "srv-runner-$n · NF-A4x20"; done)</div>
   </section>
 
   <section class="card">
@@ -121,7 +124,7 @@ cat >"$OUT/index.html" <<HTML
 
   <section class="card">
     <div class="head"><h2>Everything</h2></div>
-    <p class="meta">Module, dust filter and lid for one fan, zipped.</p>
+    <p class="meta">The three modules, a dust filter and the lid for one fan, zipped.</p>
     <div class="row">
       <a class="dl ghost" href="pi5-runners-NF-A4x10.zip" download>All parts · NF-A4x10</a>
       <a class="dl ghost" href="pi5-runners-NF-A4x20.zip" download>All parts · NF-A4x20</a>

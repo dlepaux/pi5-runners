@@ -42,3 +42,9 @@ are not ours and keep their own terms:
 Both are shipped unmodified and loaded as separate files at runtime, so they are
 aggregated with this work rather than combined into it. Notices, licence texts and the
 pointer to OpenSCAD's corresponding source are in `public/licences/`.
+
+---
+
+The label typeface, `cad/fonts/GrenzeGotisch-ExtraBold.ttf`, is Grenze Gotisch by
+Omnibus-Type, under the SIL Open Font License 1.1 (`cad/fonts/OFL.txt`), not the
+license above.

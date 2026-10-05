@@ -4,7 +4,7 @@
 # ============================================================================
 #   ./scripts/generate-stl.sh            # everything into stl/
 #   ./scripts/generate-stl.sh filter              # just one
-#   ./scripts/generate-stl.sh module-NF-A4x20
+#   ./scripts/generate-stl.sh module-srv-runner-2-NF-A4x20
 #
 # Each part is rendered from cad/case.scad with case_part set, which is the SAME
 # entry point the assembly uses -- so a part cannot drift from how it is shown.
@@ -24,18 +24,31 @@ BACKEND=""
 "$OPENSCAD" --help 2>&1 | grep -q "\-\-backend" && BACKEND="--backend=Manifold"
 
 # fan_model sets the module's and the lid's length, so they are written in
-# both. The filter panel is one part whichever fans are fitted.
+# both. The filter panel is one part whichever fans are fitted. Each module carries
+# its runner's name, so there are three of it per fan.
 TARGETS=("$@")
-[ ${#TARGETS[@]} -eq 0 ] && TARGETS=(module-NF-A4x10 lid-NF-A4x10 module-NF-A4x20 lid-NF-A4x20 filter)
+if [ ${#TARGETS[@]} -eq 0 ]; then
+    for fan in NF-A4x10 NF-A4x20; do
+        for n in 1 2 3; do TARGETS+=("module-srv-runner-$n-$fan"); done
+        TARGETS+=("lid-$fan")
+    done
+    TARGETS+=(filter)
+fi
 
 mkdir -p stl
 FAILED=""
 for target in "${TARGETS[@]}"; do
     part="${target%%-NF-*}"
-    args=(-D "case_part=\"$part\"")
-    [ "$part" != "$target" ] && args+=(-D "fan_model=\"${target#"$part"-}\"")
+    fan="${target#"$part"}"
+    args=()
+    if [[ "$part" == module-srv-runner-* ]]; then
+        args+=(-D "runner=${part##*-}")
+        part=module
+    fi
+    args+=(-D "case_part=\"$part\"")
+    [ -n "$fan" ] && args+=(-D "fan_model=\"${fan#-}\"")
     out="stl/$target.stl"
-    printf "  %-16s " "$target"
+    printf "  %-30s " "$target"
     # binstl ALWAYS. The ASCII default writes a header that every downstream reader
     # parses as a triangle count in the hundreds of millions.
     # shellcheck disable=SC2086

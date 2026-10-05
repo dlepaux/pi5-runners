@@ -1,7 +1,7 @@
 # pi5-runners — 3D-Printable Stack for Three Pi 5 CI Runners
 
 Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Actions
-runners. **A stack of three identical modules, one Pi 5 and one 40 mm Noctua each**,
+runners. **A stack of three modules, one Pi 5 and one 40 mm Noctua each**,
 a round dust filter (hexrack's, reshaped) clipped into each module's front, and a lid,
 all with rounded vertical corners. 115.9 × 68 × 182.4 mm with the 10 mm fans (125.0 deep with the 20 mm ones). No screws
 hold the case together; only the fans are screwed.
@@ -11,6 +11,7 @@ hold the case together; only the fans are screwed.
 **Standalone**, like [`lab-router`](../lab-router/) and [`naja-miner`](../naja-miner/) —
 not a variant of [`hexrack-sbc`](../hexrack-sbc/), and a **single configuration**. The
 one switch is `fan_model`; it changes the module and the lid, never the filter.
+`runner` (1–3) only picks which hostname the module is engraved with.
 
 The load is what makes this case different from a Pi shelf: 100% on all four cores for
 30–50 minutes at a stretch, three boards at once, with NVMe traffic throughout. Every
@@ -29,8 +30,12 @@ that way is redesigned, not supported.
 | 2 (middle) | Pi 5 | Raspberry Pi M.2 HAT+ Compact (2230) | Active Cooler, custom standoffs |
 | 3 (top) | Pi 5 | none | Active Cooler |
 
-The slots are a preview choice only: every module is the same part, sized for the
-tallest board, so any board goes in any module.
+The slots are a preview choice only: every module is the same shape, sized for the
+tallest board, so any board fits any module. **Only the label differs**: both side
+walls carry the runner's hostname, `srv-runner-<runner>`, engraved 1 mm in Grenze
+Gotisch ExtraBold (vendored in `cad/fonts/`, OFL — OpenSCAD falls back silently on a
+missing font, so `label-font` checks it loaded). The cut is sheared so its ceilings
+fall at 45° into the wall; it adds nothing to the print budget.
 
 - **THE M.2 HAT+ COMPACT DOES NOT TAKE THE ACTIVE COOLER AS SUPPLIED.** Raspberry Pi
   say so: the standard HAT+ ships with a 16 mm stacking header "so it can be fitted to
@@ -157,7 +162,7 @@ tallest board, so any board goes in any module.
 
 | Part | Prints | Is |
 |------|--------|----|
-| `module` ×3 | floor-down | a floor (solid by default, `floor_vents`) with four feet, four walls; the front one carries the fan, its bore, its screw holes and the filter's recess; a 45° chamfer with four clip ribs below, a bevel with four grooves above |
+| `module` ×3, one per `runner` | floor-down | a floor (solid by default, `floor_vents`) with four feet, four walls; the front one carries the fan, its bore, its screw holes and the filter's recess; a 45° chamfer with four clip ribs below, a bevel with four grooves above |
 | `lid` | plate-down | a module's chamfer and four ribs with a solid plate on it |
 | `filter` ×3 | face-down | a round ring with two flats, fabric glued into a pocket on its back, two ribs |
 
