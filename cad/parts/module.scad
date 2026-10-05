@@ -1,7 +1,7 @@
 // ============================================================================
 // MODULE — one Raspberry Pi 5 and its fan, printed as one piece
 // ============================================================================
-// Floor and four walls. The Pi screws into heat-set inserts in four posts on the floor;
+// Floor and four walls. The Pi screws straight into four printed feet on the floor;
 // its fan sits on the inside of the front wall, screwed from outside, and hexrack's
 // round dust filter clips into the front wall over it. The module's chamfered
 // underside lies on the bevel of the module below and clips there, one rib a wall;
@@ -97,39 +97,39 @@ module islandBulge() {
 }
 
 // ----------------------------------------------------------------------------
-// POSTS AND INSERTS
+// POSTS — the board's four feet
 // ----------------------------------------------------------------------------
 
-// One round post per mounting hole, not a rail per row: less plastic, and the air
-// under the board runs between four posts instead of along two walls.
-module postFootprint() {
+// Where the feet stand, d across: the feet themselves at post_d, their chamfered
+// roots at post_d + 2 * post_chamfer.
+module postFootprint(d = post_d) {
   translate([board_x, board_y])
-    for (h = pi5MountingHoles()) translate([h[0], h[1]]) circle(d = post_d, $fn = 48);
+    for (h = pi5MountingHoles()) translate([h[0], h[1]]) circle(d = d, $fn = 48);
 }
 
-// Clipped to the inside: with the walls this close to the board, a post would
-// otherwise stand into a wall. From the floor to rail_top, a standoff under the board.
+// From the floor to the board's underside, flaring on the chamfer at the root. Clipped
+// to the inside: with the walls this close to the board, a foot would otherwise stand
+// into a wall.
 module posts() {
-  translate([0, 0, floor_t - OVERLAP])
-    linear_extrude(rail_top - floor_t + OVERLAP)
-      intersection() { postFootprint(); inset(wall); }
+  intersection() {
+    union() {
+      translate([0, 0, floor_t - OVERLAP])
+        linear_extrude(board_z - floor_t + OVERLAP) postFootprint();
+      translate([board_x, board_y, floor_t - OVERLAP])
+        for (h = pi5MountingHoles())
+          translate([h[0], h[1]])
+            cylinder(d1 = post_d + 2 * (post_chamfer + OVERLAP), d2 = post_d,
+                     h = post_chamfer + OVERLAP, $fn = 48);
+    }
+    linear_extrude(board_z + 1) inset(wall);
+  }
 }
 
-// Z = 0 of insert_hole_mask() is the entry surface: the rail top, a standoff below
-// the board's underside.
-module insertPockets() {
+// The pilot holes, down from the board's underside: the screw cuts its own thread.
+module pilotHoles() {
   onBoard()
     for (h = pi5MountingHoles())
-      translate([h[0], h[1], -board_standoff_h]) insert_hole_mask(insert_m25);
-}
-
-// The board's standoffs as bought parts: a hex envelope (across corners) from each
-// insert up to the board. Not printed -- for the preview and the fit tests.
-module boardStandoffs() {
-  onBoard()
-    for (h = pi5MountingHoles())
-      translate([h[0], h[1], -board_standoff_h])
-        cylinder(d = board_standoff_af / cos(30), h = board_standoff_h, $fn = 6);
+      translate([h[0], h[1], -pilot_depth]) cylinder(d = pilot_d, h = pilot_depth + EPS, $fn = 30);
 }
 
 // ----------------------------------------------------------------------------
@@ -211,7 +211,7 @@ module floorVentProfile() {
   if (floor_vents)
     difference() {
       translate([x0, m]) ventField(module_l - m - x0, module_w - 2 * m);
-      offset(delta = vent_margin) postFootprint();
+      offset(delta = vent_margin) postFootprint(post_d + 2 * post_chamfer);
     }
 }
 
@@ -262,7 +262,7 @@ module modulePart() {
         posts();
         lapRibs();
       }
-      insertPockets();
+      pilotHoles();
       bevelGrooves();
       allPortCuts();
       ventCuts();

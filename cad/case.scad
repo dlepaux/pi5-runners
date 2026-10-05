@@ -73,7 +73,6 @@ if (case_part == "assembly") {
     translate(explodeModule(k)) moduleAt(k) {
       if (show_case) modulePart();
       slotContents(slot_kind[k]);
-      if (show_standoffs) color("Silver") boardStandoffs();
       fanContents();
       if (show_filter) color("DimGray") filterMounted(assembly_space);
     }

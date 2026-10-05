@@ -121,27 +121,20 @@ if (test_view == "slot-vs-above")
 
 if (test_view == "posts-alone")    posts();
 if (test_view == "posts-vs-board") intersection() { posts(); boardPcb(); }
-// The standoffs clear the module but for the rails they stand on -- and do stand on
-// them: lowered 0.2mm, they bite.
-if (test_view == "standoffs-vs-module")
-  intersection() { boardStandoffs(); difference() { modulePart(); posts(); } }
-if (test_view == "standoffs-seated")
-  intersection() { translate([0, 0, -0.2]) boardStandoffs(); posts(); }
-// A pocket must be VOID in the finished part...
-if (test_view == "pockets-vs-module") intersection() { insertPockets(); modulePart(); }
-// ...must sit in a rail, not in the air beside one...
-if (test_view == "pockets-in-rails") intersection() { insertPockets(); posts(); }
-// ...and WHOLLY in it, or in the SOLID floor under it -- the 6.7mm pocket runs 1.1mm
-// into the floor, which is why the floor's vents keep clear of the rails. The check
-// above only asks for some overlap, so a pocket lifted 3mm -- too shallow for the
-// insert -- still passes it. Only the mask's 0.01mm mouth may stand proud.
-if (test_view == "pockets-outside-rails")
+// The feet reach the board: raised 0.2mm, they bite it.
+if (test_view == "posts-seated")
+  intersection() { translate([0, 0, 0.2]) posts(); boardPcb(); }
+// A pilot hole must be VOID in the finished part...
+if (test_view == "pilots-vs-module") intersection() { pilotHoles(); modulePart(); }
+// ...must sit in a foot, not in the air beside one...
+if (test_view == "pilots-in-posts") intersection() { pilotHoles(); posts(); }
+// ...and WHOLLY in it. The check above only asks for some overlap, so a hole slid
+// off its foot's axis still passes it. Only the mask's 0.01mm mouth may stand proud.
+if (test_view == "pilots-outside-posts")
   difference() {
-    insertPockets();
+    pilotHoles();
     posts();
-    linear_extrude(floor_t)
-      difference() { inset(wall); floorVentProfile(); }
-    translate([-1, -1, rail_top]) cube([module_l + 2, module_w + 2, 0.05]);
+    translate([-1, -1, board_z]) cube([module_l + 2, module_w + 2, 0.05]);
   }
 
 // -- stacking -----------------------------------------------------------------
@@ -419,7 +412,6 @@ if (test_view == "report-geometry") {
   echo(str("fan_model = ", fan_model, " fan_throat_area = ", fan_throat_area));
   echo(str("board_z = ", board_z));
   echo(str("fan_room = ", floor_t, " ", module_pitch));
-  echo(str("rail_top = ", rail_top));
   echo(str("rear_port_face = ", module_l + rear_port_proud));
   echo(str("side_port_face = ", board_y - side_port_reach));
   echo(str("bed = ", bed));

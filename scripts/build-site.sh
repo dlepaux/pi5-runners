@@ -129,8 +129,8 @@ cat >"$OUT/index.html" <<HTML
   </section>
 
   <p class="note">Also needed: 3 × Noctua 40&nbsp;mm 5V fans, with the self-tapping
-  screws in their bags (not M3), 12 × M2.5 heat-set
-  inserts, filter fabric. Built from <code>$COMMIT</code> on $BUILT$TESTED.
+  screws in their bags (not M3), 4 × M2.5 × 6 screws
+  for the Pi without a HAT, filter fabric. Built from <code>$COMMIT</code> on $BUILT$TESTED.
   CC BY-NC-SA 4.0.</p>
 </main>
 </body>

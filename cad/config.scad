@@ -16,12 +16,11 @@
 // at z = k * module_pitch.
 // ============================================================================
 
-// Both spec tables, INCLUDED not used: `use` imports modules and functions but not
-// variables, and the fastener block below reads their constants. Neither includes
-// config.scad, so there is no cycle. OpenSCAD does not hoist either, which is why
-// these are at the top rather than beside the block that reads them.
+// The screw table, INCLUDED not used: `use` imports modules and functions but not
+// variables, and the fastener block below reads its constants. It does not include
+// config.scad, so there is no cycle. OpenSCAD does not hoist it, which is why it is
+// at the top rather than beside the block that reads it.
 include <lib/screws.scad>
-include <lib/theaded-inserts.scad>
 
 EPS       = 0.01;     // CSG safety
 OVERLAP   = 0.1;
@@ -285,25 +284,30 @@ assert(fan_csink_d / 2 < fan_web + filter_depth, "the countersink is deeper than
 // ----------------------------------------------------------------------------
 // FASTENERS — the Pi screws into its own module
 // ----------------------------------------------------------------------------
-// M2.5 heat-set inserts in four round posts on the floor, one under each mounting hole.
-// READ FROM lib/theaded-inserts.scad: a Ruthex RX-M2.5x5.7 wants 6.7 of hole, not 5.7.
-// THE BOARD STANDS ON STANDOFFS, not on the rails: an M2.5 x board_standoff_h male-
-// female standoff screws into each insert, female end up, and the HAT's own male-
-// female standoffs thread through the Pi into those (a bare Pi takes an M2.5 screw).
-// The board keeps its height on the fan's axis; the rails stop short of it by the
-// standoff, which leaves air under the whole board instead of a printed bed.
+// FOUR PRINTED FEET, one under each mounting hole, the screw cutting its own thread in
+// a pilot hole -- hexrack's M2.5-4 pilot, as its sbcMountingHoles() cuts it. No heat-
+// set inserts, no bought standoffs: the first prints carried a Ruthex insert in a 9.2
+// post and a 6mm male-female standoff on it, three parts doing one foot's job for a
+// board that is screwed in once. The HAT's male-female standoffs thread through the Pi
+// straight into the feet (a bare Pi takes an M2.5 screw).
+//
+// The feet run from the floor to the board's underside, so the board keeps its height
+// and air still runs under it, between four feet. Each flares onto the floor on a
+// 45-degree chamfer: the root is where a 6mm foot would snap, and floor-down the
+// chamfer prints as a widening first few layers, never over air.
 //
 // POSTS, NOT hexrack's CANOES: the rails joining each row cost plastic and did
-// nothing the posts do not; the air under the board now runs round four posts.
-insert_m25    = "M2.5";
-boss_d        = get_insert_min_boss(insert_m25);   // 7.2
-post_d        = boss_d + 2;   // a millimetre of wall round the insert's minimum boss
-board_standoff_h  = 6;     // M2.5 male-female, rail top to board underside
-board_standoff_af = 6;     // M2.5 standoff hex, across flats
+// nothing the posts do not.
+m25_screw     = "M2.5-4";
+pilot_d       = get_screw_spec(m25_screw, "pilot_hole_diameter");   // 2.42
+post_d        = 6;     // the Pi's mounting pad is 6 across: the foot sits on it, no wider
+post_chamfer  = 1.5;   // the 45-degree flare at the floor, outward
+// Deeper than anything that threads in: a HAT standoff's male end or an M2.5 x 6 screw
+// leaves ~4.4 past the 1.6 PCB, and an M2.5 x 8 6.4. A screw that bottoms out strips
+// the thread it just cut.
+pilot_depth   = 8;
 
-assert(rail_top - get_insert_spec(insert_m25, "hole_depth") >= 1,
-       "the insert pocket would break through the floor");
-assert(board_standoff_af / cos(30) <= boss_d, "the standoff's hex overhangs its insert boss");
+assert(post_d - pilot_d >= 2 * 1.6, "under 1.6mm of wall round the pilot hole");
 
 // ----------------------------------------------------------------------------
 // MODULE — one Pi 5 and its fan, printed floor-down as one piece
@@ -312,7 +316,7 @@ assert(board_standoff_af / cos(30) <= boss_d, "the standoff's hex overhangs its 
 // slot. A bare Pi wastes height; three different modules would waste a reprint every
 // time a board changes role.
 floor_t       = 2.4;   // the vented floor: 12 layers at 0.2
-rail_h        = 5.5;   // the insert posts, floor to rail_top
+post_h        = 11.5;  // the feet, floor to the board's underside
 plenum_gap    = 3;     // fan's back face to the Compact HAT's tab
 module_air    = 5;     // top of the tallest board to the next module's floor, at least
 
@@ -334,7 +338,7 @@ slide_clear     = 0.5;   // jacks to the wall's inner face while the Pi goes dow
 // degrees so it prints. The slot is what the Pi slides back into.
 pcb_slot_clear  = 0.3;   // round the PCB's +X edge, in the slot
 
-// SIDES: THE PI IS CENTRED ACROSS THE MODULE, so its two rails sit symmetrically on
+// SIDES: THE PI IS CENTRED ACROSS THE MODULE, so its feet sit symmetrically on
 // the floor -- the first print had them 2.5mm toward -Y and it read as a mistake. The
 // Pi is located by its four screws, not by the walls. The cost is on -Y: its USB-C and
 // micro-HDMI sockets now sit 3mm behind the wall instead of 0.5, and a USB-C plug's
@@ -355,7 +359,7 @@ board_y = wall + side_clear;
 // THE BOARD STAYS ON THE FLOOR'S POSTS, whatever the headroom: that is room for a taller
 // heatsink ON it. It used to rise onto the fan's axis (board_lift), which never fired
 // until the fan was centred -- and then would have eaten 5mm of that room.
-board_z = floor_t + rail_h + board_standoff_h;   // the PCB's underside
+board_z = floor_t + post_h;   // the PCB's underside
 
 module_l = board_x + pi5_pcb[0] + rear_port_reach - rear_port_proud;
 // The jacks sit wall + rear_port_proud deep in the rear wall. Slid that far forward
@@ -364,7 +368,7 @@ slide_travel = max(0, wall + rear_port_proud) + slide_clear;
 assert(plenum_gap + hat_compact_overhang_x >= slide_travel,
        "no room ahead of the Pi to slide its jacks into the rear wall");
 module_w = board_y + pi5_pcb[1] + hat_overhang_y + side_clear_pos + wall;
-assert(abs(board_y + pi5_pcb[1] / 2 - module_w / 2) < EPS, "the Pi (and its rails) is not centred across the module");
+assert(abs(board_y + pi5_pcb[1] / 2 - module_w / 2) < EPS, "the Pi (and its feet) is not centred across the module");
 
 // THE FOUR VERTICAL CORNERS ARE ROUNDED, for the look. Vertical, so it costs nothing to
 // print. Every outline -- walls, floor, lap, bevel, lid -- is inset from the same
@@ -441,8 +445,6 @@ filter_funnel = filter_depth - filter_glue_d;   // its depth, and its widening p
 assert(filter_a_out - filter_land >= filter_r_in + filter_funnel,
        "the funnel runs into a side flat: under filter_land of front face beside it");
 
-rail_top   = board_z - board_standoff_h;   // where the inserts go in
-
 module_count = 3;
 lid_t        = 3;     // the lid's plate, above its lap
 stack_h = module_count * module_pitch + lap_top + lid_t;   // floor of 0 to lid top
@@ -454,8 +456,9 @@ assert(fan_zc - fan_size / 2 >= floor_t + fan_clear - EPS, "the fan sits on the 
 assert(module_w / 2 - filter_a_recess - corner_r >= 1,
        "corner_r cuts into the filter's recess: under 1mm of wall at the front corners");
 assert(fan_size + 2 <= module_w - 2 * wall, "the fan is wider than the module's inside");
-assert(board_y + pi5_hole_inset - boss_d / 2 >= wall + lap_z0,
-       "a post's insert boss would stand in the floor's band under the lap");
+assert(board_y + pi5_hole_inset - post_d / 2 - post_chamfer >= wall + lap_z0,
+       "a foot's chamfer would stand in the floor's band under the lap");
+assert(post_h - pilot_depth >= 1, "the pilot hole would break through the floor");
 
 // The Pi's connectors must cut through FULL wall, above the chamfer.
 assert(board_z + 1.5 > lap_top,
@@ -576,7 +579,7 @@ assembly_space = 20;
 
 show_boards    = true;    // the Pi 5s, from the framework (cooler included)
 show_hats      = false;    // both M.2 HAT+ boards and their drives
-show_standoffs = false;    // the M2.5 standoffs: under each board, and each HAT's
+show_standoffs = false;    // each HAT's M2.5 standoffs
 show_fan       = true;    // one fan mesh per module, of fan_model
 show_filter    = true;    // the dust filters
 show_case      = true;    // modules and lid

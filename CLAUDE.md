@@ -155,18 +155,20 @@ tallest board, so any board goes in any module.
 
 | Part | Prints | Is |
 |------|--------|----|
-| `module` ×3 | floor-down | a floor (solid by default, `floor_vents`) with four insert posts, four walls; the front one carries the fan, its bore, its screw holes and the filter's recess; a 45° chamfer with four clip ribs below, a bevel with four grooves above |
+| `module` ×3 | floor-down | a floor (solid by default, `floor_vents`) with four feet, four walls; the front one carries the fan, its bore, its screw holes and the filter's recess; a 45° chamfer with four clip ribs below, a bevel with four grooves above |
 | `lid` | plate-down | a module's chamfer and four ribs with a solid plate on it |
 | `filter` ×3 | face-down | a round ring with two flats, fabric glued into a pocket on its back, two ribs |
 
-- **THE BOARDS ARE NEVER CONNECTED.** Each Pi screws into M2.5 heat-set inserts in
-  four round posts on its own module's floor, one per hole — **not hexrack's
-  "canoes"**: the rails joining each row cost plastic for nothing, and the air under
-  the board now runs round four posts instead of along two walls. **The board stands on M2.5 × 5 male-female standoffs** (`board_standoff_h`)
-  screwed into the inserts, not on the print: the posts stop at `rail_top`, the board
-  keeps its height, and air runs under it. The HAT's M2.5
-  male-female standoffs thread through the Pi into those. `standoffs-seated` fails if
-  the posts fall short of them
+- **THE BOARDS ARE NEVER CONNECTED.** Each Pi screws straight into four printed
+  feet on its own module's floor, one per hole — **not hexrack's "canoes"**: the
+  rails joining each row cost plastic for nothing, and the air under the board runs
+  round four feet instead of along two walls. **No heat-set inserts, no bought
+  standoffs**: each foot runs from the floor to the board's underside (`post_h`),
+  Ø`post_d` = 6 — the Pi's mounting pad — flaring onto the floor on a 45°
+  `post_chamfer`, with hexrack's `M2.5-4` pilot hole `pilot_depth` deep. The screw
+  cuts its own thread. The HAT's M2.5 male-female standoffs thread through the Pi
+  into the feet; a bare Pi takes M2.5 × 6 screws. `posts-seated` fails if the feet
+  fall short of the board, `pilots-outside-posts` if a hole leaves its foot
 - **STACKING: ONE 45° LAP ON ALL FOUR WALLS, NO SPIGOT.** A module's walls end below
   in a 45° chamfer across their whole thickness, low at the inner face, high at the
   outer; the module below ends its walls in a bevel of the same slope (`lap_gap`,
@@ -404,8 +406,8 @@ without error and exports a clean single body.
 22. **"The first line of --bboxes" is the largest BODY, not the mesh.** For the NF-A8 the
     frame happened to be the whole envelope. For the NF-A4x20 the frame is 20.1 deep and
     the mesh 21.1. Both the generator and `test-assets.sh` measure the union now.
-23. **"Some overlap" is not "inside".** `pockets-in-rails` asked whether the insert
-    pockets overlap the rails at all, and a pocket lifted 3 mm — too shallow for the
+23. **"Some overlap" is not "inside".** `pockets-in-rails` asked whether the (then)
+    insert pockets overlap the rails at all, and a pocket lifted 3 mm — too shallow for the
     insert, its mouth in the air — still passed. Found by perturbing the geometry to
     see which check fails. `pockets-outside-rails` now demands the pocket be WHOLLY in
     the rail. **Break every new check on purpose once**; one that nothing fails is

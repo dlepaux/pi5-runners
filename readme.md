@@ -15,7 +15,7 @@ together; only the fans are.
 | Top | Pi 5 | — | Active Cooler |
 
 Every module is the same part, sized for the tallest board, so any board goes in any
-module. Each Pi screws into heat-set inserts in its own module's floor; the boards are
+module. Each Pi screws straight into printed feet on its own module's floor; the boards are
 never connected to each other.
 
 Plus **three Noctua 40 mm 5V fans**, one per module, screwed in from the front and
@@ -33,8 +33,8 @@ CI runners hold 100% CPU for 30–50 minutes at a stretch, three boards at once 
 | **3 × NF-A4x10 5V** | **≈ 9.7 K** | **≈ 15 K** |
 | 3 × NF-A4x20 5V | ≈ 8.5 K | ≈ 16.5 K |
 
-Each board stands on 5 mm standoffs on four round posts, which put it and its HAT across
-the fan's flow, with air running under the board between the posts. One fan per Pi is 50% more air than the two-fan column an
+Each board stands on four printed feet, which put it and its HAT across
+the fan's flow, with air running under the board between the feet. One fan per Pi is 50% more air than the two-fan column an
 earlier version shared. The
 20 mm fans move 15% more again and push 27% more static pressure, which is what counts
 behind a filter — about a kelvin, not a different class of cooling.
@@ -108,13 +108,12 @@ the fan sat low the ring was cut flat top and bottom too.
 
 ## Assembly
 
-1. Press M2.5 heat-set inserts into each module's posts and screw an **M2.5 × 5 mm
-   male-female standoff** into each, female end up: the board stands on those, with
-   air under it, not on the print. **The Pi's rear ports come through the rear wall**,
-   so it cannot drop straight in: lower it onto the standoffs about 4 mm short of the
-   rear wall, then slide it back until its RJ45 and USB ports sit in their holes and
-   its edge in the slot under them. Do this before its HAT. Then the HAT's M2.5
-   male-female standoffs thread through the Pi into them (a bare Pi takes M2.5 screws).
+1. **The Pi's rear ports come through the rear wall**, so it cannot drop straight in:
+   lower it onto its four printed feet about 4 mm short of the rear wall, then slide
+   it back until its RJ45 and USB ports sit in their holes and its edge in the slot
+   under them. Do this before its HAT. Then the HAT's M2.5 male-female standoffs
+   thread through the Pi straight into the feet, cutting their own thread (a bare Pi
+   takes M2.5 × 6 screws). Snug, not tight: a printed thread strips.
 2. Hold each fan against the inside of its module's front wall and screw it in from
    the front with **the four self-tapping screws in the fan's own bag** (Noctua's,
    about M5) through the recess floor into the fan's corner holes. Their heads sink
