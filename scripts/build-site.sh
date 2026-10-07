@@ -19,11 +19,11 @@ rm -rf "$OUT"
 mkdir -p "$OUT/stl"
 cp stl/*.stl "$OUT/stl/"
 
-# Everything for one build, per fan: the three named modules, and one tray, one lid and
-# one filter -- three trays and filters are printed, but one file is all a slicer needs.
+# Everything for one build, per fan: one module, the three trays, one lid and one
+# filter -- three modules and filters are printed, but one file is all a slicer needs.
 for fan in NF-A4x10 NF-A4x20; do
-    zip -jq "$OUT/pi5-runners-$fan.zip" stl/module-srv-runner-[123]-"$fan".stl \
-        stl/tray.stl "stl/lid-$fan.stl" stl/filter.stl
+    zip -jq "$OUT/pi5-runners-$fan.zip" "stl/module-$fan.stl" stl/tray-[248]GB.stl \
+        "stl/lid-$fan.stl" stl/filter.stl
 done
 
 size() {
@@ -100,19 +100,18 @@ cat >"$OUT/index.html" <<HTML
   Noctua you fit: <b>NF-A4x10</b> (10&nbsp;mm) or <b>NF-A4x20</b> (20&nbsp;mm).</p>
 
   <section class="card">
-    <div class="head"><h2>Module — the shell</h2><span class="count">print one of each</span></div>
-    <p class="meta">Floor down. One Pi 5 and its fan each; they stack and clip together.
-    Each is engraved with its runner's hostname, srv-runner-1 at the bottom.<br>
-    NF-A4x10: $(size module-srv-runner-1-NF-A4x10) · NF-A4x20: $(size module-srv-runner-1-NF-A4x20)</p>
-    <div class="row">$(for n in 1 2 3; do dl "module-srv-runner-$n-NF-A4x10" "srv-runner-$n · NF-A4x10"; done)</div>
-    <div class="row">$(for n in 1 2 3; do dl "module-srv-runner-$n-NF-A4x20" "srv-runner-$n · NF-A4x20"; done)</div>
+    <div class="head"><h2>Module — the shell</h2><span class="count">print ×3</span></div>
+    <p class="meta">Floor down. One Pi 5 and its fan each; they stack and clip together.<br>
+    NF-A4x10: $(size module-NF-A4x10) · NF-A4x20: $(size module-NF-A4x20)</p>
+    <div class="row">$(dl module-NF-A4x10 "NF-A4x10") $(dl module-NF-A4x20 "NF-A4x20")</div>
   </section>
 
   <section class="card">
-    <div class="head"><h2>Tray</h2><span class="count">print ×3</span></div>
+    <div class="head"><h2>Tray</h2><span class="count">print one of each</span></div>
     <p class="meta">Floor down. The Pi screws onto its four feet on the bench; the tray then
-    clicks into the window in its module's floor. Same for both fans · $(size tray)</p>
-    <div class="row">$(dl tray "Tray")</div>
+    clicks into the window in its module's floor. Each is engraved underneath with its
+    Pi's RAM. Same for both fans · $(size tray-8GB)</p>
+    <div class="row">$(for gb in 2 4 8; do dl "tray-${gb}GB" "${gb} GB"; done)</div>
   </section>
 
   <section class="card">
@@ -131,7 +130,7 @@ cat >"$OUT/index.html" <<HTML
 
   <section class="card">
     <div class="head"><h2>Everything</h2></div>
-    <p class="meta">The three modules, a tray, a dust filter and the lid for one fan, zipped.</p>
+    <p class="meta">A module, the three trays, a dust filter and the lid for one fan, zipped.</p>
     <div class="row">
       <a class="dl ghost" href="pi5-runners-NF-A4x10.zip" download>All parts · NF-A4x10</a>
       <a class="dl ghost" href="pi5-runners-NF-A4x20.zip" download>All parts · NF-A4x20</a>

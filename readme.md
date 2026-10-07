@@ -17,9 +17,9 @@ together; only the fans are.
 | Top | Pi 5 | — | Active Cooler |
 
 Every module is the same shape, sized for the tallest board, so any board fits any
-module. Each is engraved on both sides with its runner's hostname, **srv-runner-1** at
-the bottom to **srv-runner-3** at the top, in Grenze Gotisch. Each Pi screws straight into printed feet on its own module's floor; the boards are
-never connected to each other.
+module, and the three modules are one part. Each Pi screws straight into printed feet on
+its own tray, engraved underneath with that Pi's RAM — **2GB**, **4GB** or **8GB** — in
+Grenze Gotisch; the boards are never connected to each other.
 
 Plus **three Noctua 40 mm 5V fans**, one per module, screwed in from the front and
 powered from its own Pi's GPIO 5 V header: either the **NF-A4x10** or the **NF-A4x20**. Set `fan_model` in
@@ -57,21 +57,21 @@ flush with the outside of the case and the USB ports 1.3 mm in, so every plug se
 
 ## Printing
 
-Twelve STLs, **none needing support**, in the orientation they come out of
-`generate-stl.sh`. PETG. Print the modules and lid for the fans you fit.
+Eight STLs, **none needing support**, in the orientation they come out of
+`generate-stl.sh`. PETG. Print the module and lid for the fans you fit.
 
 | Part | Print | Size |
 |------|-------|------|
-| `module-srv-runner-{1,2,3}-NF-A4x10` or `…-NF-A4x20` | one of each, floor down | 115.9 / 125.0 × 68 × 61.3 mm |
+| `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 61.3 mm |
 | `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 115.9 / 125.0 × 68 × 6.0 mm |
-| `tray` | ×3, floor down | 67.6 × 58.6 × 13.9 mm |
+| `tray-{2,4,8}GB` | one of each, floor down | 67.6 × 58.6 × 13.9 mm |
 | `filter` | ×3, face down, pocket up | 50.3 × 53.8 × 4.0 mm |
 
 **Download them** from the project's GitHub Pages site, rebuilt on every push to main
 once the whole test suite passes. Or render them yourself:
 
 ```bash
-./scripts/generate-stl.sh          # all twelve into stl/
+./scripts/generate-stl.sh          # all eight into stl/
 ./scripts/generate-stl.sh filter   # just one
 ./scripts/build-site.sh            # the download page, into _site/
 ```

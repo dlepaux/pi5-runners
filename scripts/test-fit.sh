@@ -97,9 +97,9 @@ echo ""
 echo "Fit — the label"
 
 expect_geometry "the label is in Grenze Gotisch, not a fallback" label-font
-for n in 1 2 3; do
-    expect_geometry "srv-runner-$n is engraved"                label-cuts           -D "runner=$n"
-    expect_empty    "srv-runner-$n stays in its clear face"    label-outside-region -D "runner=$n"
+for gb in 2 4 8; do
+    expect_geometry "the ${gb}GB tray is engraved"              label-cuts           -D "tray_ram=$gb"
+    expect_empty    "its label stays inside its clips' slots"  label-outside-region -D "tray_ram=$gb"
 done
 
 echo ""

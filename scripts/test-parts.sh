@@ -47,7 +47,7 @@ check_part module-10 module -D 'fan_model="NF-A4x10"'
 check_part module-20 module -D 'fan_model="NF-A4x20"'
 check_part lid-10    lid    -D 'fan_model="NF-A4x10"'
 check_part lid-20    lid    -D 'fan_model="NF-A4x20"'
-check_part tray      tray
+for gb in 2 4 8; do check_part "tray-${gb}GB" tray -D "tray_ram=$gb"; done
 check_part filter    filter
 
 # THE SHOWCASE MUST RENDER CLEAN. It is the only file that touches the framework's

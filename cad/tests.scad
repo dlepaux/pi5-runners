@@ -169,23 +169,17 @@ if (test_view == "island-pos-open")
   }
 
 // -- the label ----------------------------------------------------------------
-// What the name takes out of the walls...
-module labelRemoved() { intersection() { labelCuts(runner); moduleBody(); } }
-if (test_view == "label-cuts") labelRemoved();
-// ...WHOLLY inside its clear face, on both walls, for every runner's name.
-if (test_view == "label-outside-region")
-  difference() {
-    labelRemoved();
-    translate([label_region_x[0], -1, label_region_z[0]])
-      cube([label_region_x[1] - label_region_x[0], module_w + 2,
-            label_region_z[1] - label_region_z[0]]);
-  }
+// What the RAM takes out of the tray's underside...
+module ramRemoved(gb) { intersection() { ramCut(gb); trayBlank(); } }
+if (test_view == "label-cuts") ramRemoved(tray_ram);
+// ...WHOLLY inside its slots, for every tray.
+if (test_view == "label-outside-region") difference() { ramRemoved(tray_ram); ramRegion(); }
 // OpenSCAD swaps a font it cannot find for its default, silently. Set against a
 // name no font has -- which gets that same default -- the label must differ.
 if (test_view == "label-font")
   difference() {
-    linear_extrude(1) labelText(runner);
-    linear_extrude(1) labelText(runner, "no such font");
+    linear_extrude(1) ramText(tray_ram);
+    linear_extrude(1) ramText(tray_ram, "no such font");
   }
 
 // -- the tray -----------------------------------------------------------------

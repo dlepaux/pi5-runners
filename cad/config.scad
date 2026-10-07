@@ -316,7 +316,7 @@ assert(post_d - pilot_d >= 2 * 1.6, "under 1.6mm of wall round the pilot hole");
 // MODULE — one Pi 5 and its fan, printed floor-down as one piece
 // ----------------------------------------------------------------------------
 // SIZED FOR THE TALLEST BOARD, so there is ONE module shape and any board goes in any
-// slot -- only its engraved name (runner) differs. A bare Pi wastes height; three different modules would waste a reprint every
+// slot. A bare Pi wastes height; three different modules would waste a reprint every
 // time a board changes role.
 floor_t       = 2.4;   // the vented floor: 12 layers at 0.2
 post_h        = 11.5;  // the feet, floor to the board's underside
@@ -554,29 +554,23 @@ assert(island_x[0] - island_outer > front_wall_t + corner_r, "the port island's 
 assert(island_z[0] - island_outer > lap_top, "the port island's outer step reaches the lap");
 assert(island_z[1] + island_outer < module_h - 3, "the port island's outer step reaches the bevel");
 
-// THE LABEL: EACH MODULE CARRIES ITS RUNNER'S HOSTNAME, on both side walls, the
-// owner's call. The name, not the RAM: a failed job names its runner, and the label is
-// how you find the box. It makes the three modules three parts -- a board belongs in
-// its own module now -- told apart only by this; `runner` picks which one renders.
+// THE LABEL: EACH TRAY CARRIES ITS PI'S RAM, engraved under it, the owner's call. The
+// side walls carried the runner's hostname until the Pis moved onto trays; the RAM is
+// what tells three boards apart on the bench, and the modules are one part again.
+// `tray_ram` picks which tray renders.
 //
-// Engraved in Grenze Gotisch, a blackletter whose 45-degree strokes suit the case. The
-// cut is SHEARED like the side louvres: its floor lies label_depth lower than its
-// mouth, so every ceiling in it falls at 45 into the wall instead of printing flat
-// over air -- the face still reads the font exactly.
-runner       = 1;    // 1..module_count, bottom to top
-function runnerName(n) = str("srv-runner-", n);
+// Engraved into the tray's underside, mirrored so it reads with the tray turned over,
+// in Grenze Gotisch, a blackletter whose 45-degree strokes suit the case. A straight
+// cut into the bed face: its ceilings are the letters' own strokes, a millimetre or two
+// of bridge each, which test-print.sh budgets.
+tray_ram     = 8;            // GB: one of ram_options
+ram_options  = [2, 4, 8];
+function ramName(gb) = str(gb, "GB");
 label_font   = "Grenze Gotisch:style=ExtraBold";
-label_size   = 9;    // 61mm long, digits 6.2 tall
-label_depth  = 1;    // of the 3mm wall
-label_margin = 3;
-// The clear face above the island: past the front corner's round, short of the
-// louvres, above the island's outer step and below the bevel inside the wall's top.
-label_region_x = [corner_r + label_margin, side_field_x[0] - label_margin];
-label_region_z = [island_z[1] + island_outer + label_margin, module_pitch - label_margin];
-label_xc = (label_region_x[0] + label_region_x[1]) / 2;
-label_zc = (label_region_z[0] + label_region_z[1]) / 2;
-assert(runner >= 1 && runner <= module_count, "runner is a module, 1..module_count");
-assert(wall - label_depth >= 1.6, "the label leaves under four perimeters of side wall");
+label_size   = 14;
+label_depth  = 0.8;          // four layers: the first layer's squish cannot close it
+assert(len([for (r = ram_options) if (r == tray_ram) r]) == 1, "tray_ram is not one of ram_options");
+assert(floor_t - label_depth >= 1.2, "the label leaves under six layers of tray");
 
 // EXCLUSION ZONE, hexrack's idea: the rear port cluster sits in clean solid wall with
 // the lattice running round it. Sized from the MEASURED cluster -- the framework's +X

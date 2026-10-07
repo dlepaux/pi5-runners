@@ -5,7 +5,7 @@
 // its fan sits on the inside of the front wall, screwed from outside, and hexrack's
 // round dust filter clips into the front wall over it. The module's chamfered
 // underside lies on the bevel of the module below and clips there, one rib a wall;
-// the module above lies on this one's. Print it three times, once per runner name.
+// the module above lies on this one's. Print it three times.
 //
 // The floor under the Pi is a separate TRAY (config.scad, TRAY), dropped into a
 // window in it: the Pi screws onto the tray on the bench.
@@ -104,28 +104,6 @@ module islandBulge() {
     islandAt(island_inner) islandFace(0);
     islandAt(wall) islandFace(island_inner - wall);
   }
-}
-
-// ----------------------------------------------------------------------------
-// THE LABEL — the runner's hostname, engraved in both side walls
-// ----------------------------------------------------------------------------
-module labelText(n, font = label_font) {
-  text(runnerName(n), size = label_size, font = font, halign = "center", valign = "center");
-}
-
-// Local frame: x along the text, z up, y into the wall from its outer face at y = 0.
-// Cut straight in, then sheared so z falls as y rises: every ceiling at 45.
-module labelCut(n, font = label_font) {
-  multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, -1, 1, 0]])
-    translate([0, label_depth, 0]) rotate([90, 0, 0])
-      linear_extrude(label_depth + 1) labelText(n, font);
-}
-
-// Rotated, not mirrored, onto +Y, so both sides read left to right from outside --
-// front to rear on -Y, rear to front on +Y, over the same stretch of wall.
-module labelCuts(n, font = label_font) {
-  translate([label_xc, 0, label_zc]) labelCut(n, font);
-  translate([label_xc, module_w, label_zc]) rotate([0, 0, 180]) labelCut(n, font);
 }
 
 // ----------------------------------------------------------------------------
@@ -295,7 +273,7 @@ module fanCut() {
 // render() is NOT optional: preview does not evaluate booleans, and a body cut by
 // ports, four vent fields, a bore, a recess and eight clip features blows past OpenSCAD's normalisation
 // limit -- blank window, perfect export.
-module moduleWhole(n = runner) {
+module moduleWhole() {
   render()
     difference() {
       union() {
@@ -310,7 +288,6 @@ module moduleWhole(n = runner) {
       fanCut();
       filterRecess();
       filterGrooves();
-      labelCuts(n);
     }
 }
 
@@ -368,26 +345,46 @@ module traySlits() {
 // THE PARTS
 // ----------------------------------------------------------------------------
 // The module: the whole, less the window, the tray's feet and the clips' grooves.
-module modulePart(n = runner) {
+module modulePart() {
   render()
     difference() {
-      moduleWhole(n);
+      moduleWhole();
       trayRegion(tray_gap);
       for (j = trayJoints()) clipGroove(j);
     }
 }
 
-// The tray. Its chamfers stand EPS proud of the whole's: a rib whose side lies exactly
-// on one is tangent to it, and exports as a loose prism. ribs = false is its BODY, what
-// bears on the window and what has to go down past the module.
-module trayPart(ribs = true) {
+// THE LABEL: the Pi's RAM, under the tray, inside its slots, mirrored across the tray
+// so it reads with the tray turned over (config.scad).
+module ramText(gb, font = label_font) {
+  text(ramName(gb), size = label_size, font = font, halign = "center", valign = "center");
+}
+module ramCut(gb) {
+  b = feetBox();
+  translate([(b[0][0] + b[1][0]) / 2, (b[0][1] + b[1][1]) / 2, -1])
+    mirror([0, 1, 0]) linear_extrude(label_depth + 1) ramText(gb);
+}
+// Where it may go: the tray's underside inside the clips' slots.
+module ramRegion() {
+  translate([0, 0, -1]) linear_extrude(label_depth + 1.01)
+    trayOutline(tray_r - tray_strip - tray_slit - 1);
+}
+
+// The tray, uncut: its chamfers stand EPS proud of the whole's -- a rib whose side
+// lies exactly on one is tangent to it, and exports as a loose prism.
+module trayBlank() { intersection() { moduleWhole(); trayRegion(EPS); } }
+
+// ribs = false is its BODY, what bears on the window and what has to go down past
+// the module.
+module trayPart(ribs = true, gb = tray_ram) {
   render()
     difference() {
       union() {
-        intersection() { moduleWhole(runner); trayRegion(EPS); }
+        trayBlank();
         if (ribs) for (j = trayJoints()) clipRib(j);
       }
       traySlits();
+      ramCut(gb);
     }
 }
 
