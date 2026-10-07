@@ -7,6 +7,9 @@
 // underside lies on the bevel of the module below and clips there, one rib a wall;
 // the module above lies on this one's. Print it three times, once per runner name.
 //
+// The floor under the Pi is a separate TRAY (config.scad, TRAY), dropped into a
+// window in it: the Pi screws onto the tray on the bench.
+//
 // PRINTED FLOOR-DOWN, AS IT STANDS, WITH NO SUPPORT:
 //   - the floor is the first layers, on the bed
 //   - the walls step out from it on a 45-degree chamfer that reaches the outer face,
@@ -181,16 +184,18 @@ function exclusionCentre() =
   [board_y + (exclusion_cluster_y[0] + exclusion_cluster_y[1]) / 2,
    board_z + (exclusion_cluster_z[0] + exclusion_cluster_z[1]) / 2];
 
-// The port cluster, and the PCB-edge slot under it.
+// The port cluster, and the PCB-edge slot under it -- both rear_hole_rise taller, as
+// their holes are (allPortCuts()).
 module exclusionZone() {
-  translate(exclusionCentre())
-    offset(r = exclusion_r, $fn = 30)
-      square([exclusion_w - 2 * exclusion_r, exclusion_h - 2 * exclusion_r], center = true);
+  hull() for (dz = [0, rear_hole_rise])
+    translate(exclusionCentre() + [0, dz])
+      offset(r = exclusion_r, $fn = 30)
+        square([exclusion_w - 2 * exclusion_r, exclusion_h - 2 * exclusion_r], center = true);
   if (pcb_slot_depth > 0)
     translate([board_y - pcb_slot_clear - exclusion_pad,
                board_z - pcb_slot_clear - exclusion_pad])
       square([pi5_pcb[1] + 2 * (pcb_slot_clear + exclusion_pad),
-              pcb_slot_h + 2 * exclusion_pad]);
+              pcb_slot_h + 2 * exclusion_pad + rear_hole_rise]);
 }
 
 // Each profile is its own module so test-airflow.sh measures EXACTLY what is cut.
@@ -212,7 +217,7 @@ module rearVentProfile() {
 // The exclusion zone's bottom and top, the PCB-edge slot included.
 function rearExclusionZ() =
   [min(exclusionCentre()[1] - exclusion_h / 2, board_z - pcb_slot_clear - exclusion_pad),
-   exclusionCentre()[1] + exclusion_h / 2];
+   exclusionCentre()[1] + exclusion_h / 2 + rear_hole_rise];
 
 // The louvres' face on the wall's INNER side; sideVentCut() leans them rearward.
 module sideVentProfile() {
@@ -234,12 +239,19 @@ module sideVentCut(y_inner, outward) {
 // walls and clear of the posts, letting a module breathe into the one above. Off, the
 // floor is solid -- the first layers print whole and nothing falls from one board
 // onto the next. Every consumer reads this module, so off means off everywhere.
+// Clear of the tray's seam and its clips' springs, a band from the window's edge in
+// past the slots: a lattice across them would leave edges in slivers. The tray's
+// middle and the floor round it are cut alike.
 module floorVentProfile() {
   m = wall + lap_z0 + vent_margin;
   x0 = front_wall_t + vent_margin;
   if (floor_vents)
     difference() {
       translate([x0, m]) ventField(module_l - m - x0, module_w - 2 * m);
+      difference() {
+        trayOutline(tray_r + tray_gap * sqrt(2) + vent_margin);
+        trayOutline(tray_r - tray_strip - tray_slit - vent_margin);
+      }
       offset(delta = vent_margin) postFootprint(post_d + 2 * post_chamfer);
     }
 }
@@ -278,12 +290,12 @@ module fanCut() {
 }
 
 // ----------------------------------------------------------------------------
-// THE PART
+// THE MODULE, WHOLE -- what the module and its tray are both cut from
 // ----------------------------------------------------------------------------
 // render() is NOT optional: preview does not evaluate booleans, and a body cut by
 // ports, four vent fields, a bore, a recess and eight clip features blows past OpenSCAD's normalisation
 // limit -- blank window, perfect export.
-module modulePart(n = runner) {
+module moduleWhole(n = runner) {
   render()
     difference() {
       union() {
@@ -299,6 +311,83 @@ module modulePart(n = runner) {
       filterRecess();
       filterGrooves();
       labelCuts(n);
+    }
+}
+
+// ----------------------------------------------------------------------------
+// THE TRAY AND ITS WINDOW
+// ----------------------------------------------------------------------------
+// The feet's axes, module frame: the corners the tray's outline is drawn round.
+function feetBox() =
+  let (h = pi5MountingHoles(), xs = [for (p = h) p[0]], ys = [for (p = h) p[1]])
+  [[board_x + min(xs), board_y + min(ys)], [board_x + max(xs), board_y + max(ys)]];
+
+// The tray's outline r from the feet's axes, corners round each foot.
+module trayOutline(r) {
+  b = feetBox();
+  translate(b[0]) offset(r = r, $fn = 96) square(b[1] - b[0]);
+}
+
+// The tray's thickness, its edges at 45 all round, narrowest on the bed, grown g along
+// their normal; and the feet on it. ONLY the feet over the floor: anything wider would
+// hand the tray whatever of the module stood over it.
+module trayRegion(g) {
+  h = g * sqrt(2);
+  hull() {
+    waferAt(-1) trayOutline(tray_r - floor_t - 1 + h);
+    waferAt(floor_t) trayOutline(tray_r + h);
+  }
+  translate([0, 0, floor_t - EPS])
+    linear_extrude(board_z - floor_t + 1) postFootprint(post_d + 2 * (post_chamfer + OVERLAP));
+}
+
+// THE TRAY CLIPS: the lap's half '>', one a side, on the tray's chamfer, its centre on
+// the chamfer's foot -- the same row as lapJoints().
+function trayJoints() =
+  let (b = feetBox(), e = tray_r - floor_t, xm = (b[0][0] + b[1][0]) / 2, ym = (b[0][1] + b[1][1]) / 2)
+  [ ["tray-left",  [xm, b[0][1] - e, 0], "x", clip_rib_len, [0, -1, 0]],
+    ["tray-right", [xm, b[1][1] + e, 0], "x", clip_rib_len, [0,  1, 0]],
+    ["tray-front", [b[0][0] - e, ym, 0], "y", clip_rib_len, [-1, 0, 0]],
+    ["tray-rear",  [b[1][0] + e, ym, 0], "y", clip_rib_len, [ 1, 0, 0]] ];
+
+// THE CLIPS' SPRINGS: a slot behind each, tray_strip in from the tray's edge, running
+// between the two feet on that side.
+module traySlits() {
+  b = feetBox();
+  run = post_d / 2 + post_chamfer + tray_slit_end;   // from a foot's axis to a slot's end
+  off = tray_r - tray_strip - tray_slit;             // from the axes' line to the slot
+  translate([0, 0, -1]) linear_extrude(floor_t + 2) {
+    for (y = [b[0][1] - off - tray_slit, b[1][1] + off])
+      translate([b[0][0] + run, y]) square([b[1][0] - b[0][0] - 2 * run, tray_slit]);
+    for (x = [b[0][0] - off - tray_slit, b[1][0] + off])
+      translate([x, b[0][1] + run]) square([tray_slit, b[1][1] - b[0][1] - 2 * run]);
+  }
+}
+
+// ----------------------------------------------------------------------------
+// THE PARTS
+// ----------------------------------------------------------------------------
+// The module: the whole, less the window, the tray's feet and the clips' grooves.
+module modulePart(n = runner) {
+  render()
+    difference() {
+      moduleWhole(n);
+      trayRegion(tray_gap);
+      for (j = trayJoints()) clipGroove(j);
+    }
+}
+
+// The tray. Its chamfers stand EPS proud of the whole's: a rib whose side lies exactly
+// on one is tangent to it, and exports as a loose prism. ribs = false is its BODY, what
+// bears on the window and what has to go down past the module.
+module trayPart(ribs = true) {
+  render()
+    difference() {
+      union() {
+        intersection() { moduleWhole(runner); trayRegion(EPS); }
+        if (ribs) for (j = trayJoints()) clipRib(j);
+      }
+      traySlits();
     }
 }
 

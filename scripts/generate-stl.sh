@@ -24,7 +24,7 @@ BACKEND=""
 "$OPENSCAD" --help 2>&1 | grep -q "\-\-backend" && BACKEND="--backend=Manifold"
 
 # fan_model sets the module's and the lid's length, so they are written in
-# both. The filter panel is one part whichever fans are fitted. Each module carries
+# both. The filter panel and the tray are one part each whichever fans are fitted. Each module carries
 # its runner's name, so there are three of it per fan.
 TARGETS=("$@")
 if [ ${#TARGETS[@]} -eq 0 ]; then
@@ -32,7 +32,7 @@ if [ ${#TARGETS[@]} -eq 0 ]; then
         for n in 1 2 3; do TARGETS+=("module-srv-runner-$n-$fan"); done
         TARGETS+=("lid-$fan")
     done
-    TARGETS+=(filter)
+    TARGETS+=(tray filter)
 fi
 
 mkdir -p stl

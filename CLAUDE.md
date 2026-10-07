@@ -4,7 +4,8 @@ Standalone case holding three Raspberry Pi 5s that act as self-hosted GitHub Act
 runners. **A stack of three modules, one Pi 5 and one 40 mm Noctua each**,
 a round dust filter (hexrack's, reshaped) clipped into each module's front, and a lid,
 all with rounded vertical corners. 115.9 × 68 × 182.4 mm with the 10 mm fans (125.0 deep with the 20 mm ones). No screws
-hold the case together; only the fans are screwed.
+hold the case together; only the fans are screwed. **Each Pi screws onto a tray on the
+bench**, which clicks into a window in its module's floor.
 
 ## Project intent
 
@@ -18,7 +19,7 @@ The load is what makes this case different from a Pi shelf: 100% on all four cor
 decision below follows from sustained load rather than from idle.
 
 **HOW IT PRINTS IS THE DESIGN.** Every part prints without support in the orientation
-`case.scad` exports it, and `test-print.sh` holds that: modules floor-down, the lid
+`case.scad` exports it, and `test-print.sh` holds that: modules and trays floor-down, the lid
 plate-down, the filters face-down. A feature that cannot print
 that way is redesigned, not supported.
 
@@ -163,9 +164,43 @@ fall at 45° into the wall; it adds nothing to the print budget.
 | Part | Prints | Is |
 |------|--------|----|
 | `module` ×3, one per `runner` | floor-down | a floor (solid by default, `floor_vents`) with four feet, four walls; the front one carries the fan, its bore, its screw holes and the filter's recess; a 45° chamfer with four clip ribs below, a bevel with four grooves above |
+| `tray` ×3 | floor-down | the Pi's four feet on a plate of their own, corners round the feet, 45° edges; a lap clip on each side on a sprung strip |
 | `lid` | plate-down | a module's chamfer and four ribs with a solid plate on it |
 | `filter` ×3 | face-down | a round ring with two flats, fabric glued into a pocket on its back, two ribs |
 
+- **THE PI SCREWS ONTO A TRAY, NOT INTO THE MODULE.** Screwing a Pi and its HAT
+  standoffs 2.5 mm off a wall inside a 58 mm box was the owner's pain. The module is
+  drawn whole (`moduleWhole()`) and the tray cut out of its floor: `trayPart()` is the
+  whole ∩ `trayRegion()`, `modulePart()` the whole less it. **`trayRegion()` is the
+  plate and the feet, nothing else** — a column over the floor would hand the tray any
+  of the module standing over it and make every path check pass by construction.
+  Tried and dropped first: a sled (floor + rear wall) lifting out of a U-shaped shell —
+  the owner did not like it; and a full-floor tray, before the owner chose this one
+- **THE TRAY IS THE FEET'S OUTLINE**, the owner's call for the look: a rounded
+  rectangle whose corners are concentric with the feet, `tray_r` round each foot's
+  axis. `tray_r` is as big as it can be: lowered from the top the tray passes between
+  the port islands (they stand 1.5 into the cavity), `tray_clear` off them
+- **ALL FOUR EDGES 45°, WIDE AT THE TOP, SO IT CANNOT FALL THROUGH**, the owner's call;
+  `tray_gap` off the window, as the lap. Floor-down the tray's edge is a 45° overhang
+  and the window's looks up: both print. **A lap clip on each side** (`trayJoints()`),
+  the module's half `>`, rib on the tray's chamfer, groove in the frame
+- **THE CLIPS NEED A SPRING, SO EACH SITS ON A SLOTTED STRIP.** Tray and floor are both
+  flat plates in one plane: neither gives sideways, so a rib between them could not
+  pass. The module's lap clips work because its walls flex. Each tray rib stands on a
+  `tray_strip` (3.5) strip of the edge, freed by a `tray_slit` (1.2) slot behind it
+  running between the feet (`traySlits()`). The slots are through-holes, ~1.2 × 45:
+  a little air between modules. **Check the snap force on the first print**; longer
+  slots soften it
+- **HOW IT GOES IN, AND WHY THE REAR HOLES ARE 2.6 TALLER.** The jacks sit flush in
+  closed holes in the rear wall, and four chamfered edges lock the tray once seated,
+  so it cannot slide home in the window. It is held `tray_drop` (the floor and 0.2)
+  over the floor, `slide_travel` short of the rear wall, slid back so its jacks go into
+  their holes, then pressed down. So the rear holes, the PCB slot and the louvres'
+  exclusion zone are `rear_hole_rise` (= `tray_drop`) taller upward: a ~2.6 gap over
+  each jack from outside, and the rear louvres lose some area — exhaust 231 → 221% of
+  the throat with the NF-A4x10, 203 → 195% with the NF-A4x20. `tray-path` and
+  `boards-path` sweep the tray and every board, jacks included, along that path;
+  break-tested with `rear_hole_rise = 0`, `tray_clear = -0.5` and `tray_gap = 0.3`
 - **THE BOARDS ARE NEVER CONNECTED.** Each Pi screws straight into four printed
   feet on its own module's floor, one per hole — **not hexrack's "canoes"**: the
   rails joining each row cost plastic for nothing, and the air under the board runs
@@ -265,8 +300,10 @@ fall at 45° into the wall; it adds nothing to the print budget.
 - **NO BASE.** There were feet — a module's bevel on an open rim with a skirt — and
   they were dropped as useless: the bottom module stands on its own floor, flat on
   the bed side, the lap ribs' flat undersides flush with it
-- **Assembly**: slide each Pi back into its rear wall's holes, fit its HAT and screw it into its module and each fan in from the front, with
-  the screws in the fan's bag; stack the modules, each tilted with its front clip
+- **Assembly**: screw each Pi and its HAT onto its tray on the bench; screw each fan in
+  from the front, with the screws in the fan's bag; hold each tray over its module's
+  floor short of the rear wall, slide it back into the jacks and press it down until it
+  clicks; stack the modules, each tilted with its front clip
   hooked in first, then pressed down at the rear until the other three lap clips click;
   click the lid on; glue fabric into each filter and click it into its recess
 
@@ -305,7 +342,7 @@ modifier and is still included in the export — it does not do this job.
 
 ```bash
 ./scripts/test.sh                   # all seven suites, geometry in both fan modes
-./scripts/generate-stl.sh           # module and lid in both fan modes, filter, into stl/
+./scripts/generate-stl.sh           # module and lid in both fan modes, tray, filter, into stl/
 ./scripts/generate-fan-asset.sh [m] # regenerate a fan mesh (networked, needs uv)
 ./scripts/build-site.sh             # STLs + a static download page into _site/
 ```

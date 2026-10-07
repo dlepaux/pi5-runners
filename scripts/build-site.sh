@@ -19,11 +19,11 @@ rm -rf "$OUT"
 mkdir -p "$OUT/stl"
 cp stl/*.stl "$OUT/stl/"
 
-# Everything for one build, per fan: the three named modules, and one lid and one
-# filter -- three filters are printed, but one file is all a slicer needs.
+# Everything for one build, per fan: the three named modules, and one tray, one lid and
+# one filter -- three trays and filters are printed, but one file is all a slicer needs.
 for fan in NF-A4x10 NF-A4x20; do
     zip -jq "$OUT/pi5-runners-$fan.zip" stl/module-srv-runner-[123]-"$fan".stl \
-        "stl/lid-$fan.stl" stl/filter.stl
+        stl/tray.stl "stl/lid-$fan.stl" stl/filter.stl
 done
 
 size() {
@@ -109,6 +109,13 @@ cat >"$OUT/index.html" <<HTML
   </section>
 
   <section class="card">
+    <div class="head"><h2>Tray</h2><span class="count">print ×3</span></div>
+    <p class="meta">Floor down. The Pi screws onto its four feet on the bench; the tray then
+    clicks into the window in its module's floor. Same for both fans · $(size tray)</p>
+    <div class="row">$(dl tray "Tray")</div>
+  </section>
+
+  <section class="card">
     <div class="head"><h2>Dust filter</h2><span class="count">print ×3</span></div>
     <p class="meta">Face down. Glue filter fabric into the pocket on its back, clip it into
     a module's front. Same for both fans · $(size filter)</p>
@@ -124,7 +131,7 @@ cat >"$OUT/index.html" <<HTML
 
   <section class="card">
     <div class="head"><h2>Everything</h2></div>
-    <p class="meta">The three modules, a dust filter and the lid for one fan, zipped.</p>
+    <p class="meta">The three modules, a tray, a dust filter and the lid for one fan, zipped.</p>
     <div class="row">
       <a class="dl ghost" href="pi5-runners-NF-A4x10.zip" download>All parts · NF-A4x10</a>
       <a class="dl ghost" href="pi5-runners-NF-A4x20.zip" download>All parts · NF-A4x20</a>

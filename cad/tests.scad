@@ -90,12 +90,14 @@ if (test_view == "report-fan-asset") {
 // As they sit in the case, in the stack frame.
 module partByName(n) {
   if (n == "module") modulePart();
+  if (n == "tray")   trayPart();
   if (n == "lid")    lidAt() lidPart();
   if (n == "filter") filterMounted();
 }
 // As they print: what the bed check and the printability check measure.
 module printByName(n) {
   if (n == "module") modulePart();
+  if (n == "tray")   trayPart();
   if (n == "lid")    lidPrint();
   if (n == "filter") filterPart();
 }
@@ -186,6 +188,43 @@ if (test_view == "label-font")
     linear_extrude(1) labelText(runner, "no such font");
   }
 
+// -- the tray -----------------------------------------------------------------
+// The module, with its tray in. Everything a board or the stack meets is the two.
+module moduleWithTray() { modulePart(); trayPart(); }
+
+// Tray and module do not overlap...
+if (test_view == "tray-vs-module") intersection() { trayPart(); modulePart(); }
+// ...and the tray SITS on the window's chamfers: lowered 0.2mm, its body bites the
+// module. Body, not part: a rib biting an ungrooved frame would pass for a seat.
+if (test_view == "tray-seated")
+  intersection() { translate([0, 0, -0.2]) trayPart(false); modulePart(); }
+// THE POINT OF THE TRAY: loaded on the bench, it goes in along one path, and nothing
+// on it -- tray, board, jacks -- meets the module on the way. Down from the top
+// slide_travel short of the rear wall, past the islands and the fan, to tray_drop over
+// the floor; back, so the jacks go into their holes; then down into its window. Copies
+// 1mm apart down from the top, 0.5 along the rest: the tray is 2.4 thick and the rest
+// runs straight up, so the copies leave no gap to slip through. Without the ribs,
+// which snap.
+function trayPath() = concat(
+  [for (dz = [tray_drop : 1 : module_h]) [-slide_travel, dz]],
+  [for (dx = [0 : 0.5 : slide_travel]) [-dx, tray_drop]],
+  [for (dz = riseSteps(tray_drop)) [0, dz]]);
+module alongTrayPath() { for (p = trayPath()) translate([p[0], 0, p[1]]) children(); }
+if (test_view == "tray-path")
+  intersection() { modulePart(); alongTrayPath() trayPart(false); }
+if (test_view == "boards-path")
+  intersection() {
+    modulePart();
+    alongTrayPath() {
+      for (k = ["standard", "compact", "bare"]) slotSlab(k);
+      onBoard() { sideEdge(); rearEdge(); }
+    }
+  }
+// NOTHING FALLS BETWEEN THEM: the module loses the seam round the tray and the
+// grooves; the tray's spring slots are cut from the tray, and count too.
+if (test_view == "tray-lost")
+  difference() { moduleWhole(); modulePart(); trayPart(false); }
+
 // -- stacking -----------------------------------------------------------------
 // Neighbours touch on the lap, and the floor on the front wall below, and nowhere else.
 if (test_view == "module-vs-above") intersection() { modulePart(); moduleAt(1) modulePart(); }
@@ -250,18 +289,22 @@ function allJoints() = concat(
   [ for (j = lapJoints())
       [str("lid-", j[0]),
        [j[0], j[1] + [0, 0, module_count * module_pitch], j[2], j[3], j[4]], "lid", "module"] ],
-  [ for (j = filterJoints()) [j[0], j, "filter", "module"] ]);
+  [ for (j = filterJoints()) [j[0], j, "filter", "module"] ],
+  [ for (j = trayJoints()) [j[0], j, "tray", "module"] ]);
 
 // The mate, as it sits relative to the rib: a lap rib of the module above, or of
 // the lid, lands in the socket of the module below it.
 module mateOf(row) {
-  moduleAt(row[2] == "lid" ? module_count - 1 : 0) modulePart();
+  if (row[2] == "tray") modulePart();
+  else moduleAt(row[2] == "lid" ? module_count - 1 : 0) modulePart();
 }
 // The mate's own territory -- where a rib must reach to be engaged: the walls of the
 // module below, or for a filter, the front wall it clips into.
 module mateTerritory(row) {
   if (row[2] == "filter")
     cube([front_wall_t, module_w, module_pitch]);
+  else if (row[2] == "tray")   // the frame round the window: the floor, outside the tray
+    difference() { linear_extrude(floor_t) inset(wall); trayRegion(0); }
   else moduleAt(row[2] == "lid" ? module_count - 1 : 0)
     linear_extrude(module_h) difference() { square([module_l, module_w]); inset(wall); }
 }

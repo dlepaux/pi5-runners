@@ -103,10 +103,17 @@ module pcbEdgeSlot() {
                    [pcb_slot_x0 - EPS, pi5_pcb[2] + c + pcb_slot_depth + EPS]]);
 }
 
+// The rear ones run rear_hole_rise taller upward: the tray is held that high, over the
+// floor, while its jacks slide into their holes, then drops into its window. Copies
+// 0.5 apart: every hole is far taller than that, so they leave no step.
+function riseSteps(h) = let (n = max(1, ceil(h / 0.5))) [for (i = [0 : n]) i * h / n];
+
 module allPortCuts() {
   portCuts("-Y");
-  portCuts("+X");
-  onBoard() pcbEdgeSlot();
+  for (dz = riseSteps(rear_hole_rise)) translate([0, 0, dz]) {
+    portCuts("+X");
+    onBoard() pcbEdgeSlot();
+  }
 }
 
 // ----------------------------------------------------------------------------

@@ -3,6 +3,8 @@
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
 runners. **Three modules, one Pi 5 and one 40 mm Noctua each**, a round
 dust filter clipped into each module's front, and a lid, all with rounded corners.
+Each Pi screws onto a **tray** on the bench, which then clicks into a window in its
+module's floor.
 **115.9 × 68 × 182.4 mm** with the 10 mm fans, 125.0 mm deep with the 20 mm ones. Nothing in the case is screwed
 together; only the fans are.
 
@@ -55,20 +57,21 @@ flush with the outside of the case and the USB ports 1.3 mm in, so every plug se
 
 ## Printing
 
-Eleven STLs, **none needing support**, in the orientation they come out of
+Twelve STLs, **none needing support**, in the orientation they come out of
 `generate-stl.sh`. PETG. Print the modules and lid for the fans you fit.
 
 | Part | Print | Size |
 |------|-------|------|
 | `module-srv-runner-{1,2,3}-NF-A4x10` or `…-NF-A4x20` | one of each, floor down | 115.9 / 125.0 × 68 × 61.3 mm |
 | `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 115.9 / 125.0 × 68 × 6.0 mm |
+| `tray` | ×3, floor down | 67.6 × 58.6 × 13.9 mm |
 | `filter` | ×3, face down, pocket up | 50.3 × 53.8 × 4.0 mm |
 
 **Download them** from the project's GitHub Pages site, rebuilt on every push to main
 once the whole test suite passes. Or render them yourself:
 
 ```bash
-./scripts/generate-stl.sh          # all seven into stl/
+./scripts/generate-stl.sh          # all twelve into stl/
 ./scripts/generate-stl.sh filter   # just one
 ./scripts/build-site.sh            # the download page, into _site/
 ```
@@ -85,6 +88,9 @@ How each part avoids support:
   filter's recess has its clips at the sides and a round crown, an arch 4 mm deep off
   the wall behind it, steeper than 45° only near its top. The rounded corners
   are vertical, so they cost nothing.
+- **Tray.** Its edges are 45° chamfers, narrow at the bed, and the window's in the
+  module's floor face up to meet them; its clip ribs are the lap's; the feet and the
+  spring slots behind the clips run straight up.
 - **Lid.** Upside down, its lap narrows as it rises and its ribs are 45° bars on it.
 - **Filter.** A flat ring; the glue pocket faces up.
 
@@ -109,22 +115,24 @@ the fan sat low the ring was cut flat top and bottom too.
 
 ## Assembly
 
-1. **The Pi's rear ports come through the rear wall**, so it cannot drop straight in:
-   lower it onto its four printed feet about 4 mm short of the rear wall, then slide
-   it back until its RJ45 and USB ports sit in their holes and its edge in the slot
-   under them. Do this before its HAT. Then the HAT's M2.5 male-female standoffs
-   thread through the Pi straight into the feet, cutting their own thread (a bare Pi
-   takes M2.5 × 6 screws). Snug, not tight: a printed thread strips.
+1. **On its tray, on the bench.** The HAT's M2.5 male-female standoffs thread through
+   the Pi straight into the tray's feet, cutting their own thread (a bare Pi takes
+   M2.5 × 6 screws). Snug, not tight: a printed thread strips.
 2. Hold each fan against the inside of its module's front wall and screw it in from
    the front with **the four self-tapping screws in the fan's own bag** (Noctua's,
    about M5) through the recess floor into the fan's corner holes. Their heads sink
    below the recess floor. Not M3s: the fan's holes are 4.3 mm, and an earlier hole
-   drawn for M3 cracked round every screw. Plug the fan into that Pi's GPIO: 5 V on
-   pin 2 or 4, ground on pin 6.
-3. Stand the bottom module on the desk on its floor. Stack the others: tilt each one,
+   drawn for M3 cracked round every screw.
+3. **Into its module.** The Pi's rear ports come through the rear wall, so the tray
+   cannot drop straight in: hold it about 2.5 mm over the floor and 3.5 mm short of the
+   rear wall, slide it back until its RJ45 and USB ports sit in their holes and its edge
+   in the slot under them, then press it down into the window until its four clips
+   click. Its chamfered edges stop it falling through. Plug the fan into that Pi's
+   GPIO: 5 V on pin 2 or 4, ground on pin 6.
+4. Stand the bottom module on the desk on its floor. Stack the others: tilt each one,
    hook its front clip in first, then press its rear down until the other three click.
    Its chamfer lies on the bevel of the one below. Click the lid onto the top one.
-4. Glue filter fabric into the pocket on the back of each filter and click
+5. Glue filter fabric into the pocket on the back of each filter and click
    it into its recess, over the screw heads.
 
 ## Development
@@ -138,7 +146,7 @@ git submodule update --init --recursive   # SBC_Model_Framework
 |-------|-------|
 | `test-board-assets.sh` | the declared Pi 5 geometry still matches the framework |
 | `test-assets.sh` | both fan meshes are what `config.scad` says they are |
-| `test-fit.sh` | every board fits its module and clears its fan; modules, lid and filters touch only where they should and seat where they must |
+| `test-fit.sh` | every board fits its module and clears its fan; the loaded tray goes in along its path without touching the module; modules, trays, lid and filters touch only where they should and seat where they must |
 | `test-parts.sh` | one body each, in both fan modes, everything fits the bed, the showcase renders |
 | `test-clips.sh` | every clip rib sits in its groove at rest and reaches into the part it holds |
 | `test-airflow.sh` | no module's exhaust chokes its fan, every fan's air path is open, every fan screw has a path, a seat and a filter over its head, no port is blind, no hole exists that should not |

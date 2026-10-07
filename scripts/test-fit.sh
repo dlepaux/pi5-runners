@@ -103,6 +103,27 @@ for n in 1 2 3; do
 done
 
 echo ""
+echo "Fit — the tray"
+
+# The floor under the Pi is a tray, dropped into a window in the module's floor.
+expect_empty    "the tray and the module do not overlap"         tray-vs-module
+expect_geometry "the tray sits on the window's chamfers"         tray-seated
+# Loaded on the bench, it goes in from the top short of the rear wall, slides back so
+# its jacks enter their holes, and drops into its window -- tray, board and jacks
+# meeting nothing on the way.
+expect_empty    "the tray goes in: down, back into the jacks, down" tray-path
+expect_empty    "with every kind of board on it"                    boards-path
+# Nothing falls between them: the seam round the tray, the clips' grooves and the
+# tray's spring slots, ~600mm3. A region left to neither part is far more.
+render tray-lost "$WORK/tray-lost.stl"
+LOST=$(vol "$WORK/tray-lost.stl")
+if awk -v v="$LOST" 'BEGIN { exit !(v >= 0 && v < 900) }'; then
+    pass "$(printf 'the window loses only its seams and slots (%.0fmm3)' "$LOST")"
+else
+    fail "$(printf 'the window loses %.0fmm3 -- a region went to neither part?' "$LOST")"
+fi
+
+echo ""
 echo "Fit — the stack"
 
 expect_empty    "a module clears the module above it"  module-vs-above

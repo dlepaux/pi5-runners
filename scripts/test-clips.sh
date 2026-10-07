@@ -4,7 +4,7 @@
 # ============================================================================
 # Every clipped joint is one row of allJoints() in cad/tests.scad, built from the same
 # tables the parts use: lapJoints() for module-to-module and lid-to-module,
-# filterJoints() for the filter. hexrack's own dust clip taught why this needs
+# filterJoints() for the filter, trayJoints() for the tray in its window. hexrack's own dust clip taught why this needs
 # measuring: its groove was once anchored to a different datum than its rib, 9mm
 # off, and both parts still exported clean. The joint had simply stopped existing.
 #
@@ -39,7 +39,7 @@ for row in "${JOINTS[@]}"; do
     # A lap clip must HOLD, not rattle: lifted 0.3mm, the rib already bites its groove.
     # At rest-clear alone it passed with 0.8mm of play before the clips took a module.
     case "$name" in
-        module-*|lid-*) expect_geometry "$name: holds a module lifted 0.3mm" clip-rib-lifted -D "clip_k=$k" ;;
+        module-*|lid-*|tray-*) expect_geometry "$name: holds a module lifted 0.3mm" clip-rib-lifted -D "clip_k=$k" ;;
     esac
 
     render clip-rib       "$WORK/rib-$k.stl"   -D "clip_k=$k"

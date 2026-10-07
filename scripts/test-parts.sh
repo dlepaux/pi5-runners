@@ -47,6 +47,7 @@ check_part module-10 module -D 'fan_model="NF-A4x10"'
 check_part module-20 module -D 'fan_model="NF-A4x20"'
 check_part lid-10    lid    -D 'fan_model="NF-A4x10"'
 check_part lid-20    lid    -D 'fan_model="NF-A4x20"'
+check_part tray      tray
 check_part filter    filter
 
 # THE SHOWCASE MUST RENDER CLEAN. It is the only file that touches the framework's

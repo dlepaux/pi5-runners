@@ -26,20 +26,27 @@ use <parts/module.scad>
 use <parts/lid.scad>
 use <parts/filter.scad>
 
-case_parts = ["module", "lid", "filter"];
+case_parts = ["module", "tray", "lid", "filter"];
 
 module casePart(name) {
   if (name == "module") modulePart(runner);
+  if (name == "tray")   trayPart();
   if (name == "lid")    lidPrint();
   if (name == "filter") filterPart();
 }
 
 // ----------------------------------------------------------------------------
-// EXPLODE — modules apart, lid up, filters forward
+// EXPLODE — modules apart, trays up, lid up, filters forward
 // ----------------------------------------------------------------------------
-// Each module takes its board and its fan with it: both are screwed to it.
-function explodeModule(k) = [0, 0, k * assembly_space];
-function explodeLid()     = [0, 0, module_count * assembly_space + assembly_space];
+// Each module takes its fan with it, each tray its board: that is what is screwed to
+// each. A tray rises clear of its module's top, assembly_space over it, slide_travel
+// forward -- where it goes in, short of the rear wall -- and every module above makes
+// room for it. Less than clear hides it inside its own walls. Closed (0), everything
+// sits where it stands.
+function trayLift()       = assembly_space > 0 ? module_h + assembly_space : 0;
+function explodeModule(k) = [0, 0, k * (assembly_space + trayLift())];
+function explodeTray()    = assembly_space > 0 ? [-slide_travel, 0, trayLift()] : [0, 0, 0];
+function explodeLid()     = [0, 0, module_count * (assembly_space + trayLift()) + assembly_space];
 
 // ----------------------------------------------------------------------------
 // PREVIEW CONTENT
@@ -74,7 +81,10 @@ if (case_part == "assembly") {
   for (k = [0 : module_count - 1])
     translate(explodeModule(k)) moduleAt(k) {
       if (show_case) modulePart(k + 1);
-      slotContents(slot_kind[k]);
+      translate(explodeTray()) {
+        if (show_case) color("Orange") trayPart();
+        slotContents(slot_kind[k]);
+      }
       fanContents();
       if (show_filter) color("DimGray") filterMounted(assembly_space);
     }

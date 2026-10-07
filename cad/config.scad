@@ -597,11 +597,52 @@ pcb_slot_h     = pi5_pcb[2] + 2 * pcb_slot_clear + pcb_slot_depth;
 assert(pcb_slot_depth < wall - 1, "the PCB slot leaves under 1mm of rear wall");
 
 // ----------------------------------------------------------------------------
+// TRAY — the Pi's feet on a plate of their own, clipped into the module's floor
+// ----------------------------------------------------------------------------
+// The Pi screws onto its four feet on a TRAY, on the bench, not 2.5mm off a wall
+// inside the module. The tray is the feet's own outline: a rounded rectangle whose
+// corners are concentric with the feet. It drops into a WINDOW of the same shape in
+// the module's floor; the module keeps its walls, its lap and its clips.
+//
+// IT CANNOT FALL THROUGH: all four edges of the window are chamfered at 45, wide at
+// the top, and the tray's edges match -- floor-down, the tray's edge is a 45-degree
+// overhang and the window's looks up, so both print. A lap clip (the half '>') on
+// each of the four sides holds it down.
+//
+// THE CLIPS NEED A SPRING. Tray and floor are both flat plates in one plane: neither
+// gives sideways, so a rib between them could not pass. Each rib stands on a strip of
+// the tray's edge, tray_strip wide, freed by a slot behind it between the feet -- the
+// strip bends in as the tray goes down, as the module's walls do for its lap clips.
+//
+// HOW IT GOES IN: the jacks sit flush in holes in the rear wall, so the loaded tray is
+// held tray_drop up, over the floor, slide_travel short of the rear wall; slid back,
+// its jacks go into their holes; then it drops into its window and clicks. So the rear
+// holes and the PCB slot are tray_drop taller upward than the jacks need.
+//
+// Its edge stands island_inner + tray_clear in from each outer face: lowered from the
+// top, it passes between the port islands, which stand 1.5mm into the cavity. That
+// sets the corners' radius round the feet.
+tray_gap    = lap_gap;                    // along the chamfer's normal, as on the lap
+tray_clear  = 0.2;                        // where tray and module meet but do not bear
+tray_r      = board_y + pi5_hole_inset - (island_inner + tray_clear);  // round each foot's axis
+tray_drop   = floor_t + tray_clear;       // held this high, the tray slides over the floor
+rear_hole_rise = tray_drop;               // so the rear holes and the PCB slot run this much taller
+tray_strip  = 3.5;                        // the clip's spring, at the tray's top face
+tray_slit   = 1.2;                        // the slot behind it: three lines
+tray_slit_end = 1;                        // a slot's end to the foot beside it
+
+assert(tray_r >= post_d / 2 + post_chamfer + 0.2, "a foot's root overhangs the tray's edge");
+assert(tray_r - tray_strip - tray_slit >= 0, "the slot behind a clip cuts a foot");
+assert(tray_strip - floor_t >= 1, "the clip's strip is under 1mm on the bed");
+assert(island_inner + tray_clear + floor_t - wall - (lap_rib_w + 2 * clip_clear) >= 1,
+       "the tray clip's groove leaves under 1mm of frame on the bed");
+
+// ----------------------------------------------------------------------------
 // ASSEMBLY / PREVIEW
 // ----------------------------------------------------------------------------
 // Open cad/case.scad and set case_part:
 //   "assembly" - everything, for looking at
-//   "module" | "lid" | "filter" - one printed part
+//   "module" | "tray" | "lid" | "filter" - one printed part
 case_part = "assembly";
 
 // Explode distance: modules apart, lid up, filters forward. The

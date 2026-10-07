@@ -45,6 +45,9 @@ budget() {
 budget lid-10 lid    0 0 -D 'fan_model="NF-A4x10"'
 budget lid-20 lid    0 0 -D 'fan_model="NF-A4x20"'
 budget filter filter 0 0
+# TRAY: nothing. Its chamfered edges are 45-degree overhangs, its ribs the lap's, its
+# feet run straight up.
+budget tray   tray   0 0
 
 
 # MODULE, measured by where it is (both fans measure the same):
