@@ -168,20 +168,6 @@ if (test_view == "island-pos-open")
     islandProbe((island_x[0] + island_x[1]) / 2, module_w - island_outer + 0.1, module_w + 1);
   }
 
-// -- the label ----------------------------------------------------------------
-// What the RAM takes out of the tray's underside...
-module ramRemoved(gb) { intersection() { ramCut(gb); trayBlank(); } }
-if (test_view == "label-cuts") ramRemoved(tray_ram);
-// ...WHOLLY inside its slots, for every tray.
-if (test_view == "label-outside-region") difference() { ramRemoved(tray_ram); ramRegion(); }
-// OpenSCAD swaps a font it cannot find for its default, silently. Set against a
-// name no font has -- which gets that same default -- the label must differ.
-if (test_view == "label-font")
-  difference() {
-    linear_extrude(1) ramText(tray_ram);
-    linear_extrude(1) ramText(tray_ram, "no such font");
-  }
-
 // -- the tray -----------------------------------------------------------------
 // The module, with its tray in. Everything a board or the stack meets is the two.
 module moduleWithTray() { modulePart(); trayPart(); }
@@ -199,11 +185,17 @@ if (test_view == "tray-seated")
 // 1mm apart down from the top, 0.5 along the rest: the tray is 2.4 thick and the rest
 // runs straight up, so the copies leave no gap to slip through. Without the ribs,
 // which snap.
+//
+// THE JACKS ARE ONLY HELD TO THE DESCENT, short of the wall: their holes are their own
+// size (rear_hole_rise, config.scad), so held tray_drop up they do not go in as rigid
+// CAD. On the owner's print they do; rear-edge-vs-module holds them once seated.
+function trayDescent() = [for (dz = [tray_drop : 1 : module_h]) [-slide_travel, dz]];
 function trayPath() = concat(
-  [for (dz = [tray_drop : 1 : module_h]) [-slide_travel, dz]],
+  trayDescent(),
   [for (dx = [0 : 0.5 : slide_travel]) [-dx, tray_drop]],
   [for (dz = riseSteps(tray_drop)) [0, dz]]);
-module alongTrayPath() { for (p = trayPath()) translate([p[0], 0, p[1]]) children(); }
+module alongPath(path) { for (p = path) translate([p[0], 0, p[1]]) children(); }
+module alongTrayPath() { alongPath(trayPath()) children(); }
 if (test_view == "tray-path")
   intersection() { modulePart(); alongTrayPath() trayPart(false); }
 if (test_view == "boards-path")
@@ -211,8 +203,9 @@ if (test_view == "boards-path")
     modulePart();
     alongTrayPath() {
       for (k = ["standard", "compact", "bare"]) slotSlab(k);
-      onBoard() { sideEdge(); rearEdge(); }
+      onBoard() sideEdge();
     }
+    alongPath(trayDescent()) onBoard() rearEdge();
   }
 // NOTHING FALLS BETWEEN THEM: the module loses the seam round the tray and the
 // grooves; the tray's spring slots are cut from the tray, and count too.

@@ -12,7 +12,6 @@ bench**, which clicks into a window in its module's floor.
 **Standalone**, like [`lab-router`](../lab-router/) and [`naja-miner`](../naja-miner/) —
 not a variant of [`hexrack-sbc`](../hexrack-sbc/), and a **single configuration**. The
 one switch is `fan_model`; it changes the module and the lid, never the filter.
-`tray_ram` (2, 4 or 8) only picks which RAM a tray is engraved with.
 
 The load is what makes this case different from a Pi shelf: 100% on all four cores for
 30–50 minutes at a stretch, three boards at once, with NVMe traffic throughout. Every
@@ -33,14 +32,8 @@ that way is redesigned, not supported.
 
 The slots are a preview choice only: every module is the same shape, sized for the
 tallest board, so any board fits any module, and **the three modules are one part**.
-**Only the trays differ**: each is engraved underneath with its Pi's RAM, `2GB`, `4GB`
-or `8GB` (`tray_ram`), 0.8 mm deep, size 14, in Grenze Gotisch ExtraBold (vendored in
-`cad/fonts/`, OFL — OpenSCAD falls back silently on a missing font, so `label-font`
-checks it loaded), mirrored so it reads with the tray turned over, inside the clips'
-slots. The owner's call: the side walls carried the runner's hostname, sheared into
-the wall, until the Pis moved onto trays; the RAM is what tells three boards apart on
-the bench. A straight cut into the bed face: the letters' strokes are its ceilings,
-~210 mm² of short bridges, budgeted in `test-print.sh`.
+So are the three trays. They were engraved underneath with each Pi's RAM (and the side
+walls with the runner's hostname before that); the owner dropped the text after a print.
 
 - **THE M.2 HAT+ COMPACT DOES NOT TAKE THE ACTIVE COOLER AS SUPPLIED.** Raspberry Pi
   say so: the standard HAT+ ships with a 16 mm stacking header "so it can be fitted to
@@ -125,8 +118,8 @@ the bench. A straight cut into the bed face: the letters' strokes are its ceilin
   print**
 - **AIR PATH: front to back, along each board's full length.** Each fan draws through
   its dust filter and its front wall's bore, pushes over its own SoC and drive, and
-  the module exhausts through its rear wall and the rear of both side walls — **225%
-  of its fan's throat** with the NF-A4x10 (257% with the NF-A4x20). **Never the lid**: a lid with holes drops dust on a board.
+  the module exhausts through its rear wall and the rear of both side walls — **203%
+  of its fan's throat** with the NF-A4x10 (231% with the NF-A4x20). **Never the lid**: a lid with holes drops dust on a board.
   The floor's triangle lattice is an option, **`floor_vents`, off by default**: a
   solid floor prints whole and drops nothing from one board onto the next; on, each
   module breathes into the one above. `test-airflow.sh` checks both
@@ -155,7 +148,7 @@ the bench. A straight cut into the bed face: the letters' strokes are its ceilin
   run through them). **No intake louvres ahead of them**: considered and dropped — the
   module is at positive pressure, so any side opening near the fan leaks filtered air
   before it crosses the board and lets dust in when the fans stop.
-  Exhaust: 225% of the throat with the NF-A4x10 (257% with the NF-A4x20)
+  Exhaust: 203% of the throat with the NF-A4x10 (231% with the NF-A4x20)
 - **Positive pressure.** One filtered intake; dust can only enter where the filter is,
   which is the only reason there is exactly one filter
 - **Six cables leave the box** — 3× Ethernet at the rear, 3× USB-C on −Y — because
@@ -168,7 +161,7 @@ the bench. A straight cut into the bed face: the letters' strokes are its ceilin
 | Part | Prints | Is |
 |------|--------|----|
 | `module` ×3 | floor-down | a floor (solid by default, `floor_vents`) with the tray's window in it, four walls; the front one carries the fan, its bore, its screw holes and the filter's recess; a 45° chamfer with four clip ribs below, a bevel with four grooves above |
-| `tray` ×3, one per `tray_ram` | floor-down | the Pi's four feet on a plate of their own, corners round the feet, 45° edges; a lap clip on each side on a sprung strip; its Pi's RAM engraved underneath |
+| `tray` ×3 | floor-down | the Pi's four feet on a plate of their own, corners round the feet, 45° edges; a lap clip on each side on a sprung strip |
 | `lid` | plate-down | a module's chamfer and four ribs with a solid plate on it |
 | `filter` ×3 | face-down | a round ring with two flats, fabric glued into a pocket on its back, two ribs |
 
@@ -195,16 +188,19 @@ the bench. A straight cut into the bed face: the letters' strokes are its ceilin
   running between the feet (`traySlits()`). The slots are through-holes, ~1.2 × 45:
   a little air between modules. **Check the snap force on the first print**; longer
   slots soften it
-- **HOW IT GOES IN, AND WHY THE REAR HOLES ARE 2.6 TALLER.** The jacks sit flush in
+- **HOW IT GOES IN, AND THE REAR HOLES ARE THE JACKS' OWN SIZE.** The jacks sit flush in
   closed holes in the rear wall, and four chamfered edges lock the tray once seated,
   so it cannot slide home in the window. It is held `tray_drop` (the floor and 0.2)
   over the floor, `slide_travel` short of the rear wall, slid back so its jacks go into
-  their holes, then pressed down. So the rear holes, the PCB slot and the louvres'
-  exclusion zone are `rear_hole_rise` (= `tray_drop`) taller upward: a ~2.6 gap over
-  each jack from outside, and the rear louvres lose some area — exhaust 231 → 221% of
-  the throat with the NF-A4x10, 203 → 195% with the NF-A4x20. `tray-path` and
-  `boards-path` sweep the tray and every board, jacks included, along that path;
-  break-tested with `rear_hole_rise = 0`, `tray_clear = -0.5` and `tray_gap = 0.3`
+  their holes, then pressed down. The rear holes, the PCB slot and the louvres'
+  exclusion zone once ran `rear_hole_rise` = `tray_drop` taller for that, a 2.6 gap
+  over each jack from outside. **The owner's call after a print: it read as a mistake,
+  and the tray goes in without it — `rear_hole_rise` = 0.** As rigid CAD the raised
+  jacks do meet the wall (243 mm³), so `boards-path` holds the jacks only down the
+  descent, short of the wall, and their entry is the print's to prove; `tray-path`
+  still sweeps the tray the whole way, and `rear-edge-vs-module` holds the jacks
+  seated. `rear_hole_rise` stays as the knob. Break-tested with `tray_clear = -0.5`
+  and `tray_gap = 0.3`
 - **THE BOARDS ARE NEVER CONNECTED.** Each Pi screws straight into four printed
   feet on its own module's floor, one per hole — **not hexrack's "canoes"**: the
   rails joining each row cost plastic for nothing, and the air under the board runs

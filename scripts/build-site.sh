@@ -19,10 +19,10 @@ rm -rf "$OUT"
 mkdir -p "$OUT/stl"
 cp stl/*.stl "$OUT/stl/"
 
-# Everything for one build, per fan: one module, the three trays, one lid and one
-# filter -- three modules and filters are printed, but one file is all a slicer needs.
+# Everything for one build, per fan: one module, one tray, one lid and one
+# filter -- three modules, trays and filters are printed, but one file is all a slicer needs.
 for fan in NF-A4x10 NF-A4x20; do
-    zip -jq "$OUT/pi5-runners-$fan.zip" "stl/module-$fan.stl" stl/tray-[248]GB.stl \
+    zip -jq "$OUT/pi5-runners-$fan.zip" "stl/module-$fan.stl" stl/tray.stl \
         "stl/lid-$fan.stl" stl/filter.stl
 done
 
@@ -107,11 +107,10 @@ cat >"$OUT/index.html" <<HTML
   </section>
 
   <section class="card">
-    <div class="head"><h2>Tray</h2><span class="count">print one of each</span></div>
+    <div class="head"><h2>Tray</h2><span class="count">print ×3</span></div>
     <p class="meta">Floor down. The Pi screws onto its four feet on the bench; the tray then
-    clicks into the window in its module's floor. Each is engraved underneath with its
-    Pi's RAM. Same for both fans · $(size tray-8GB)</p>
-    <div class="row">$(for gb in 2 4 8; do dl "tray-${gb}GB" "${gb} GB"; done)</div>
+    clicks into the window in its module's floor. Same for both fans · $(size tray)</p>
+    <div class="row">$(dl tray "Tray")</div>
   </section>
 
   <section class="card">
@@ -130,7 +129,7 @@ cat >"$OUT/index.html" <<HTML
 
   <section class="card">
     <div class="head"><h2>Everything</h2></div>
-    <p class="meta">A module, the three trays, a dust filter and the lid for one fan, zipped.</p>
+    <p class="meta">A module, a tray, a dust filter and the lid for one fan, zipped.</p>
     <div class="row">
       <a class="dl ghost" href="pi5-runners-NF-A4x10.zip" download>All parts · NF-A4x10</a>
       <a class="dl ghost" href="pi5-runners-NF-A4x20.zip" download>All parts · NF-A4x20</a>

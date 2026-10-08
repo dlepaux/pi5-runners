@@ -354,29 +354,13 @@ module modulePart() {
     }
 }
 
-// THE LABEL: the Pi's RAM, under the tray, inside its slots, mirrored across the tray
-// so it reads with the tray turned over (config.scad).
-module ramText(gb, font = label_font) {
-  text(ramName(gb), size = label_size, font = font, halign = "center", valign = "center");
-}
-module ramCut(gb) {
-  b = feetBox();
-  translate([(b[0][0] + b[1][0]) / 2, (b[0][1] + b[1][1]) / 2, -1])
-    mirror([0, 1, 0]) linear_extrude(label_depth + 1) ramText(gb);
-}
-// Where it may go: the tray's underside inside the clips' slots.
-module ramRegion() {
-  translate([0, 0, -1]) linear_extrude(label_depth + 1.01)
-    trayOutline(tray_r - tray_strip - tray_slit - 1);
-}
-
 // The tray, uncut: its chamfers stand EPS proud of the whole's -- a rib whose side
 // lies exactly on one is tangent to it, and exports as a loose prism.
 module trayBlank() { intersection() { moduleWhole(); trayRegion(EPS); } }
 
 // ribs = false is its BODY, what bears on the window and what has to go down past
 // the module.
-module trayPart(ribs = true, gb = tray_ram) {
+module trayPart(ribs = true) {
   render()
     difference() {
       union() {
@@ -384,7 +368,6 @@ module trayPart(ribs = true, gb = tray_ram) {
         if (ribs) for (j = trayJoints()) clipRib(j);
       }
       traySlits();
-      ramCut(gb);
     }
 }
 

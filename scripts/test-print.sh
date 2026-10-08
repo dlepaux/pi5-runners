@@ -46,9 +46,8 @@ budget lid-10 lid    0 0 -D 'fan_model="NF-A4x10"'
 budget lid-20 lid    0 0 -D 'fan_model="NF-A4x20"'
 budget filter filter 0 0
 # TRAY: nothing steep. Its chamfered edges are 45-degree overhangs, its ribs the lap's,
-# its feet run straight up. Flat: the RAM engraved in its bed face, whose ceilings are
-# the letters' own strokes, a millimetre or two of bridge each.
-for gb in 2 4 8; do budget "tray-${gb}GB" tray 0 230 -D "tray_ram=$gb"; done
+# its feet run straight up. Nothing flat either.
+budget tray   tray   0 0
 
 
 # MODULE, measured by where it is (both fans measure the same):
@@ -67,7 +66,6 @@ for gb in 2 4 8; do budget "tray-${gb}GB" tray 0 230 -D "tray_ram=$gb"; done
 #                 on down to the bed, and its ribs are square bars with every face at
 #                 45 -- the first print's chamfer stopped 1.3mm short and left a roof
 #                 (~371) that sagged.
-#   the label  -- nothing: its cut is sheared, so every ceiling falls at 45.
 budget module-10 module 300 510 -D 'fan_model="NF-A4x10"'
 budget module-20 module 300 510 -D 'fan_model="NF-A4x20"'
 

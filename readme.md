@@ -18,8 +18,7 @@ together; only the fans are.
 
 Every module is the same shape, sized for the tallest board, so any board fits any
 module, and the three modules are one part. Each Pi screws straight into printed feet on
-its own tray, engraved underneath with that Pi's RAM — **2GB**, **4GB** or **8GB** — in
-Grenze Gotisch; the boards are never connected to each other.
+its own tray; the boards are never connected to each other.
 
 Plus **three Noctua 40 mm 5V fans**, one per module, screwed in from the front and
 powered from its own Pi's GPIO 5 V header: either the **NF-A4x10** or the **NF-A4x20**. Set `fan_model` in
@@ -45,8 +44,8 @@ behind a filter — about a kelvin, not a different class of cooling.
 **Airflow** runs front to back along each board's full length. Each fan draws through
 its module's dust filter and front wall, pushes over its own SoC and drive, and
 the module exhausts through its rear wall and the rear of both side walls — never the
-lid, which would drop dust onto a board. Each module's exhaust is **225% of its fan's
-throat** (257% with the 20 mm fans) — louvres leaning rearward at the rear of each
+lid, which would drop dust onto a board. Each module's exhaust is **203% of its fan's
+throat** (231% with the 20 mm fans) — louvres leaning rearward at the rear of each
 side, straight louvres above and below the rear ports. The floors are solid by default; set
 `floor_vents = true` for a triangle lattice that lets each module breathe into the
 one above.
@@ -57,21 +56,21 @@ flush with the outside of the case and the USB ports 1.3 mm in, so every plug se
 
 ## Printing
 
-Eight STLs, **none needing support**, in the orientation they come out of
+Six STLs, **none needing support**, in the orientation they come out of
 `generate-stl.sh`. PETG. Print the module and lid for the fans you fit.
 
 | Part | Print | Size |
 |------|-------|------|
 | `module-NF-A4x10` or `module-NF-A4x20` | ×3, floor down | 115.9 / 125.0 × 68 × 61.3 mm |
 | `lid-NF-A4x10` or `lid-NF-A4x20` | plate down | 115.9 / 125.0 × 68 × 6.0 mm |
-| `tray-{2,4,8}GB` | one of each, floor down | 67.6 × 58.6 × 13.9 mm |
+| `tray` | ×3, floor down | 67.6 × 58.6 × 13.9 mm |
 | `filter` | ×3, face down, pocket up | 50.3 × 53.8 × 4.0 mm |
 
 **Download them** from the project's GitHub Pages site, rebuilt on every push to main
 once the whole test suite passes. Or render them yourself:
 
 ```bash
-./scripts/generate-stl.sh          # all eight into stl/
+./scripts/generate-stl.sh          # all six into stl/
 ./scripts/generate-stl.sh filter   # just one
 ./scripts/build-site.sh            # the download page, into _site/
 ```

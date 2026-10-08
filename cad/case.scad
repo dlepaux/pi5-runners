@@ -4,10 +4,8 @@
 //   openscad -D 'case_part="module"' cad/case.scad
 //   openscad -D 'assembly_space=30' cad/case.scad          // pull the stack apart
 //   openscad -D 'fan_model="NF-A4x20"' cad/case.scad       // the 20mm fans
-//   openscad -D 'case_part="tray"' -D 'tray_ram=4' cad/case.scad    // the 4GB Pi's tray
 //
 // fan_model changes the module and the lid; the dust filter is the same either way.
-// tray_ram changes only the tray's engraved RAM.
 //
 // Every printed part comes out of here IN ITS PRINT ORIENTATION: module floor-down,
 // lid plate-down, dust filter face-down.

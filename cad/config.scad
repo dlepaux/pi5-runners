@@ -21,9 +21,6 @@
 // config.scad, so there is no cycle. OpenSCAD does not hoist it, which is why it is
 // at the top rather than beside the block that reads it.
 include <lib/screws.scad>
-// The label's typeface, vendored (SIL OFL, fonts/OFL.txt): a font OpenSCAD cannot
-// find falls back to its default WITHOUT A WARNING, so it travels with the CAD.
-use <fonts/GrenzeGotisch-ExtraBold.ttf>
 
 EPS       = 0.01;     // CSG safety
 OVERLAP   = 0.1;
@@ -554,24 +551,6 @@ assert(island_x[0] - island_outer > front_wall_t + corner_r, "the port island's 
 assert(island_z[0] - island_outer > lap_top, "the port island's outer step reaches the lap");
 assert(island_z[1] + island_outer < module_h - 3, "the port island's outer step reaches the bevel");
 
-// THE LABEL: EACH TRAY CARRIES ITS PI'S RAM, engraved under it, the owner's call. The
-// side walls carried the runner's hostname until the Pis moved onto trays; the RAM is
-// what tells three boards apart on the bench, and the modules are one part again.
-// `tray_ram` picks which tray renders.
-//
-// Engraved into the tray's underside, mirrored so it reads with the tray turned over,
-// in Grenze Gotisch, a blackletter whose 45-degree strokes suit the case. A straight
-// cut into the bed face: its ceilings are the letters' own strokes, a millimetre or two
-// of bridge each, which test-print.sh budgets.
-tray_ram     = 8;            // GB: one of ram_options
-ram_options  = [2, 4, 8];
-function ramName(gb) = str(gb, "GB");
-label_font   = "Grenze Gotisch:style=ExtraBold";
-label_size   = 14;
-label_depth  = 0.8;          // four layers: the first layer's squish cannot close it
-assert(len([for (r = ram_options) if (r == tray_ram) r]) == 1, "tray_ram is not one of ram_options");
-assert(floor_t - label_depth >= 1.2, "the label leaves under six layers of tray");
-
 // EXCLUSION ZONE, hexrack's idea: the rear port cluster sits in clean solid wall with
 // the lattice running round it. Sized from the MEASURED cluster -- the framework's +X
 // mask spans Y 2.33..54.50 and Z 1.65..17.90 in the board frame.
@@ -610,8 +589,13 @@ assert(pcb_slot_depth < wall - 1, "the PCB slot leaves under 1mm of rear wall");
 //
 // HOW IT GOES IN: the jacks sit flush in holes in the rear wall, so the loaded tray is
 // held tray_drop up, over the floor, slide_travel short of the rear wall; slid back,
-// its jacks go into their holes; then it drops into its window and clicks. So the rear
-// holes and the PCB slot are tray_drop taller upward than the jacks need.
+// its jacks go into their holes; then it drops into its window and clicks.
+//
+// THE REAR HOLES ARE THE JACKS' OWN SIZE, the owner's call (rear_hole_rise = 0). They
+// ran tray_drop taller so the jacks could go in at that height as rigid CAD; on the
+// print that read as a 2.6mm gap over every jack, and the owner found the tray goes
+// in without it. So the CAD path no longer proves the jacks' entry: boards-path holds
+// them only down to the wall. rear_hole_rise is the knob if a print disagrees.
 //
 // Its edge stands island_inner + tray_clear in from each outer face: lowered from the
 // top, it passes between the port islands, which stand 1.5mm into the cavity. That
@@ -620,7 +604,7 @@ tray_gap    = lap_gap;                    // along the chamfer's normal, as on t
 tray_clear  = 0.2;                        // where tray and module meet but do not bear
 tray_r      = board_y + pi5_hole_inset - (island_inner + tray_clear);  // round each foot's axis
 tray_drop   = floor_t + tray_clear;       // held this high, the tray slides over the floor
-rear_hole_rise = tray_drop;               // so the rear holes and the PCB slot run this much taller
+rear_hole_rise = 0;                       // the rear holes and the PCB slot, taller upward by this
 tray_strip  = 3.5;                        // the clip's spring, at the tray's top face
 tray_slit   = 1.2;                        // the slot behind it: three lines
 tray_slit_end = 1;                        // a slot's end to the foot beside it

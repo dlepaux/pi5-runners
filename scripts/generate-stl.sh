@@ -4,7 +4,6 @@
 # ============================================================================
 #   ./scripts/generate-stl.sh            # everything into stl/
 #   ./scripts/generate-stl.sh filter              # just one
-#   ./scripts/generate-stl.sh tray-4GB
 #
 # Each part is rendered from cad/case.scad with case_part set, which is the SAME
 # entry point the assembly uses -- so a part cannot drift from how it is shown.
@@ -24,13 +23,11 @@ BACKEND=""
 "$OPENSCAD" --help 2>&1 | grep -q "\-\-backend" && BACKEND="--backend=Manifold"
 
 # fan_model sets the module's and the lid's length, so they are written in
-# both. The tray and the filter panel are the same whichever fans are fitted. Each tray
-# carries its Pi's RAM under it, so there are three of it.
+# both. The tray and the filter panel are the same whichever fans are fitted.
 TARGETS=("$@")
 if [ ${#TARGETS[@]} -eq 0 ]; then
     for fan in NF-A4x10 NF-A4x20; do TARGETS+=("module-$fan" "lid-$fan"); done
-    for gb in 2 4 8; do TARGETS+=("tray-${gb}GB"); done
-    TARGETS+=(filter)
+    TARGETS+=(tray filter)
 fi
 
 mkdir -p stl
@@ -39,10 +36,6 @@ for target in "${TARGETS[@]}"; do
     part="${target%%-NF-*}"
     fan="${target#"$part"}"
     args=()
-    if [[ "$part" =~ ^tray-([0-9]+)GB$ ]]; then
-        args+=(-D "tray_ram=${BASH_REMATCH[1]}")
-        part=tray
-    fi
     args+=(-D "case_part=\"$part\"")
     [ -n "$fan" ] && args+=(-D "fan_model=\"${fan#-}\"")
     out="stl/$target.stl"

@@ -94,23 +94,15 @@ expect_geometry "+Y carries the island's bulge too"         island-pos-bulge
 expect_empty    "and its recess, open outside"              island-pos-open
 
 echo ""
-echo "Fit — the label"
-
-expect_geometry "the label is in Grenze Gotisch, not a fallback" label-font
-for gb in 2 4 8; do
-    expect_geometry "the ${gb}GB tray is engraved"              label-cuts           -D "tray_ram=$gb"
-    expect_empty    "its label stays inside its clips' slots"  label-outside-region -D "tray_ram=$gb"
-done
-
-echo ""
 echo "Fit — the tray"
 
 # The floor under the Pi is a tray, dropped into a window in the module's floor.
 expect_empty    "the tray and the module do not overlap"         tray-vs-module
 expect_geometry "the tray sits on the window's chamfers"         tray-seated
 # Loaded on the bench, it goes in from the top short of the rear wall, slides back so
-# its jacks enter their holes, and drops into its window -- tray, board and jacks
-# meeting nothing on the way.
+# its jacks enter their holes, and drops into its window -- tray and board meeting
+# nothing on the way. The jacks are held only down to the wall: their holes are their
+# own size (rear_hole_rise = 0, the owner's call), so their entry is the print's to prove.
 expect_empty    "the tray goes in: down, back into the jacks, down" tray-path
 expect_empty    "with every kind of board on it"                    boards-path
 # Nothing falls between them: the seam round the tray, the clips' grooves and the
