@@ -8,7 +8,6 @@
 # the sizes it shows are MEASURED off the files it links -- never typed. The figures
 # quoted from the readme (case air rise, exhaust area) are the suite's, not the page's.
 # Static assets (style, viewer, font, vendored three.js, hero loop) live in site/.
-# Photos dropped into site/photos/ as .webp get a gallery; with none, no section.
 # CI runs this after the test suite and publishes _site/ to GitHub Pages.
 # ============================================================================
 set -euo pipefail
@@ -59,20 +58,6 @@ sizes() {  # sizes <part>
         "$(size "$1-NF-A4x10")" "$(size "$1-NF-A4x20")"
 }
 
-PHOTOS=""
-shopt -s nullglob
-photos=(site/photos/*.webp)
-if [ ${#photos[@]} -gt 0 ]; then
-    PHOTOS='<section id="photos"><h2>Printed</h2><p class="intro">PETG, as it comes off the printer and on the shelf.</p><div class="photos">'
-    for p in "${photos[@]}"; do
-        name=$(basename "$p" .webp)
-        PHOTOS+="<img src=\"photos/$name.webp\" alt=\"${name//-/ }\" loading=\"lazy\">"
-    done
-    PHOTOS+='</div></section>'
-fi
-PHOTOS_NAV=""
-[ -n "$PHOTOS" ] && PHOTOS_NAV='<a href="#photos">Photos</a>'
-
 cat >"$OUT/index.html" <<HTML
 <!doctype html>
 <html lang="en">
@@ -93,7 +78,7 @@ cat >"$OUT/index.html" <<HTML
 <div class="wrap">
   <header class="top">
     <a class="brand" href="#">pi5-runners</a>
-    <nav><a href="#why">Why this shape</a>$PHOTOS_NAV<a href="#parts">Parts</a><a href="#build">Build</a><a href="https://github.com/dlepaux/pi5-runners">Source</a></nav>
+    <nav><a href="#why">Why this shape</a><a href="#parts">Parts</a><a href="#build">Build</a><a href="https://github.com/dlepaux/pi5-runners">Source</a></nav>
   </header>
 
   <section class="hero">
@@ -170,8 +155,6 @@ cat >"$OUT/index.html" <<HTML
       </table>
     </div>
   </section>
-
-  $PHOTOS
 
   <section id="parts">
     <h2>Parts</h2>

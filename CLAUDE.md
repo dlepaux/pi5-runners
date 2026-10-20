@@ -358,8 +358,8 @@ by that script — no Node — and its part sizes are measured off the STLs it l
 This repo is public: no hostnames, addresses or links to the private siblings in
 anything committed. Its static assets live in `site/` (hexrack's look: Archivo, zinc, amber; three.js vendored
 for the part viewer, so the page makes no third-party request). `site/vendor/` is caught
-by the global gitignore's `vendor/` — add new files there with `git add -f`. Photos dropped
-into `site/photos/*.webp` become a gallery, alt text from the filename. `test-site.sh` runs
+by the global gitignore's `vendor/` — add new files there with `git add -f`.
+`test-site.sh` runs
 last and fails the build on a missing file or any external URL the page loads.
 
 Open `cad/case.scad` to look at it: `case_part` selects a part, `fan_model` the fans,
