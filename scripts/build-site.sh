@@ -93,7 +93,7 @@ cat >"$OUT/index.html" <<HTML
 <div class="wrap">
   <header class="top">
     <a class="brand" href="#">pi5-runners</a>
-    <nav><a href="#why">Why this shape</a>$PHOTOS_NAV<a href="#parts">Parts</a><a href="#build">Build</a></nav>
+    <nav><a href="#why">Why this shape</a>$PHOTOS_NAV<a href="#parts">Parts</a><a href="#build">Build</a><a href="https://github.com/dlepaux/pi5-runners">Source</a></nav>
   </header>
 
   <section class="hero">
@@ -105,7 +105,7 @@ cat >"$OUT/index.html" <<HTML
       Nothing is screwed together but the fans.</p>
       <div class="cta">
         <a class="btn primary" href="#parts">Download the parts</a>
-        <a class="btn" href="#why">How it stays cool</a>
+        <a class="btn" href="https://github.com/dlepaux/pi5-runners">Read the OpenSCAD source</a>
       </div>
       <p class="fine">Free for personal use under CC BY-NC-SA 4.0. Every part prints without
       supports, in the orientation it downloads in.</p>
@@ -242,7 +242,7 @@ cat >"$OUT/index.html" <<HTML
   <footer>
     <p>Built from <code>$COMMIT</code> on $BUILT$TESTED. Part sizes are measured off the files
     this page links.</p>
-    <p>CC BY-NC-SA 4.0. Archivo is under the <a href="licences/archivo-LICENSE-OFL-1.1.txt">SIL OFL 1.1</a>,
+    <p><a href="https://github.com/dlepaux/pi5-runners/blob/main/license.md">CC BY-NC-SA 4.0</a>. Archivo is under the <a href="licences/archivo-LICENSE-OFL-1.1.txt">SIL OFL 1.1</a>,
     three.js under the <a href="licences/three-LICENSE-MIT.txt">MIT licence</a>.</p>
   </footer>
 </div>

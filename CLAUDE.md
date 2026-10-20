@@ -9,8 +9,8 @@ bench**, which clicks into a window in its module's floor.
 
 ## Project intent
 
-**Standalone**, like [`lab-router`](../lab-router/) and [`naja-miner`](../naja-miner/) —
-not a variant of [`hexrack-sbc`](../hexrack-sbc/), and a **single configuration**. The
+**Standalone**, like the owner's private `lab-router` and `naja-miner` —
+not a variant of [`hexrack-sbc`](https://github.com/dlepaux/hexrack-sbc), and a **single configuration**. The
 one switch is `fan_model`; it changes the module and the lid, never the filter.
 
 The load is what makes this case different from a Pi shelf: 100% on all four cores for
@@ -76,7 +76,7 @@ walls with the runner's hostname before that); the owner dropped the text after 
   (`module_pitch_min`): the 2.4 floor, 40 of fan and `fan_clear` 2 above and below, for
   its silicone corner pads. **`module_headroom` = 12.4, 58.8 floor to floor, is the
   owner's call**: 10 at first, because a taller passive heatsink did not fit on
-  srv-runner-1; 12.4 once the fan was centred, because that is what the round filter
+  the first runner; 12.4 once the fan was centred, because that is what the round filter
   needs over Noctua's screw heads (`filter_room` asserts it). The tallest board needs
   42.45 with its air gap
 - **THE FAN IS CENTRED**, the owner's call: it sat at the bottom of the front with all
@@ -355,7 +355,8 @@ what only CI's newer snap sees — the red build it was added for was one of tho
 **CI** (`.github/workflows/deploy.yml`): on every push to main it runs `test.sh`, then
 `build-site.sh`, and publishes `_site/` to GitHub Pages. The page is plain HTML written
 by that script — no Node — and its part sizes are measured off the STLs it links.
-Its static assets live in `site/` (hexrack's look: Archivo, zinc, amber; three.js vendored
+This repo is public: no hostnames, addresses or links to the private siblings in
+anything committed. Its static assets live in `site/` (hexrack's look: Archivo, zinc, amber; three.js vendored
 for the part viewer, so the page makes no third-party request). `site/vendor/` is caught
 by the global gitignore's `vendor/` — add new files there with `git add -f`. Photos dropped
 into `site/photos/*.webp` become a gallery, alt text from the filename. `test-site.sh` runs
@@ -507,7 +508,7 @@ without error and exports a clean single body.
 
 ## Companion
 
-- Sibling: [`hexrack-sbc`](../hexrack-sbc/) — modular hex rack; the mesh-asset pattern
+- Sibling: [`hexrack-sbc`](https://github.com/dlepaux/hexrack-sbc) — modular hex rack; the mesh-asset pattern
   and the `SBC_Model_Framework` submodule come from there
-- Sibling: [`lab-router`](../lab-router/) — the standalone-fork pattern this follows
-- Sibling: [`naja-miner`](../naja-miner/) — the test harness and the trap list
+- Sibling: `lab-router` (private) — the standalone-fork pattern this follows
+- Sibling: `naja-miner` (private) — the test harness and the trap list

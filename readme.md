@@ -1,5 +1,7 @@
 # pi5-runners
 
+[![The three modules, tray and lid pulling apart](site/media/holo-poster.jpg)](https://dlepaux.github.io/pi5-runners/)
+
 A 3D-printable stack for three Raspberry Pi 5s running as self-hosted GitHub Actions
 runners. **Three modules, one Pi 5 and one 40 mm Noctua each**, a round
 dust filter clipped into each module's front, and a lid, all with rounded corners.
@@ -50,7 +52,7 @@ side, straight louvres above and below the rear ports. The floors are solid by d
 `floor_vents = true` for a triangle lattice that lets each module breathe into the
 one above.
 
-Around the rear port cluster the louvres stop at an **exclusion zone**, hexrack's
+Around the rear port cluster the louvres stop at an **exclusion zone**, [hexrack](https://github.com/dlepaux/hexrack-sbc)'s
 back-face idea, so every connector sits in clean solid wall. The Ethernet port is
 flush with the outside of the case and the USB ports 1.3 mm in, so every plug seats.
 
@@ -66,7 +68,7 @@ Six STLs, **none needing support**, in the orientation they come out of
 | `tray` | ×3, floor down | 67.6 × 58.6 × 13.9 mm |
 | `filter` | ×3, face down, pocket up | 50.3 × 53.8 × 4.0 mm |
 
-**Download them** from the project's GitHub Pages site, rebuilt on every push to main
+**[Download them](https://dlepaux.github.io/pi5-runners/)** from the project's site, where every part also turns in 3D, rebuilt on every push to main
 once the whole test suite passes. Or render them yourself:
 
 ```bash
@@ -79,8 +81,8 @@ How each part avoids support:
 
 - **Module.** The floor is the first layers. Every wall steps out from it on a **45°
   chamfer that reaches the outer face** — the front too — lying on a bevel inside the
-  top of the module below; each wall's clip rib is a square bar on that chamfer with
-  every face at 45°. Nothing on it is printed over air: the first print's chamfer
+  top of the module below; each wall's clip rib sits on that chamfer, a flat underside on
+  the bed and a 60° face that holds. Nothing on it is printed over air: the first print's chamfer
   stopped 1.3 mm short and the roof it left sagged. The wall below rises into the
   chamfer as a lip one extrusion line wide at its top, so the joint is flush but for
   a 0.4 mm hairline. The
@@ -90,7 +92,7 @@ How each part avoids support:
 - **Tray.** Its edges are 45° chamfers, narrow at the bed, and the window's in the
   module's floor face up to meet them; its clip ribs are the lap's; the feet and the
   spring slots behind the clips run straight up.
-- **Lid.** Upside down, its lap narrows as it rises and its ribs are 45° bars on it.
+- **Lid.** Upside down, its lap narrows as it rises and carries the module's ribs.
 - **Filter.** A flat ring; the glue pocket faces up.
 
 ## Why the case is this tall

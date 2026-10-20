@@ -6,7 +6,8 @@
 #
 # build-site.sh runs this last, so a renamed STL or a missing asset fails the
 # build instead of shipping a dead button. External links are not followed: the
-# page is meant to have none it loads from, and this check would fail it if it did.
+# page is meant to load nothing from another site. Links a visitor follows (<a href> to
+# the repo) are not loads, so they are dropped before the scan.
 # ============================================================================
 set -euo pipefail
 SITE="${1:?usage: test-site.sh <built site dir>}"
@@ -15,7 +16,8 @@ PAGE="$SITE/index.html"
 
 # Everything the page or its viewer will request: links, sources, posters, part views,
 # the import map's targets and the viewer module itself.
-refs=$(grep -oE '(href|src|poster|data-stl)="[^"#][^"]*"' "$PAGE" | sed -E 's/^[a-z-]+="//; s/"$//' \
+refs=$(sed -E 's/(<a [^>]*)href="https?:\/\/[^"]*"/\1/g' "$PAGE" \
+    | grep -oE '(href|src|poster|data-stl)="[^"#][^"]*"' | sed -E 's/^[a-z-]+="//; s/"$//' \
     | grep -v '^data:')
 refs+=$'\n'$(grep -oE '"\./[^"]+"' "$PAGE" | tr -d '"' | sed 's|^\./||')
 
